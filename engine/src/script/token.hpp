@@ -2,6 +2,7 @@
 
 #include "../global.hpp"
 
+#include <string>
 #include <optional>
 #include <string_view>
 

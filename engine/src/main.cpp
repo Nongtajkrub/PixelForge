@@ -1,11 +1,10 @@
 #include <iostream>
 
-#include "global.hpp"
 #include "script/lexer.hpp"
 #include "io/file.hpp"
 
 int main() {
-	const auto code = file::load_str("script.gby"); 
+	const auto code = io::file::load_str("script.gby"); 
 
 	if (!code.has_value()) {
 		std::cout << "No code file.\n";

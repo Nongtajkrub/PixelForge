@@ -15,6 +15,8 @@ target_sources(engine
 
 	src/io/file.hpp
 	src/io/file.cpp
+	src/io/byte.hpp
+	src/io/byte.cpp
 
 	src/instruction/type.hpp
 	src/instruction/block.hpp

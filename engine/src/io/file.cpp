@@ -4,6 +4,8 @@
 #include <fstream>
 #include <iterator>
 
+namespace io {
+
 namespace file {
 
 std::optional<std::string> load_str(const std::filesystem::path& path) {
@@ -19,4 +21,6 @@ std::optional<std::string> load_str(const std::filesystem::path& path) {
 	return content;
 }
 
-}
+} // namespace file
+
+} // namespace io
