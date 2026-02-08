@@ -18,6 +18,7 @@ static const std::unordered_map<std::string, TokenType> keywords = {
 	{"return", TokenType::RETURN},
 	{"pass", TokenType::PASS},
 	{"var", TokenType::VAR},
+	{"print", TokenType::PRINT},
 };
 
 void Lexer::lex() {

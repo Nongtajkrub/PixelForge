@@ -9,7 +9,7 @@ namespace scr {
 
 class Parser {
 private:
-	SourceStream<std::vector<Token>> tokens;
+	SourceStream<std::vector<Token>, Token> tokens;
 
 public:
 	Parser(const std::vector<Token>& source) :

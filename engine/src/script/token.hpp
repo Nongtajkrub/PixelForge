@@ -46,7 +46,8 @@ enum class TokenType : u8 {
 	FOR,
 	RETURN,
 	PASS,
-	VAR
+	VAR,
+	PRINT,
 };
 
 struct Token {

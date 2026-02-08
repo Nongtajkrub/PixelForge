@@ -45,6 +45,7 @@ const std::string_view Token::type_as_str() const {
 		{TokenType::RETURN,        "RETURN"},
 		{TokenType::PASS,          "PASS"},
 		{TokenType::VAR,           "VAR"},
+		{TokenType::PRINT,         "PRINT"},
 	};
 
 	return converter.at(this->token);

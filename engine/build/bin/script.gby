@@ -1,6 +1,0 @@
-var number = (15 + 15) * 2;
-var string = "Hello, World!";
-
-if number > 12;
-	pass
-endif;
