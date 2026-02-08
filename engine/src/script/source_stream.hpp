@@ -20,7 +20,7 @@ private:
 	} location;
 
 public:
-	explicit SourceStream(const T& soruce) :
+	explicit SourceStream(T soruce) :
 		soruce(std::move(soruce)),
 		location{ .pos = 0  }
 	{ }

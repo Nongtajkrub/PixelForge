@@ -1,6 +1,6 @@
 #pragma once
 
-// Zero cost alternative instead of using ::io::log::*.
+// Use this instead of ::io::log::*.
 #ifdef ENABLE_LOG
 	#include <source_location>
 	#include <string_view>

@@ -15,6 +15,9 @@ public:
 	Parser(const std::vector<Token>& source) :
 		tokens(source)
 	{ }
+
+private:
+	void parse();
 };
 
 } // namespace scr
