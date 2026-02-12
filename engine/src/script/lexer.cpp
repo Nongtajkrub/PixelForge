@@ -5,20 +5,21 @@
 
 namespace scr {
 
-static const std::unordered_map<std::string, TokenType> keywords = {
-	{"and", TokenType::AND},
-	{"or", TokenType::OR},
-	{"if", TokenType::IF},
-	{"endif", TokenType::ENDIF},
-	{"else", TokenType::ELSE},
-	{"true", TokenType::TRUE},
-	{"false", TokenType::FALSE},
-	{"while", TokenType::WHILE},
-	{"for", TokenType::FOR},
-	{"return", TokenType::RETURN},
-	{"pass", TokenType::PASS},
-	{"var", TokenType::VAR},
-	{"print", TokenType::PRINT},
+static const std::unordered_map<std::string, TokenKind> keywords = {
+	{"and", TokenKind::AND},
+	{"or", TokenKind::OR},
+	{"if", TokenKind::IF},
+	{"endif", TokenKind::ENDIF},
+	{"else", TokenKind::ELSE},
+	{"true", TokenKind::TRUE},
+	{"false", TokenKind::FALSE},
+	{"while", TokenKind::WHILE},
+	{"for", TokenKind::FOR},
+	{"return", TokenKind::RETURN},
+	{"pass", TokenKind::PASS},
+	{"var", TokenKind::VAR},
+	{"print", TokenKind::PRINT},
+	{"math", TokenKind::MATH},
 };
 
 void Lexer::lex() {
@@ -26,28 +27,34 @@ void Lexer::lex() {
 	while (!this->source.is_eof()) {
 		switch (c) {
 			case '(':
-				add_token(TokenType::LEFT_BRACE);
+				add_token(TokenKind::LEFT_BRACE);
 				break;
 			case ')':
-				add_token(TokenType::RIGHT_BRACE);
+				add_token(TokenKind::RIGHT_BRACE);
+				break;
+			case '[':
+				add_token(TokenKind::LEFT_BRACKET);
+				break;
+			case ']':
+				add_token(TokenKind::RIGHT_BRACKET);
 				break;
 			case ',':
-				add_token(TokenType::COMMA);
+				add_token(TokenKind::COMMA);
 				break;
 			case '-':
-				add_token(TokenType::MINUS);
+				add_token(TokenKind::MINUS);
 				break;
 			case '+':
-				add_token(TokenType::PLUS);
+				add_token(TokenKind::PLUS);
 				break;
 			case '/':
-				add_token(TokenType::SLASH);
+				add_token(TokenKind::SLASH);
 				break;
 			case '*':
-				add_token(TokenType::STAR);
+				add_token(TokenKind::STAR);
 				break;
 			case ';':
-				add_token(TokenType::SEMICOLON);
+				add_token(TokenKind::SEMICOLON);
 				break;
 			case '0':
 			case '1':
@@ -58,40 +65,48 @@ void Lexer::lex() {
 			case '6':
 			case '7':
 			case '8':
-			case '9':
-				add_token(
-					TokenType::NUMBER,
+			case '9': {
+				const auto sub_info =
 					this->source.advance_until(
-						[](auto c) -> bool { return !std::isdigit(c); }));
+						[](auto c) -> bool { return !std::isdigit(c); });
+				add_token(
+					TokenKind::NUMBER,
+					this->source.data().substr(sub_info.begin, sub_info.size));
+
 				break;
+			}
 			case '=':
 				add_token(
 					(this->source.advance_if('=')) ?
-						TokenType::DOUBLE_EQUAL : TokenType::EQUAL);
+						TokenKind::DOUBLE_EQUAL : TokenKind::EQUAL);
 				break;
 			case '!':
 				add_token(
 					this->source.advance_if('=') ?
-						TokenType::BANG_EQUAL : TokenType::BANG);
+						TokenKind::BANG_EQUAL : TokenKind::BANG);
 				break;
 			case '>':
 				add_token(
 					this->source.advance_if('=') ?
-						TokenType::GREATER_EQUAL : TokenType::GREATER);
+						TokenKind::GREATER_EQUAL : TokenKind::GREATER);
 				break;
 			case '<':
 				add_token(
 					this->source.advance_if('=') ?
-						TokenType::LESS_EQUAL : TokenType::LESS);
-			case '"':
+						TokenKind::LESS_EQUAL : TokenKind::LESS);
+			case '"': {
 				// Advance once to skip the first quote.
 				this->source.advance();
 
-				add_token(TokenType::STRING, this->source.advance_until('"'));
+				const auto sub_info = this->source.advance_until('"');
+				add_token(
+					TokenKind::STRING,
+					this->source.data().substr(sub_info.begin, sub_info.size));
 
 				// Advance again to skip the last quote.
 				this->source.advance();
 				break;
+			}
 			case '\n':
 			case '\r':
 				this->location.line++;
@@ -99,18 +114,21 @@ void Lexer::lex() {
 			case ' ':
 			case '\t':
 				break;
-			default:
-				const std::string lexeme =
+			default: {
+				const auto sub_info = 
 					this->source.advance_until(
 						[](auto c) -> bool { return !std::isalpha(c) && c != '_'; });
+				const std::string lexeme =
+						this->source.data().substr(sub_info.begin, sub_info.size);
 
 				if (auto it = keywords.find(lexeme); it != keywords.end()) {
 					add_token(it->second);
 				} else {
-					add_token(TokenType::IDENTIFIER, lexeme);
+					add_token(TokenKind::IDENTIFIER, lexeme);
 				}
 
 				break;
+			}
 		}
 
 		c = this->source.advance();

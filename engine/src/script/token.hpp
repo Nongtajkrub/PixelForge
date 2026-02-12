@@ -8,10 +8,12 @@
 
 namespace scr {
 
-enum class TokenType : u8 {
+enum class TokenKind : u8 {
 	// Single charactor tokens
 	LEFT_BRACE,
 	RIGHT_BRACE,
+	LEFT_BRACKET,
+	RIGHT_BRACKET,
 	COMMA,
 	MINUS,
 	PLUS,
@@ -48,22 +50,23 @@ enum class TokenType : u8 {
 	PASS,
 	VAR,
 	PRINT,
+	MATH,
 };
 
 struct Token {
-	TokenType token;
+	TokenKind token;
 	std::optional<std::string> lexeme;
 
 	struct {
 		u32 line;
 	} location;
 
-	Token(TokenType token, u32 line) :
+	Token(TokenKind token, u32 line) :
 		token(token),
 		lexeme(std::nullopt),
 		location{ .line = line }
 	{ }
-	Token(TokenType token, const std::string_view lexeme, u32 line) :
+	Token(TokenKind token, const std::string_view lexeme, u32 line) :
 		token(token),
 		lexeme(lexeme),
 		location{ .line = line }

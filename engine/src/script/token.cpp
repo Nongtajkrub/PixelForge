@@ -6,46 +6,49 @@
 namespace scr {
 
 const std::string_view Token::type_as_str() const {
-	static const std::unordered_map<TokenType, const char*> converter = {
+	static const std::unordered_map<TokenKind, const char*> converter = {
 		// Single character tokens
-		{TokenType::LEFT_BRACE,    "LEFT_BRACE"},
-		{TokenType::RIGHT_BRACE,   "RIGHT_BRACE"},
-		{TokenType::COMMA,         "COMMA"},
-		{TokenType::MINUS,         "MINUS"},
-		{TokenType::PLUS,          "PLUS"},
-		{TokenType::SLASH,         "SLASH"},
-		{TokenType::STAR,          "STAR"},
-		{TokenType::EQUAL,         "EQUAL"},
-		{TokenType::SEMICOLON,     "SEMICOLON"},
-		{TokenType::BANG,          "BANG"},
-		{TokenType::GREATER,       "GREATER"},
-		{TokenType::LESS,          "LESS"},
+		{TokenKind::LEFT_BRACE,    "LEFT_BRACE"},
+		{TokenKind::RIGHT_BRACE,   "RIGHT_BRACE"},
+		{TokenKind::LEFT_BRACKET,  "LEFT_BRACKET"},
+		{TokenKind::RIGHT_BRACKET, "RIGHT_BRACKET"},
+		{TokenKind::COMMA,         "COMMA"},
+		{TokenKind::MINUS,         "MINUS"},
+		{TokenKind::PLUS,          "PLUS"},
+		{TokenKind::SLASH,         "SLASH"},
+		{TokenKind::STAR,          "STAR"},
+		{TokenKind::EQUAL,         "EQUAL"},
+		{TokenKind::SEMICOLON,     "SEMICOLON"},
+		{TokenKind::BANG,          "BANG"},
+		{TokenKind::GREATER,       "GREATER"},
+		{TokenKind::LESS,          "LESS"},
 
 		// Multi-character tokens
-		{TokenType::DOUBLE_EQUAL,  "DOUBLE_EQUAL"},
-		{TokenType::BANG_EQUAL,    "BANG_EQUAL"},
-		{TokenType::GREATER_EQUAL, "GREATER_EQUAL"},
-		{TokenType::LESS_EQUAL,    "LESS_EQUAL"},
+		{TokenKind::DOUBLE_EQUAL,  "DOUBLE_EQUAL"},
+		{TokenKind::BANG_EQUAL,    "BANG_EQUAL"},
+		{TokenKind::GREATER_EQUAL, "GREATER_EQUAL"},
+		{TokenKind::LESS_EQUAL,    "LESS_EQUAL"},
 
 		// Literals
-		{TokenType::IDENTIFIER,    "IDENTIFIER"},
-		{TokenType::STRING,        "STRING"},
-		{TokenType::NUMBER,        "NUMBER"},
+		{TokenKind::IDENTIFIER,    "IDENTIFIER"},
+		{TokenKind::STRING,        "STRING"},
+		{TokenKind::NUMBER,        "NUMBER"},
 
 		// Keywords
-		{TokenType::AND,           "AND"},
-		{TokenType::OR,            "OR"},
-		{TokenType::IF,            "IF"},
-		{TokenType::ENDIF,         "ENDIF"},
-		{TokenType::ELSE,          "ELSE"},
-		{TokenType::TRUE,          "TRUE"},
-		{TokenType::FALSE,         "FALSE"},
-		{TokenType::WHILE,         "WHILE"},
-		{TokenType::FOR,           "FOR"},
-		{TokenType::RETURN,        "RETURN"},
-		{TokenType::PASS,          "PASS"},
-		{TokenType::VAR,           "VAR"},
-		{TokenType::PRINT,         "PRINT"},
+		{TokenKind::AND,           "AND"},
+		{TokenKind::OR,            "OR"},
+		{TokenKind::IF,            "IF"},
+		{TokenKind::ENDIF,         "ENDIF"},
+		{TokenKind::ELSE,          "ELSE"},
+		{TokenKind::TRUE,          "TRUE"},
+		{TokenKind::FALSE,         "FALSE"},
+		{TokenKind::WHILE,         "WHILE"},
+		{TokenKind::FOR,           "FOR"},
+		{TokenKind::RETURN,        "RETURN"},
+		{TokenKind::PASS,          "PASS"},
+		{TokenKind::VAR,           "VAR"},
+		{TokenKind::PRINT,         "PRINT"},
+		{TokenKind::MATH,          "MATH"},
 	};
 
 	return converter.at(this->token);

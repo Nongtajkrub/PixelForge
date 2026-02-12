@@ -35,11 +35,11 @@ public:
 private:
 	void lex();
 
-	inline void add_token(TokenType type) {
+	inline void add_token(TokenKind type) {
 		this->tokens.push_back(Token(type, this->location.line));
 	}
 
-	inline void add_token(TokenType type, std::string_view lexeme) {
+	inline void add_token(TokenKind type, std::string_view lexeme) {
 		this->tokens.push_back(Token(type, lexeme, this->location.line));
 	}
 };
