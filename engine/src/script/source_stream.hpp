@@ -1,7 +1,6 @@
 #pragma once
 
 #include <cstddef>
-#include <utility>
 #include <functional>
 #include <ranges>
 
@@ -9,9 +8,16 @@ namespace scr {
 
 // T: Type of source to create a SourceStream from, must be a range.
 // U: Type of element containe in source, if `std::string` the element is `char`.
-template <typename T, typename U>
+// V: Type of the advance method returns to avoid unnecessary copies. (Optional)
+template <typename T, typename U, typename V = U>
 requires std::ranges::random_access_range<T> 
 class SourceStream {
+public:
+	struct SubstreamInfo {
+		size_t begin;
+		size_t size;
+	};
+
 private:
 	const T soruce;
 
@@ -21,12 +27,12 @@ private:
 
 public:
 	explicit SourceStream(T soruce) :
-		soruce(std::move(soruce)),
+		soruce(soruce),
 		location{ .pos = 0  }
 	{ }
 
 	// Consume the current charactor and move to the next.
-	U advance() {
+	V advance() {
 		if (is_eof()) return '\0';
 
 		char c = this->soruce[this->location.pos];
@@ -55,28 +61,26 @@ public:
 		}
 	}
 
-	T advance_until(U v) {
+	SubstreamInfo advance_until(U v) {
 		const size_t begin = this->location.pos - 1;
 		while (peek() != v && !is_eof()) { advance(); }
-
-		return this->soruce 
-			| std::views::drop(begin) 
-			| std::views::take(this->location.pos - begin)
-			| std::ranges::to<T>();
+		return (SubstreamInfo) {
+			.begin = begin,
+			.size = this->location.pos - begin,
+		};
 	}
 
-	T advance_until(std::function<bool(U)> predicate) {
+	SubstreamInfo advance_until(std::function<bool(U)> predicate) {
 		const size_t begin = this->location.pos - 1;
 		while (!predicate(peek()) && !is_eof()) { advance(); }
-
-		return this->soruce 
-			| std::views::drop(begin) 
-			| std::views::take(this->location.pos - begin)
-			| std::ranges::to<T>();
+		return (SubstreamInfo) {
+			.begin = begin,
+			.size = this->location.pos - begin,
+		};
 	}
 
 	// Peek at the current charactor without consuming.
-	inline U peek() const {
+	inline V peek() const {
 		return this->soruce[this->location.pos];
 	}
 
@@ -86,6 +90,10 @@ public:
 
 	inline bool is_eof() const {
 		return this->location.pos == this->soruce.size();
+	}
+
+	inline const T& data() const {
+		return this->soruce;
 	}
 };
 
