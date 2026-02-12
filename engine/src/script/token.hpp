@@ -54,20 +54,20 @@ enum class TokenKind : u8 {
 };
 
 struct Token {
-	TokenKind token;
+	TokenKind kind;
 	std::optional<std::string> lexeme;
 
 	struct {
 		u32 line;
 	} location;
 
-	Token(TokenKind token, u32 line) :
-		token(token),
+	Token(TokenKind kind, u32 line) :
+		kind(kind),
 		lexeme(std::nullopt),
 		location{ .line = line }
 	{ }
-	Token(TokenKind token, const std::string_view lexeme, u32 line) :
-		token(token),
+	Token(TokenKind kind, const std::string_view lexeme, u32 line) :
+		kind(kind),
 		lexeme(lexeme),
 		location{ .line = line }
 	{ }

@@ -6,6 +6,7 @@
 #include "ast.hpp"
 
 #include <cstddef>
+#include <optional>
 #include <vector>
 
 namespace scr {
@@ -15,10 +16,10 @@ private:
 	// Arena allocator for nodes.
 	BumpArena& arena;
 
-	SourceStream<const std::vector<Token>&, Token, const Token&> tokens;
+	SourceStream<const std::vector<Token>&, Token, Token&> tokens;
 
 	// Abstract Syntax Tree separated into each line.
-	std::vector<ASTNode*> ast;
+	std::vector<ASTNode> ast;
 
 public:
 	Parser(const std::vector<Token>& tokens, BumpArena& arena) :
@@ -27,6 +28,10 @@ public:
 	{ }
 
 	void parse();
+
+private:
+	std::optional<ASTNode> parse_declaration_stmt();
+	std::optional<ASTNode> parse_expr();
 };
 
 } // namespace scr

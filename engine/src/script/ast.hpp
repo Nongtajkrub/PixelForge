@@ -3,8 +3,6 @@
 #include "../global.hpp"
 #include "token.hpp"
 
-#include <optional>
-
 namespace scr {
 
 enum class ASTNodeKind : u8 {
@@ -15,25 +13,30 @@ enum class ASTNodeKind : u8 {
 	DECLARATION,
 };
 
-// Store info about how to interpretate expression memory.
+// Store info about where the node is stored in memory and how to interpret it.
+// Since first member of every kind of expression is its kind.
 struct ASTNode {
-	ASTNodeKind kind;
+	const ASTNodeKind* adr;
+
+	ASTNode(const ASTNodeKind* adr) :
+		adr(adr)
+	{ }
 };
 
 struct LiteralExpr {
-	ASTNodeKind kind = ASTNodeKind::LITERAL;
+	const ASTNodeKind kind = ASTNodeKind::LITERAL;
 
 	Token token;
 }; 
 
 struct IdentifierExpr {
-	ASTNodeKind kind = ASTNodeKind::IDENTIFIER;
+	const ASTNodeKind kind = ASTNodeKind::IDENTIFIER;
 
 	Token token;
 }; 
 
 struct BinaryExpr {
-	ASTNodeKind kind = ASTNodeKind::BINARY;
+	const ASTNodeKind kind = ASTNodeKind::BINARY;
 
 	ASTNode* left;
 	Token op;
@@ -41,10 +44,10 @@ struct BinaryExpr {
 };
 
 struct DeclarationStmt {
-	ASTNodeKind kind = ASTNodeKind::DECLARATION;
+	const ASTNodeKind kind = ASTNodeKind::DECLARATION;
 
 	Token name;
-	std::optional<ASTNode*> init;
+	ASTNode* init;
 };
 
 } // namespace scr
