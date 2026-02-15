@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../global.hpp"
+#include "location.hpp"
 
 #include <string>
 #include <optional>
@@ -57,19 +58,17 @@ struct Token {
 	TokenKind kind;
 	std::optional<std::string> lexeme;
 
-	struct {
-		u32 line;
-	} location;
+	Location location;
 
-	Token(TokenKind kind, u32 line) :
+	Token(TokenKind kind, Location location) :
 		kind(kind),
 		lexeme(std::nullopt),
-		location{ .line = line }
+		location(location)
 	{ }
-	Token(TokenKind kind, const std::string_view lexeme, u32 line) :
+	Token(TokenKind kind, const std::string_view lexeme, Location location) :
 		kind(kind),
 		lexeme(lexeme),
-		location{ .line = line }
+		location(location)
 	{ }
 
 	const std::string_view type_as_str() const;

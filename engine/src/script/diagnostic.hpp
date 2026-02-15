@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../global.hpp"
+#include "location.hpp"
 #include "token.hpp"
 
 #include <cstddef>
@@ -40,14 +41,11 @@ enum class DiagnosticKind : u8 {
 
 struct Diagnostic {
 	DiagnosticKind kind;
-
-	struct {
-		u32 line;
-	} location;
+	Location location;
 
 	explicit Diagnostic(DiagnosticKind kind, const Token& from) :
 		kind(kind),
-		location({ .line = from.location.line })
+		location(from.location)
 	{ } 
 
 	std::string_view resolve_msg() const;
