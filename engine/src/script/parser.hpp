@@ -9,6 +9,7 @@
 #include <cstddef>
 #include <optional>
 #include <vector>
+#include <iostream>
 
 namespace scr {
 
@@ -38,6 +39,7 @@ private:
 	std::optional<ASTNode> parse_stmt();
 	std::optional<ASTNode> parse_declaration_stmt();
 	std::optional<ASTNode> parse_expr();
+	std::optional<ASTNode> parse_math_expr();
 
 	inline bool expect_semicolon() {
 		if (match_token(TokenKind::SEMICOLON)) {
