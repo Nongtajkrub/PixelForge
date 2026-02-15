@@ -16,22 +16,32 @@ private:
 	// Arena allocator for nodes.
 	BumpArena& arena;
 
-	SourceStream<const std::vector<Token>&, Token, Token&> tokens;
+	SourceStream<const std::span<Token>, Token, const Token&> tokens;
 
 	// Abstract Syntax Tree separated into each line.
 	std::vector<ASTNode> ast;
 
 public:
-	Parser(const std::vector<Token>& tokens, BumpArena& arena) :
+	Parser(const std::span<Token> tokens, BumpArena& arena) :
 		tokens(tokens),
 		arena(arena)
 	{ }
 
-	void parse();
+	bool parse();
+
+	inline const std::span<ASTNode> get_ast() {
+		return this->ast;
+	} 
 
 private:
+	std::optional<ASTNode> parse_stmt();
 	std::optional<ASTNode> parse_declaration_stmt();
 	std::optional<ASTNode> parse_expr();
+
+	inline bool match_token(TokenKind kind) {
+		return this->tokens.match(
+			[kind](auto token) -> bool { return token.kind == kind; });
+	}
 };
 
 } // namespace scr

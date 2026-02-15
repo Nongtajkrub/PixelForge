@@ -8,7 +8,7 @@ namespace scr {
 
 // T: Type of source to create a SourceStream from, must be a range.
 // U: Type of element containe in source, if `std::string` the element is `char`.
-// V: Type of the advance method returns to avoid unnecessary copies. (Optional)
+// V: Type of an alternative `U`, usually a `&U` to avoid unnecessary copies. (Optional)
 template <typename T, typename U, typename V = U>
 requires std::ranges::random_access_range<T> 
 class SourceStream {
@@ -32,18 +32,20 @@ public:
 	{ }
 
 	// Consume the current charactor and move to the next.
-	V advance() {
-		if (is_eof()) return '\0';
-
-		char c = this->soruce[this->location.pos];
+	inline V advance() {
+		V v = this->soruce[this->location.pos];
 		this->location.pos++;
 
-		return c;
+		return v;
+	}
+
+	inline V prev() {
+		return this->soruce[this->location.pos - 1];
 	}
 	
 	// Consume and move only if the current charactor is `c`.
 	// Return whether an advance occur or not.
-	bool advance_if(U v) {
+	inline bool match(U v) {
 		if (peek() == v) {
 			advance();
 			return true;
@@ -52,7 +54,7 @@ public:
 		}
 	}
 
-	bool advance_if(std::function<bool(U)> predicate) {
+	inline bool match(std::function<bool(V)> predicate) {
 		if (predicate(peek())) {
 			advance();
 			return true;
@@ -70,7 +72,7 @@ public:
 		};
 	}
 
-	SubstreamInfo advance_until(std::function<bool(U)> predicate) {
+	SubstreamInfo advance_until(std::function<bool(V)> predicate) {
 		const size_t begin = this->location.pos - 1;
 		while (!predicate(peek()) && !is_eof()) { advance(); }
 		return (SubstreamInfo) {

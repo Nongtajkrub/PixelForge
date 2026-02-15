@@ -23,8 +23,9 @@ static const std::unordered_map<std::string, TokenKind> keywords = {
 };
 
 void Lexer::lex() {
-	char c = this->source.advance();
 	while (!this->source.is_eof()) {
+		char c = this->source.advance();
+
 		switch (c) {
 			case '(':
 				add_token(TokenKind::LEFT_BRACE);
@@ -77,23 +78,24 @@ void Lexer::lex() {
 			}
 			case '=':
 				add_token(
-					(this->source.advance_if('=')) ?
+					(this->source.match('=')) ?
 						TokenKind::DOUBLE_EQUAL : TokenKind::EQUAL);
 				break;
 			case '!':
 				add_token(
-					this->source.advance_if('=') ?
+					this->source.match('=') ?
 						TokenKind::BANG_EQUAL : TokenKind::BANG);
 				break;
 			case '>':
 				add_token(
-					this->source.advance_if('=') ?
+					this->source.match('=') ?
 						TokenKind::GREATER_EQUAL : TokenKind::GREATER);
 				break;
 			case '<':
 				add_token(
-					this->source.advance_if('=') ?
+					this->source.match('=') ?
 						TokenKind::LESS_EQUAL : TokenKind::LESS);
+				break;
 			case '"': {
 				// Advance once to skip the first quote.
 				this->source.advance();
@@ -130,8 +132,6 @@ void Lexer::lex() {
 				break;
 			}
 		}
-
-		c = this->source.advance();
 	}
 }
 

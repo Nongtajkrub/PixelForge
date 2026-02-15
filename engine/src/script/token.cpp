@@ -51,7 +51,7 @@ const std::string_view Token::type_as_str() const {
 		{TokenKind::MATH,          "MATH"},
 	};
 
-	return converter.at(this->token);
+	return converter.at(this->kind);
 }
 
 } // namespace scr

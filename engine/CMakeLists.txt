@@ -29,6 +29,11 @@ target_sources(engine
 	src/script/lexer.cpp
 	src/script/source_stream.hpp
 	src/script/parser.hpp
+	src/script/parser.cpp
+	src/script/ast.hpp
+	src/script/ast.cpp
+	src/script/diagnostic.hpp
+	src/script/diagnostic.cpp
 
 	src/global.hpp
 
