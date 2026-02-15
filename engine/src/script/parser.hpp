@@ -4,6 +4,7 @@
 #include "source_stream.hpp"
 #include "token.hpp"
 #include "ast.hpp"
+#include "diagnostic.hpp"
 
 #include <cstddef>
 #include <optional>
@@ -37,6 +38,24 @@ private:
 	std::optional<ASTNode> parse_stmt();
 	std::optional<ASTNode> parse_declaration_stmt();
 	std::optional<ASTNode> parse_expr();
+
+	inline bool expect_semicolon() {
+		if (match_token(TokenKind::SEMICOLON)) {
+			return true;
+		} else {
+			Diagnostic(DiagnosticKind::EXPECTED_SEMICOLON, this->tokens.peek())
+				.emit(std::cout);
+			return false;
+		}
+	}
+
+	template <typename T>
+	inline ASTNode new_node(ASTNodeKind kind, const Token& token) {
+		auto node = this->arena.alloc<T>();
+		node->kind = kind;
+		node->token = token;
+		return ASTNode(&node->kind);
+	}
 
 	inline bool match_token(TokenKind kind) {
 		return this->tokens.match(

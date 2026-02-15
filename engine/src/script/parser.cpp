@@ -57,22 +57,34 @@ std::optional<ASTNode> Parser::parse_declaration_stmt() {
 	switch (this->tokens.advance().kind) {
 	case TokenKind::SEMICOLON:
 		node->init = std::nullopt;
-		break;
+		return ASTNode(&node->kind);
 	case TokenKind::EQUAL:
 		node->init = parse_expr();
-		break;
+		return (expect_semicolon()) ?
+			std::make_optional(ASTNode(&node->kind)) : std::nullopt;
 	default:
 		Diagnostic(DiagnosticKind::UNEXPECTED_TOKEN, this->tokens.prev())
 			.emit(std::cout);
 		return std::nullopt;
 	}
 
-	return ASTNode(&node->kind);
 }
 
 std::optional<ASTNode> Parser::parse_expr() {
-	// TODO: Implement
-	return std::nullopt;
+	ENSURE_NOT_EOF();
+
+	switch (this->tokens.advance().kind) {
+	case TokenKind::IDENTIFIER: 
+		return 
+			new_node<IdentifierExpr>(ASTNodeKind::IDENTIFIER, this->tokens.prev());
+	case TokenKind::NUMBER:
+	case TokenKind::STRING:
+		return new_node<LiteralExpr>(ASTNodeKind::LITERAL, this->tokens.prev());
+	default:
+		Diagnostic(DiagnosticKind::EXPECTED_EXPRESSION, this->tokens.prev())
+			.emit(std::cout);
+		return std::nullopt;
+	}
 }
 
 } // namespace scr
