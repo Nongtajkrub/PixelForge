@@ -2,6 +2,7 @@
 
 #include "../global.hpp"
 #include "token.hpp"
+#include <optional>
 
 namespace scr {
 
@@ -24,30 +25,30 @@ struct ASTNode {
 };
 
 struct LiteralExpr {
-	const ASTNodeKind kind = ASTNodeKind::LITERAL;
+	ASTNodeKind kind;
 
 	Token token;
 }; 
 
 struct IdentifierExpr {
-	const ASTNodeKind kind = ASTNodeKind::IDENTIFIER;
+	ASTNodeKind kind;
 
 	Token token;
 }; 
 
 struct BinaryExpr {
-	const ASTNodeKind kind = ASTNodeKind::BINARY;
+	ASTNodeKind kind;
 
-	ASTNode* left;
+	ASTNode left;
 	Token op;
-	ASTNode* right;
+	ASTNode right;
 };
 
 struct DeclarationStmt {
-	const ASTNodeKind kind = ASTNodeKind::DECLARATION;
+	ASTNodeKind kind;
 
 	Token name;
-	ASTNode* init;
+	std::optional<ASTNode> init;
 };
 
 } // namespace scr
