@@ -9,8 +9,6 @@ std::string_view Diagnostic::resolve_msg() const {
     switch (this->kind) {
     case DiagnosticKind::UNEXPECTED_TOKEN:
         return "unexpected token";
-    case DiagnosticKind::UNEXPECTED_END_OF_FILE:
-        return "unexpected end of file";
     case DiagnosticKind::EXPECTED_TOKEN:
         return "expected token";
     case DiagnosticKind::EXPECTED_IDENTIFIER:
@@ -19,16 +17,26 @@ std::string_view Diagnostic::resolve_msg() const {
         return "expected expression";
     case DiagnosticKind::EXPECTED_TYPE:
         return "expected type";
+	case DiagnosticKind::EXPECTED_ARITHMETIC:
+		return "expected arithmetic";
     case DiagnosticKind::EXPECTED_SEMICOLON:
         return "expected ';'";
     case DiagnosticKind::EXPECTED_RIGHT_PAREN:
         return "expected ')'";
     case DiagnosticKind::EXPECTED_RIGHT_BRACE:
         return "expected '}'";
+    case DiagnosticKind::EXPECTED_LEFT_BRACKET:
+        return "expected '['";
+	case DiagnosticKind::EXPECTED_RIGHT_BRACKET:
+        return "expected ']'";
+	case DiagnosticKind::EXPECTED_NUMBER:
+        return "expected a number";
     case DiagnosticKind::INVALID_ASSIGNMENT_TARGET:
         return "invalid assignment target";
     case DiagnosticKind::TOO_MANY_ARGUMENTS:
         return "too many arguments";
+    case DiagnosticKind::UNEXPECTED_END_OF_FILE:
+        return "unexpected end of file";
     case DiagnosticKind::UNKNOWN_IDENTIFIER:
         return "unknown identifier";
     case DiagnosticKind::REDECLARED_IDENTIFIER:

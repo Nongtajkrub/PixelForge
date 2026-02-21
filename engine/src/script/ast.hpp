@@ -7,11 +7,15 @@
 namespace scr {
 
 enum class ASTNodeKind : u8 {
-	BINARY,
+	TERMINATE,
+
 	STATEMENT,
+	DECLARATION,
+
+	BINARY,
+
 	LITERAL,
 	IDENTIFIER,
-	DECLARATION,
 };
 
 // Store info about where the node is stored in memory and how to interpret it.
@@ -24,13 +28,11 @@ struct ASTNode {
 	{ }
 };
 
-struct LiteralExpr {
+struct TerminateNode {
 	ASTNodeKind kind;
+};
 
-	Token token;
-}; 
-
-struct IdentifierExpr {
+struct PrimaryExpr {
 	ASTNodeKind kind;
 
 	Token token;
