@@ -83,6 +83,14 @@ public:
 		return this->soruce[this->pos];
 	}
 
+	inline bool can_look_ahead(size_t n) {
+		return (this->pos + n) < std::ranges::size(this->soruce);
+	}
+
+	inline V look_ahead(size_t n) {
+		return this->soruce[this->pos + n];
+	}
+
 	inline size_t get_pos() const {
 		return this->pos;
 	}
