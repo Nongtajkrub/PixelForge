@@ -5,7 +5,7 @@
 
 namespace scr {
 
-const std::string_view Token::type_as_str() const {
+const std::string_view Token::kind_as_str() const {
 	static const std::unordered_map<TokenKind, const char*> converter = {
 		// Single character tokens
 		{TokenKind::LEFT_BRACE,    "LEFT_BRACE"},
@@ -52,6 +52,18 @@ const std::string_view Token::type_as_str() const {
 	};
 
 	return converter.at(this->kind);
+}
+
+bool Token::is_arithmetic_operator() const {
+	switch (this->kind) {
+	case TokenKind::MINUS:
+	case TokenKind::PLUS:
+	case TokenKind::SLASH:
+	case TokenKind::STAR:
+		return true;
+	default:
+		return false;
+	}
 }
 
 } // namespace scr

@@ -71,7 +71,9 @@ struct Token {
 		location(location)
 	{ }
 
-	const std::string_view type_as_str() const;
+	const std::string_view kind_as_str() const;
+	bool is_arithmetic_operator() const;
+	
 };
 
 } // namespace scr
