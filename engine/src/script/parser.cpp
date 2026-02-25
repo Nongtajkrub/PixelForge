@@ -21,8 +21,8 @@ namespace scr {
 bool Parser::parse() {
 	while (!this->tokens.is_eof()) {
 		// Recursively parse the code.
-		if (auto node = parse_stmt(); node.has_value()) {
-			this->ast.push_back(node.value());
+		if (auto node = parse_stmt(); !node) {
+			this->ast.push_back(*node);
 		} else {
 			return false;
 		}
@@ -59,7 +59,7 @@ std::optional<ASTNode> Parser::parse_declaration_stmt() {
 		node->init = std::nullopt;
 		return ASTNode(&node->kind);
 	case TokenKind::EQUAL:
-		if (node->init = parse_expr(); !node->init.has_value()) {
+		if (node->init = parse_expr(); !node->init) {
 			return std::nullopt;
 		}
 		return ASTNode(&node->kind);
@@ -147,6 +147,10 @@ std::optional<ASTNode> Parser::pratt_parser(u8 min_bp) {
 	}
 	node->op = this->tokens.prev();
 
+	if (this->tokens.peek().kind == TokenKind::LEFT_BRACE) {
+		OPT_ASSIGN_OR_RETURN(node->right, pratt_parser(0), rhs);
+	}
+
 	// Validate that a number follow an arithmetic operator.
 	if (!expect_peek(TokenKind::NUMBER, DiagnosticKind::EXPECTED_NUMBER)) {
 		return std::nullopt;
@@ -163,11 +167,7 @@ std::optional<ASTNode> Parser::pratt_parser(u8 min_bp) {
 	// Recursively parse the right-hand side based on operator binding power.
 	auto [lbp, rbp] = resolve_binding_power(this->tokens.prev().kind); 
 	if (lbp > min_bp) {
-		if (auto rhs = pratt_parser(rbp); rhs.has_value()) {
-			node->right = rhs.value();
-		} else {
-			return std::nullopt;
-		}
+		OPT_ASSIGN_OR_RETURN(node->right, pratt_parser(rbp), rhs);
 	}
 
 	return ASTNode(&node->kind);
