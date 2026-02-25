@@ -21,7 +21,7 @@ namespace scr {
 bool Parser::parse() {
 	while (!this->tokens.is_eof()) {
 		// Recursively parse the code.
-		if (auto node = parse_stmt(); !node) {
+		if (auto node = parse_stmt(); node) {
 			this->ast.push_back(*node);
 		} else {
 			return false;
@@ -74,33 +74,28 @@ std::optional<ASTNode> Parser::parse_declaration_stmt() {
 std::optional<ASTNode> Parser::parse_expr() {
 	ENSURE_NOT_EOF();
 
-	switch (this->tokens.advance().kind) {
+	switch (this->tokens.peek().kind) {
 	case TokenKind::IDENTIFIER: 
-		return new_primary_node(ASTNodeKind::IDENTIFIER, this->tokens.prev());
+		return new_primary_node(ASTNodeKind::IDENTIFIER, this->tokens.advance());
 	case TokenKind::NUMBER:
+		// Check if the expression is binary.
+		if (this->tokens.can_look_ahead(1) &&
+				this->tokens.look_ahead(1).is_arithmetic_operator()) {
+			return parse_binary_expr();
+		}
+		[[fallthrough]];
 	case TokenKind::STRING:
-		return new_primary_node(ASTNodeKind::LITERAL, this->tokens.prev());
-	case TokenKind::MATH:
-		return parse_math_expr();
+		return new_primary_node(ASTNodeKind::LITERAL, this->tokens.advance());
 	default:
-		Diagnostic(DiagnosticKind::EXPECTED_EXPRESSION, this->tokens.prev())
+		Diagnostic(DiagnosticKind::EXPECTED_EXPRESSION, this->tokens.advance())
 			.emit(std::cout);
 		return std::nullopt;
 	}
 }
 
-std::optional<ASTNode> Parser::parse_math_expr() {
-	if (!expect(
-			TokenKind::LEFT_BRACKET, DiagnosticKind::EXPECTED_LEFT_BRACKET)) {
-		return std::nullopt;
-	}
-
+std::optional<ASTNode> Parser::parse_binary_expr() {
 	auto ast = pratt_parser(0);
 
-	if (!expect(
-			TokenKind::RIGHT_BRACKET, DiagnosticKind::EXPECTED_RIGHT_BRACKET)) {
-		return std::nullopt;
-	}
 	if (!expect(TokenKind::SEMICOLON, DiagnosticKind::EXPECTED_SEMICOLON)) {
 		return std::nullopt;
 	}
@@ -132,7 +127,8 @@ std::optional<ASTNode> Parser::pratt_parser(u8 min_bp) {
 		node->left = new_primary_node(ASTNodeKind::LITERAL, this->tokens.prev());
 		break;
 	default:
-		Diagnostic(DiagnosticKind::EXPECTED_ARITHMETIC, this->tokens.prev())
+		std::cout << this->tokens.prev().kind_as_str() << '\n';
+		Diagnostic(DiagnosticKind::EXPECTED_LITERAL, this->tokens.prev())
 			.emit(std::cout);
 		return std::nullopt;
 	}

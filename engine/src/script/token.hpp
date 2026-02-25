@@ -50,8 +50,7 @@ enum class TokenKind : u8 {
 	RETURN,
 	PASS,
 	VAR,
-	PRINT,
-	MATH,
+	PRINT
 };
 
 struct Token {

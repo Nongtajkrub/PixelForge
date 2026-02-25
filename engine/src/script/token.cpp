@@ -47,8 +47,7 @@ const std::string_view Token::kind_as_str() const {
 		{TokenKind::RETURN,        "RETURN"},
 		{TokenKind::PASS,          "PASS"},
 		{TokenKind::VAR,           "VAR"},
-		{TokenKind::PRINT,         "PRINT"},
-		{TokenKind::MATH,          "MATH"},
+		{TokenKind::PRINT,         "PRINT"}
 	};
 
 	return converter.at(this->kind);

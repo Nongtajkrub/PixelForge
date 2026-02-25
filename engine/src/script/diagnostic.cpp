@@ -17,8 +17,8 @@ std::string_view Diagnostic::resolve_msg() const {
         return "expected expression";
     case DiagnosticKind::EXPECTED_TYPE:
         return "expected type";
-	case DiagnosticKind::EXPECTED_ARITHMETIC:
-		return "expected arithmetic";
+	case DiagnosticKind::EXPECTED_LITERAL:
+		return "expected literal expression";
     case DiagnosticKind::EXPECTED_SEMICOLON:
         return "expected ';'";
     case DiagnosticKind::EXPECTED_RIGHT_PAREN:
@@ -60,7 +60,7 @@ void Diagnostic::emit(std::ostream& stream) const {
 	stream 
 		<< resolve_msg() 
 		<< " at line " 
-		<< this->location.line 
+		<< this->location.line
 		<< '\n';
 }
 
