@@ -14,7 +14,7 @@ using i64 = int64_t;
 
 using f32 = float;
 
-#define OPT_ASSIGN_OR_RETURN(TARGET, EXPR, TMP)                               \
+#define OPT_ASSIGN_OR_RETURN(TARGET, EXPR)                                    \
 do {                                                                          \
     auto TMP = (EXPR);                                                        \
     if (!TMP)                                                                 \

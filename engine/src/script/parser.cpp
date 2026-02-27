@@ -95,7 +95,11 @@ std::optional<ASTNode> Parser::parse_expr() {
 
 std::optional<ASTNode> Parser::parse_binary_expr() {
 	auto ast = pratt_parser(0);
+	if (!ast) {
+		return std::nullopt;
+	}
 
+	std::cout << *this->tokens.peek().lexeme << '\n';
 	if (!expect(TokenKind::SEMICOLON, DiagnosticKind::EXPECTED_SEMICOLON)) {
 		return std::nullopt;
 	}
@@ -116,57 +120,50 @@ static std::tuple<u8, u8> resolve_binding_power(TokenKind kind) {
 	}
 }
 
-std::optional<ASTNode> Parser::pratt_parser(u8 min_bp) {
-	auto node = new_node<BinaryExpr>(ASTNodeKind::BINARY);
-
-	ENSURE_NOT_EOF();
-
-	// Parse the left-hand side as a primary (atomic) expression.
-	switch (this->tokens.advance().kind) {
+std::optional<ASTNode> Parser::pratt_nud() {
+	switch (this->tokens.peek().kind) {
 	case TokenKind::NUMBER:
-		node->left = new_primary_node(ASTNodeKind::LITERAL, this->tokens.prev());
-		break;
+		return new_primary_node(ASTNodeKind::LITERAL, this->tokens.advance());
 	default:
-		std::cout << this->tokens.prev().kind_as_str() << '\n';
-		Diagnostic(DiagnosticKind::EXPECTED_LITERAL, this->tokens.prev())
+		Diagnostic(DiagnosticKind::UNEXPECTED_TOKEN, this->tokens.advance())
 			.emit(std::cout);
 		return std::nullopt;
 	}
+}
 
-	ENSURE_NOT_EOF();
-
-	// Validate that the current token is a valid arithmetic operator.
-	if (!this->tokens.advance().is_arithmetic_operator()) {
-		Diagnostic(DiagnosticKind::UNEXPECTED_TOKEN, this->tokens.prev())
-			.emit(std::cout);
-		return std::nullopt;
-	}
-	node->op = this->tokens.prev();
-
-	if (this->tokens.peek().kind == TokenKind::LEFT_BRACE) {
-		OPT_ASSIGN_OR_RETURN(node->right, pratt_parser(0), rhs);
-	}
-
-	// Validate that a number follow an arithmetic operator.
-	if (!expect_peek(TokenKind::NUMBER, DiagnosticKind::EXPECTED_NUMBER)) {
-		return std::nullopt;
-	}
-
-	// If the next expression is a literal parse it directly as the right-hand side.
-	if (this->tokens.can_look_ahead(1) 
-			&& !this->tokens.look_ahead(1).is_arithmetic_operator()) {
-		node->right =
-			new_primary_node(ASTNodeKind::LITERAL, this->tokens.advance());
+std::optional<ASTNode> Parser::pratt_led(Token op, ASTNode left, u8 min_bp) {
+	switch (this->tokens.peek().kind) {
+	case TokenKind::NUMBER: {
+		auto node = new_node<BinaryExpr>(ASTNodeKind::BINARY);
+		node->left = left;
+		node->op = op;
+		OPT_ASSIGN_OR_RETURN(node->right, pratt_parser(min_bp));
 		return ASTNode(&node->kind);
 	}
-
-	// Recursively parse the right-hand side based on operator binding power.
-	auto [lbp, rbp] = resolve_binding_power(this->tokens.prev().kind); 
-	if (lbp > min_bp) {
-		OPT_ASSIGN_OR_RETURN(node->right, pratt_parser(rbp), rhs);
+	default:
+		Diagnostic(DiagnosticKind::UNEXPECTED_TOKEN, this->tokens.advance())
+			.emit(std::cout);
+		return std::nullopt;
 	}
+}
 
-	return ASTNode(&node->kind);
+std::optional<ASTNode> Parser::pratt_parser(u8 min_bp) {
+	auto left = ASTNode(nullptr);
+
+	OPT_ASSIGN_OR_RETURN(left, pratt_nud());
+
+	while (this->tokens.peek().kind != TokenKind::SEMICOLON) {
+		const Token op = this->tokens.advance();
+		const auto [lbp, rbp] = resolve_binding_power(op.kind);
+
+		if (lbp < min_bp) {
+			break;
+		}
+
+		OPT_ASSIGN_OR_RETURN(left, pratt_led(op, left, rbp));
+	}
+	
+	return left;
 }
 
 } // namespace scr

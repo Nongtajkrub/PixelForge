@@ -44,6 +44,8 @@ private:
 	std::optional<ASTNode> parse_declaration_stmt();
 	std::optional<ASTNode> parse_expr();
 	std::optional<ASTNode> parse_binary_expr();
+	std::optional<ASTNode> pratt_nud();
+	std::optional<ASTNode> pratt_led(Token op, ASTNode left, u8 min_bp);
 	std::optional<ASTNode> pratt_parser(u8 min_bp);
 
 	inline bool expect(TokenKind kind, DiagnosticKind err) {
