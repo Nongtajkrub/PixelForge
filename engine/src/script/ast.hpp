@@ -3,13 +3,11 @@
 #include "../global.hpp"
 #include "token.hpp"
 #include <optional>
+#include <ostream>
 
 namespace scr {
 
 enum class ASTNodeKind : u8 {
-	TERMINATE,
-
-	STATEMENT,
 	DECLARATION,
 
 	BINARY,
@@ -26,6 +24,8 @@ struct ASTNode {
 	ASTNode(const ASTNodeKind* adr) :
 		adr(adr)
 	{ }
+
+	const char* kind_as_str() const;
 };
 
 struct TerminateNode {
@@ -52,5 +52,7 @@ struct DeclarationStmt {
 	Token name;
 	std::optional<ASTNode> init;
 };
+
+void ast_output(std::ostream& stream, ASTNode root, const u32 level = 0);
 
 } // namespace scr
