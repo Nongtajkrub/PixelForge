@@ -1,58 +1,53 @@
 #include "token.hpp"
 
-#include <string_view>
-#include <unordered_map>
-
 namespace scr {
 
-const std::string_view Token::kind_as_str() const {
-	static const std::unordered_map<TokenKind, const char*> converter = {
-		// Single character tokens
-		{TokenKind::LEFT_BRACE,    "LEFT_BRACE"},
-		{TokenKind::RIGHT_BRACE,   "RIGHT_BRACE"},
-		{TokenKind::LEFT_BRACKET,  "LEFT_BRACKET"},
-		{TokenKind::RIGHT_BRACKET, "RIGHT_BRACKET"},
-		{TokenKind::COMMA,         "COMMA"},
-		{TokenKind::MINUS,         "MINUS"},
-		{TokenKind::PLUS,          "PLUS"},
-		{TokenKind::SLASH,         "SLASH"},
-		{TokenKind::STAR,          "STAR"},
-		{TokenKind::EQUAL,         "EQUAL"},
-		{TokenKind::SEMICOLON,     "SEMICOLON"},
-		{TokenKind::BANG,          "BANG"},
-		{TokenKind::GREATER,       "GREATER"},
-		{TokenKind::LESS,          "LESS"},
+const char* Token::kind_as_str() const {
+	switch (this->kind) {
+		case TokenKind::LEFT_BRACE: return "LEFT_BRACE";
+        case TokenKind::RIGHT_BRACE: return "RIGHT_BRACE";
+        case TokenKind::LEFT_BRACKET: return "LEFT_BRACKET";
+        case TokenKind::RIGHT_BRACKET: return "RIGHT_BRACKET";
+        case TokenKind::COMMA: return "COMMA";
+        case TokenKind::MINUS: return "MINUS";
+        case TokenKind::PLUS: return "PLUS";
+        case TokenKind::SLASH: return "SLASH";
+        case TokenKind::STAR: return "STAR";
+        case TokenKind::EQUAL: return "EQUAL";
+        case TokenKind::SEMICOLON: return "SEMICOLON";
+        case TokenKind::BANG: return "BANG";
+        case TokenKind::GREATER: return "GREATER";
+        case TokenKind::LESS: return "LESS";
 
-		// Multi-character tokens
-		{TokenKind::DOUBLE_EQUAL,  "DOUBLE_EQUAL"},
-		{TokenKind::BANG_EQUAL,    "BANG_EQUAL"},
-		{TokenKind::GREATER_EQUAL, "GREATER_EQUAL"},
-		{TokenKind::LESS_EQUAL,    "LESS_EQUAL"},
+        // Multi-character tokens
+        case TokenKind::DOUBLE_EQUAL: return "DOUBLE_EQUAL";
+        case TokenKind::BANG_EQUAL: return "BANG_EQUAL";
+        case TokenKind::GREATER_EQUAL: return "GREATER_EQUAL";
+        case TokenKind::LESS_EQUAL: return "LESS_EQUAL";
 
-		// Literals
-		{TokenKind::IDENTIFIER,    "IDENTIFIER"},
-		{TokenKind::STRING,        "STRING"},
-		{TokenKind::NUMBER,        "NUMBER"},
+        // Literals
+        case TokenKind::IDENTIFIER: return "IDENTIFIER";
+        case TokenKind::STRING: return "STRING";
+        case TokenKind::NUMBER: return "NUMBER";
 
-		// Keywords
-		{TokenKind::AND,           "AND"},
-		{TokenKind::OR,            "OR"},
-		{TokenKind::IF,            "IF"},
-		{TokenKind::ENDIF,         "ENDIF"},
-		{TokenKind::ELSE,          "ELSE"},
-		{TokenKind::TRUE,          "TRUE"},
-		{TokenKind::FALSE,         "FALSE"},
-		{TokenKind::WHILE,         "WHILE"},
-		{TokenKind::FOR,           "FOR"},
-		{TokenKind::RETURN,        "RETURN"},
-		{TokenKind::PASS,          "PASS"},
-		{TokenKind::VAR,           "VAR"},
-		{TokenKind::PRINT,         "PRINT"}
-	};
+        // Keywords
+        case TokenKind::AND: return "AND";
+        case TokenKind::OR: return "OR";
+        case TokenKind::IF: return "IF";
+        case TokenKind::ENDIF: return "ENDIF";
+        case TokenKind::ELSE: return "ELSE";
+        case TokenKind::TRUE: return "TRUE";
+        case TokenKind::FALSE: return "FALSE";
+        case TokenKind::WHILE: return "WHILE";
+        case TokenKind::FOR: return "FOR";
+        case TokenKind::RETURN: return "RETURN";
+        case TokenKind::PASS: return "PASS";
+        case TokenKind::VAR: return "VAR";
+        case TokenKind::PRINT: return "PRINT";
+    }
 
-	return converter.at(this->kind);
+    return "UNKNOWN_TOKEN";
 }
-
 bool Token::is_arithmetic_operator() const {
 	switch (this->kind) {
 	case TokenKind::MINUS:

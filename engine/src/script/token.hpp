@@ -5,7 +5,6 @@
 
 #include <string>
 #include <optional>
-#include <string_view>
 
 namespace scr {
 
@@ -70,7 +69,7 @@ struct Token {
 		location(location)
 	{ }
 
-	const std::string_view kind_as_str() const;
+	const char* kind_as_str() const;
 	bool is_arithmetic_operator() const;
 	
 };
