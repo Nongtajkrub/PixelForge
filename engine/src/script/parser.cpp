@@ -34,6 +34,8 @@ std::optional<ASTNode> Parser::parse_stmt() {
 	if (match_token(TokenKind::VAR)) {
 		return parse_declaration_stmt();
 	}
+	Diagnostic(DiagnosticKind::UNEXPECTED_TOKEN, this->tokens.advance())
+		.emit(std::cout);
 	return std::nullopt;
 }
 
@@ -74,37 +76,34 @@ std::optional<ASTNode> Parser::parse_declaration_stmt() {
 std::optional<ASTNode> Parser::parse_expr() {
 	ENSURE_NOT_EOF();
 
+	auto node = ASTNode(nullptr);
+
 	switch (this->tokens.peek().kind) {
 	case TokenKind::IDENTIFIER: 
-		return new_primary_node(ASTNodeKind::IDENTIFIER, this->tokens.advance());
+		node = new_primary_node(ASTNodeKind::IDENTIFIER, this->tokens.advance());
+		break;
 	case TokenKind::NUMBER:
 		// Check if the expression is binary.
 		if (this->tokens.can_look_ahead(1) &&
 				this->tokens.look_ahead(1).is_arithmetic_operator()) {
-			return parse_binary_expr();
+			OPT_ASSIGN_OR_RETURN(node, pratt_parser(0));
+			break;
 		}
 		[[fallthrough]];
 	case TokenKind::STRING:
-		return new_primary_node(ASTNodeKind::LITERAL, this->tokens.advance());
+		node = new_primary_node(ASTNodeKind::LITERAL, this->tokens.advance());
+		break;
 	default:
 		Diagnostic(DiagnosticKind::EXPECTED_EXPRESSION, this->tokens.advance())
 			.emit(std::cout);
 		return std::nullopt;
 	}
-}
 
-std::optional<ASTNode> Parser::parse_binary_expr() {
-	auto ast = pratt_parser(0);
-	if (!ast) {
-		return std::nullopt;
-	}
-
-	std::cout << *this->tokens.peek().lexeme << '\n';
 	if (!expect(TokenKind::SEMICOLON, DiagnosticKind::EXPECTED_SEMICOLON)) {
 		return std::nullopt;
 	}
 
-	return ast;
+	return node;
 }
 
 static std::tuple<u8, u8> resolve_binding_power(TokenKind kind) {

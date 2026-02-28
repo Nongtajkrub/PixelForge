@@ -36,14 +36,13 @@ public:
 	}
 
 	inline const ASTNode get_ast(size_t line) {
-		return this->ast[line - 1];
+		return this->ast[line];
 	}
 
 private:
 	std::optional<ASTNode> parse_stmt();
 	std::optional<ASTNode> parse_declaration_stmt();
 	std::optional<ASTNode> parse_expr();
-	std::optional<ASTNode> parse_binary_expr();
 	std::optional<ASTNode> pratt_nud();
 	std::optional<ASTNode> pratt_led(Token op, ASTNode left, u8 min_bp);
 	std::optional<ASTNode> pratt_parser(u8 min_bp);
@@ -75,6 +74,7 @@ private:
 
 	inline ASTNode new_primary_node(ASTNodeKind kind, const Token& token) {
 		auto node = this->arena.alloc<PrimaryExpr>();
+		node->kind = kind;
 		node->token = token;
 		return ASTNode(&node->kind);
 	}
