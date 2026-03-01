@@ -74,32 +74,15 @@ std::optional<ASTNode> Parser::parse_declaration_stmt() {
 }
 
 std::optional<ASTNode> Parser::parse_expr() {
-	ENSURE_NOT_EOF();
-
-	auto node = ASTNode(nullptr);
-
-	switch (this->tokens.peek().kind) {
-	case TokenKind::IDENTIFIER: 
-		node = new_primary_node(ASTNodeKind::IDENTIFIER, this->tokens.advance());
-		break;
-	case TokenKind::NUMBER:
-		// Check if the expression is binary.
-		if (this->tokens.can_look_ahead(1) &&
-				this->tokens.look_ahead(1).is_arithmetic_operator()) {
-			OPT_ASSIGN_OR_RETURN(node, pratt_parser(0));
-			break;
-		}
-		[[fallthrough]];
-	case TokenKind::STRING:
-		node = new_primary_node(ASTNodeKind::LITERAL, this->tokens.advance());
-		break;
-	default:
-		Diagnostic(DiagnosticKind::EXPECTED_EXPRESSION, this->tokens.advance())
-			.emit(std::cout);
+	auto node = pratt_parser();
+	if (!node) {
 		return std::nullopt;
 	}
 
-	if (!expect(TokenKind::SEMICOLON, DiagnosticKind::EXPECTED_SEMICOLON)) {
+	ENSURE_NOT_EOF();
+
+	if (!expect(TokenKind::SEMICOLON, DiagnosticKind::EXPECTED_SEMICOLON) 
+			|| !node) {
 		return std::nullopt;
 	}
 
@@ -122,6 +105,7 @@ static std::tuple<u8, u8> resolve_binding_power(TokenKind kind) {
 std::optional<ASTNode> Parser::pratt_nud() {
 	switch (this->tokens.peek().kind) {
 	case TokenKind::NUMBER:
+	case TokenKind::STRING:
 		return new_primary_node(ASTNodeKind::LITERAL, this->tokens.advance());
 	default:
 		Diagnostic(DiagnosticKind::UNEXPECTED_TOKEN, this->tokens.advance())
@@ -147,19 +131,24 @@ std::optional<ASTNode> Parser::pratt_led(Token op, ASTNode left, u8 min_bp) {
 }
 
 std::optional<ASTNode> Parser::pratt_parser(u8 min_bp) {
-	auto left = ASTNode(nullptr);
+	auto left = pratt_nud();
+	if (!left) {
+		return std::nullopt;
+	}
 
-	OPT_ASSIGN_OR_RETURN(left, pratt_nud());
+	while (!this->tokens.is_eof()) {
+		const Token op = this->tokens.peek();
+		if (op.kind == TokenKind::SEMICOLON) {
+			break;
+		}
 
-	while (this->tokens.peek().kind != TokenKind::SEMICOLON) {
-		const Token op = this->tokens.advance();
 		const auto [lbp, rbp] = resolve_binding_power(op.kind);
-
 		if (lbp < min_bp) {
 			break;
 		}
 
-		OPT_ASSIGN_OR_RETURN(left, pratt_led(op, left, rbp));
+		this->tokens.advance();
+		OPT_ASSIGN_OR_RETURN(left, pratt_led(op, *left, rbp));
 	}
 	
 	return left;

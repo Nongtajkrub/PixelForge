@@ -68,7 +68,8 @@ void Lexer::lex() {
 			case '9': {
 				const auto sub_info =
 					this->source.advance_until(
-						[](auto c) -> bool { return !std::isdigit(c); });
+						[](auto c) -> bool {
+							return !std::isdigit(c) && c != '.'; });
 				add_token(
 					TokenKind::NUMBER,
 					this->source.data().substr(sub_info.begin, sub_info.size));

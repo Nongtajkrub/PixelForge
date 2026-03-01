@@ -49,7 +49,7 @@ struct Diagnostic {
 
 	explicit Diagnostic(DiagnosticKind kind, const Token& from) :
 		kind(kind),
-		location(from.location)
+		location(from.location.line)
 	{ } 
 
 	std::string_view resolve_msg() const;

@@ -2,6 +2,7 @@
 
 #include <cstddef>
 #include <functional>
+#include <iterator>
 #include <ranges>
 
 namespace scr {
@@ -101,6 +102,10 @@ public:
 
 	inline const T& data() const {
 		return this->soruce;
+	}
+
+	inline const V last() const {
+		return this->soruce[std::size(this->soruce) - 1];
 	}
 };
 

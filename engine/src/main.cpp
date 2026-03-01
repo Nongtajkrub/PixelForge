@@ -14,7 +14,7 @@ int main() {
 		return 1;
 	}
 
-	auto lexer = scr::Lexer(code.value());
+	auto lexer = scr::Lexer(*code);
 
 	/*
 	for (const auto token : lexer.get_token()) {
@@ -34,7 +34,10 @@ int main() {
 		return -1;
 	}
 
-	scr::ast_output(std::cout, parser.get_ast(0));
+	for (auto ast : parser.get_ast()) {
+		scr::ast_output(std::cout, ast);
+	}
+
 	/*
 	auto inner_expression = 
 		reinterpret_cast<const scr::BinaryExpr*>(expression->right.adr);
