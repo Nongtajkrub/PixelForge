@@ -20,7 +20,7 @@ private:
 
 	SourceStream<const std::span<Token>, Token, const Token&> tokens;
 
-	// Abstract Syntax Tree separated into each line.
+	// Abstract Syntax Tree separated into each statements.
 	std::vector<ASTNode> ast;
 
 public:
@@ -41,7 +41,10 @@ public:
 
 private:
 	std::optional<ASTNode> parse_stmt();
-	std::optional<ASTNode> parse_declaration_stmt();
+	std::optional<ASTNode> parse_nop();
+	std::optional<ASTNode> parse_var_declaration_stmt();
+	std::optional<ASTNode> parse_func_declaration_stmt();
+	bool parse_block(TokenKind end, std::vector<ASTNode>& buf);
 	std::optional<ASTNode> parse_expr();
 	std::optional<ASTNode> pratt_nud();
 	std::optional<ASTNode> pratt_led(Token op, ASTNode left, u8 min_bp);
@@ -51,7 +54,7 @@ private:
 		if (match_token(kind)) {
 			return true;
 		} else {
-			Diagnostic(err, this->tokens.peek())
+			Diagnostic(err, this->tokens.prev())
 				.emit(std::cout);
 			return false;
 		}

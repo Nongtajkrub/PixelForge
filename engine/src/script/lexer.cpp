@@ -18,6 +18,8 @@ static const std::unordered_map<std::string, TokenKind> keywords = {
 	{"return", TokenKind::RETURN},
 	{"pass", TokenKind::PASS},
 	{"var", TokenKind::VAR},
+	{"func", TokenKind::FUNC},
+	{"endfunc", TokenKind::ENDFUNC},
 	{"print", TokenKind::PRINT}
 };
 

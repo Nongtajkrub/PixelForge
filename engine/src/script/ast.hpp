@@ -4,11 +4,15 @@
 #include "token.hpp"
 #include <optional>
 #include <ostream>
+#include <vector>
 
 namespace scr {
 
 enum class ASTNodeKind : u8 {
-	DECLARATION,
+	NOP,
+
+	VAR_DECLARATION,
+	FUNC_DECLARATION,
 
 	BINARY,
 
@@ -28,7 +32,7 @@ struct ASTNode {
 	const char* kind_as_str() const;
 };
 
-struct TerminateNode {
+struct NopNode {
 	ASTNodeKind kind;
 };
 
@@ -46,11 +50,23 @@ struct BinaryExpr {
 	ASTNode right;
 };
 
-struct DeclarationStmt {
+struct VarDeclarationStmt {
 	ASTNodeKind kind;
 
-	Token name;
+	ASTNode name;
 	std::optional<ASTNode> init;
+};
+
+struct FuncDeclarationStmt {
+	ASTNodeKind kind;
+
+	ASTNode name;
+
+	// Function arguments.
+	std::vector<ASTNode> args;
+
+	// Function definition separated into statements.
+	std::vector<ASTNode> body;
 };
 
 void ast_output(std::ostream& stream, ASTNode root, const u32 level = 0);

@@ -4,7 +4,9 @@ namespace scr {
 
 const char* ASTNode::kind_as_str() const {
     switch (*this->adr) {
-        case ASTNodeKind::DECLARATION: return "DECLARATION";
+		case ASTNodeKind::NOP: return "NOP";
+        case ASTNodeKind::VAR_DECLARATION: return "VAR_DECLARATION";
+        case ASTNodeKind::FUNC_DECLARATION: return "FUNC_DECLARATION";
         case ASTNodeKind::BINARY: return "BINARY";
         case ASTNodeKind::LITERAL: return "LITERAL";
         case ASTNodeKind::IDENTIFIER: return "IDENTIFIER";
@@ -29,12 +31,29 @@ void ast_output(std::ostream &stream, ASTNode root, const u32 level) {
 		stream << indent << "Identifier: " << *node->token.lexeme << '\n';
 		break;
 	}
-	case ASTNodeKind::DECLARATION: {
-		auto node = reinterpret_cast<const DeclarationStmt*>(root.adr);
+	case ASTNodeKind::VAR_DECLARATION: {
+		auto node = reinterpret_cast<const VarDeclarationStmt*>(root.adr);
 
-		stream << indent << "Identifier: " << *node->name.lexeme << '\n'; 
+		ast_output(stream, node->name, level);
 		if (node->init) {
 			ast_output(stream, *node->init, level + 1);
+		}
+
+		break;
+	}
+	case ASTNodeKind::FUNC_DECLARATION: {
+		auto node = reinterpret_cast<const FuncDeclarationStmt*>(root.adr);
+
+		ast_output(stream, node->name, level);
+
+		stream << indent << "args: \n";
+		for (const auto& arg : node->args) {
+			ast_output(stream, arg, level + 1);
+		}
+
+		stream << indent << "body: \n";
+		for (const auto& stmt : node->body) {
+			ast_output(stream, stmt, level + 1);
 		}
 
 		break;
