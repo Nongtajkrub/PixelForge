@@ -42,7 +42,7 @@ const char* Token::kind_as_str() const {
         case TokenKind::FOR: return "FOR";
         case TokenKind::RETURN: return "RETURN";
         case TokenKind::PASS: return "PASS";
-        case TokenKind::VAR: return "VAR";
+		case TokenKind::LET: return "LET";
         case TokenKind::FUNC: return "FUNC";
         case TokenKind::ENDFUNC: return "ENDFUNC";
         case TokenKind::PRINT: return "PRINT";

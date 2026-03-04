@@ -8,6 +8,7 @@ const char* ASTNode::kind_as_str() const {
         case ASTNodeKind::VAR_DECLARATION: return "VAR_DECLARATION";
         case ASTNodeKind::FUNC_DECLARATION: return "FUNC_DECLARATION";
         case ASTNodeKind::BINARY: return "BINARY";
+		case ASTNodeKind::CALL: return "CALL";
         case ASTNodeKind::LITERAL: return "LITERAL";
         case ASTNodeKind::IDENTIFIER: return "IDENTIFIER";
     }
@@ -21,6 +22,8 @@ void ast_output(std::ostream &stream, ASTNode root, const u32 level) {
 	stream << indent << root.kind_as_str() << " ->\n";
 
 	switch (*root.adr) {
+	case ASTNodeKind::NOP:
+		break;
 	case ASTNodeKind::LITERAL: {
 		auto node = reinterpret_cast<const PrimaryExpr*>(root.adr);
 		stream << indent << "Literal: " << *node->token.lexeme << '\n';
@@ -71,7 +74,20 @@ void ast_output(std::ostream &stream, ASTNode root, const u32 level) {
 
 		break;
 	}
+	case ASTNodeKind::CALL: {
+		auto node = reinterpret_cast<const CallExpr*>(root.adr);
+
+		ast_output(stream, node->name, level);
+
+		stream << indent << "args: \n";
+		for (const auto& arg : node->args) {
+			ast_output(stream, arg, level + 1);
+		}
+
+		break;
+	}
 	default:
+		stream << "UNKNOW\n";
 		return;
 }
 }

@@ -48,7 +48,7 @@ enum class TokenKind : u8 {
 	FOR,
 	RETURN,
 	PASS,
-	VAR,
+	LET,
 	FUNC,
 	ENDFUNC,
 	PRINT

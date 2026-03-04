@@ -17,7 +17,7 @@ static const std::unordered_map<std::string, TokenKind> keywords = {
 	{"for", TokenKind::FOR},
 	{"return", TokenKind::RETURN},
 	{"pass", TokenKind::PASS},
-	{"var", TokenKind::VAR},
+	{"let", TokenKind::LET},
 	{"func", TokenKind::FUNC},
 	{"endfunc", TokenKind::ENDFUNC},
 	{"print", TokenKind::PRINT}

@@ -15,6 +15,7 @@ enum class ASTNodeKind : u8 {
 	FUNC_DECLARATION,
 
 	BINARY,
+	CALL,
 
 	LITERAL,
 	IDENTIFIER,
@@ -23,12 +24,14 @@ enum class ASTNodeKind : u8 {
 // Store info about where the node is stored in memory and how to interpret it.
 // Since first member of every kind of expression is its kind.
 struct ASTNode {
+	// Hold a pointer to different nodes.
 	const ASTNodeKind* adr;
 
 	ASTNode(const ASTNodeKind* adr) :
 		adr(adr)
 	{ }
 
+	// Turn ASTNodeKind enum into string.
 	const char* kind_as_str() const;
 };
 
@@ -50,6 +53,13 @@ struct BinaryExpr {
 	ASTNode right;
 };
 
+struct CallExpr {
+	ASTNodeKind kind;
+
+	ASTNode name;
+	std::vector<ASTNode> args;
+};
+
 struct VarDeclarationStmt {
 	ASTNodeKind kind;
 
@@ -61,8 +71,6 @@ struct FuncDeclarationStmt {
 	ASTNodeKind kind;
 
 	ASTNode name;
-
-	// Function arguments.
 	std::vector<ASTNode> args;
 
 	// Function definition separated into statements.

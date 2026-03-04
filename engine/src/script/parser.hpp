@@ -44,11 +44,13 @@ private:
 	std::optional<ASTNode> parse_nop();
 	std::optional<ASTNode> parse_var_declaration_stmt();
 	std::optional<ASTNode> parse_func_declaration_stmt();
-	bool parse_block(TokenKind end, std::vector<ASTNode>& buf);
 	std::optional<ASTNode> parse_expr();
 	std::optional<ASTNode> pratt_nud();
 	std::optional<ASTNode> pratt_led(Token op, ASTNode left, u8 min_bp);
-	std::optional<ASTNode> pratt_parser(const u8 min_bp = 0);
+	std::optional<ASTNode> pratt_parser(u8 min_bp = 0);
+
+	bool parse_block(TokenKind end, std::vector<ASTNode>& buf);
+	bool parse_func_args(std::vector<ASTNode>& buf);
 
 	inline bool expect(TokenKind kind, DiagnosticKind err) {
 		if (match_token(kind)) {
