@@ -67,27 +67,6 @@ void Lexer::lex() {
 			case ':':
 				add_token(TokenKind::COLON);
 				break;
-			case '0':
-			case '1':
-			case '2':
-			case '3':
-			case '4':
-			case '5':
-			case '6':
-			case '7':
-			case '8':
-			case '9': {
-				const auto sub_info =
-					this->source.advance_until(
-						[](auto c) -> bool {
-							return !std::isdigit(c) && c != '.'; });
-				add_token(
-					TokenKind::NUMBER,
-					this->source.data().substr(sub_info.begin, sub_info.size));
-				this->location.col += sub_info.size;
-
-				break;
-			}
 			case '=':
 				add_token(
 					(this->source.match('=')) ?
@@ -122,6 +101,36 @@ void Lexer::lex() {
 				this->source.advance();
 				break;
 			}
+			case '0':
+			case '1':
+			case '2':
+			case '3':
+			case '4':
+			case '5':
+			case '6':
+			case '7':
+			case '8':
+			case '9': {
+				const auto sub_info =
+					this->source.advance_until(
+						[](auto c) -> bool {
+							return !std::isdigit(c) && c != '.'; });
+				add_token(
+					TokenKind::NUMBER,
+					this->source.data().substr(sub_info.begin, sub_info.size));
+				this->location.col += sub_info.size;
+
+				break;
+			}
+			case '#':
+				if (this->source.peek() == '<') {
+					this->source.advance_until('>');
+					this->source.advance();
+				} else {
+					this->source.advance_until(
+						[](auto c) -> bool { return c == '\n' || c == '\r'; });
+				}
+				break;
 			case '\n':
 			case '\r':
 				this->location.row++;
