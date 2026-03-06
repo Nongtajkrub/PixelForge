@@ -11,36 +11,15 @@
 namespace scr {
 
 enum class DiagnosticKind : u8 {
-    // Syntax Errors
-    UNEXPECTED_TOKEN,
-    EXPECTED_TOKEN,
-    EXPECTED_IDENTIFIER,
-    EXPECTED_EXPRESSION,
-    EXPECTED_TYPE,
-	EXPECTED_LITERAL,
-    EXPECTED_SEMICOLON,
-    EXPECTED_RIGHT_PAREN,
-    EXPECTED_RIGHT_BRACE,
-    EXPECTED_LEFT_BRACKET,
-	EXPECTED_RIGHT_BRACKET,
-	EXPECTED_NUMBER,
-    INVALID_ASSIGNMENT_TARGET,
-    TOO_MANY_ARGUMENTS,
-    UNEXPECTED_END_OF_FILE,
+	UNEXPECTED_EOF,
+	UNEXPECTED_TOKEN,
 
-    // Name Resolution
-    UNKNOWN_IDENTIFIER,
-    REDECLARED_IDENTIFIER,
-
-    // Type Checking 
-    TYPE_MISMATCH,
-    INVALID_BINARY_OPERANDS,
-    CANNOT_ASSIGN_TO_CONST,
-
-    // Warnings
-    UNUSED_VARIABLE,
-    UNREACHABLE_CODE,
-    SHADOWED_VARIABLE
+	EXPECTED_SEMICOLON,
+	EXPECTED_COLON,
+	EXPECTED_IDENTIFIER,
+	EXPECTED_LEFT_PAREN,
+	EXPECTED_RIGHT_PAREN,
+	EXPECTED_COMMA,
 };
 
 struct Diagnostic {
@@ -49,7 +28,7 @@ struct Diagnostic {
 
 	explicit Diagnostic(DiagnosticKind kind, const Token& from) :
 		kind(kind),
-		location(from.location.line)
+		location(from.location)
 	{ } 
 
 	std::string_view resolve_msg() const;

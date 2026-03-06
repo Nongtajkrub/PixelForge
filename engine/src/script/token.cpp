@@ -8,6 +8,8 @@ const char* Token::kind_as_str() const {
         case TokenKind::RIGHT_BRACE: return "RIGHT_BRACE";
         case TokenKind::LEFT_BRACKET: return "LEFT_BRACKET";
         case TokenKind::RIGHT_BRACKET: return "RIGHT_BRACKET";
+        case TokenKind::LEFT_PAREN: return "LEFT_PAREN";
+        case TokenKind::RIGHT_PAREN: return "RIGHT_PAREN";
         case TokenKind::COMMA: return "COMMA";
         case TokenKind::MINUS: return "MINUS";
         case TokenKind::PLUS: return "PLUS";
@@ -15,6 +17,7 @@ const char* Token::kind_as_str() const {
         case TokenKind::STAR: return "STAR";
         case TokenKind::EQUAL: return "EQUAL";
         case TokenKind::SEMICOLON: return "SEMICOLON";
+        case TokenKind::COLON: return "COLON";
         case TokenKind::BANG: return "BANG";
         case TokenKind::GREATER: return "GREATER";
         case TokenKind::LESS: return "LESS";
@@ -45,7 +48,6 @@ const char* Token::kind_as_str() const {
 		case TokenKind::LET: return "LET";
         case TokenKind::FUNC: return "FUNC";
         case TokenKind::ENDFUNC: return "ENDFUNC";
-        case TokenKind::PRINT: return "PRINT";
     }
 
     return "UNKNOWN_TOKEN";

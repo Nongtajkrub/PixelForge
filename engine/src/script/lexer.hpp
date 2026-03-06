@@ -21,7 +21,7 @@ private:
 public:
 	explicit Lexer(const std::string& source) :
 		source(SourceStream<std::string, char>(source)),
-		location(1)
+		location(1, 1)
 	{ 
 		this->lex();
 	}

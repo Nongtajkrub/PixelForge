@@ -3,15 +3,17 @@
 #include "token.hpp"
 #include "ast.hpp"
 
+#include <cassert>
 #include <optional>
 #include <iostream>
 #include <tuple>
+#include <utility>
 #include <vector>
 
 #define ENSURE_NOT_EOF()                                                      \
 do                                                                            \
 if (this->tokens.is_eof()) {                                                  \
-	Diagnostic(DiagnosticKind::UNEXPECTED_END_OF_FILE, this->tokens.prev())   \
+	Diagnostic(DiagnosticKind::UNEXPECTED_EOF, this->tokens.prev())           \
 		.emit(std::cout);                                                     \
 	return std::nullopt;                                                      \
 }                                                                             \
@@ -63,13 +65,9 @@ std::optional<ASTNode> Parser::parse_var_declaration_stmt() {
 	// Ignore "var" keyword.
 	this->tokens.advance();
 
-	ENSURE_NOT_EOF();
-
-	// Ensure an identifier follow var.
-	if (!expect(TokenKind::IDENTIFIER, DiagnosticKind::UNEXPECTED_TOKEN)) {
+	if (!parse_type_annotation<VarDeclarationStmt*>(node)) {
 		return std::nullopt;
 	}
-	node->name = new_primary_node(ASTNodeKind::IDENTIFIER, this->tokens.prev());
 
 	ENSURE_NOT_EOF();
 
@@ -99,14 +97,17 @@ std::optional<ASTNode> Parser::parse_func_declaration_stmt() {
 	ENSURE_NOT_EOF();
 
 	// Ensure an identifier follow func.
-	if (!expect(TokenKind::IDENTIFIER, DiagnosticKind::UNEXPECTED_TOKEN)) {
+	if (!expect_peek(
+			TokenKind::IDENTIFIER, DiagnosticKind::EXPECTED_IDENTIFIER)) {
+		std::println("Found: {}", this->tokens.advance().kind_as_str());
 		return std::nullopt;
 	}
-	node->name = new_primary_node(ASTNodeKind::IDENTIFIER, this->tokens.prev());
+	node->name =
+		new_primary_node(ASTNodeKind::IDENTIFIER, this->tokens.advance());
 
 	ENSURE_NOT_EOF();
 
-	if (!expect(TokenKind::LEFT_BRACE, DiagnosticKind::UNEXPECTED_TOKEN)) {
+	if (!expect(TokenKind::LEFT_PAREN, DiagnosticKind::EXPECTED_LEFT_PAREN)) {
 		return std::nullopt;
 	}
 
@@ -114,6 +115,8 @@ std::optional<ASTNode> Parser::parse_func_declaration_stmt() {
 	if (!parse_func_args(node->args)) {
 		return std::nullopt;
 	}
+
+	ENSURE_NOT_EOF();
 
 	if (!expect(TokenKind::SEMICOLON, DiagnosticKind::EXPECTED_SEMICOLON)) {
 		return std::nullopt;
@@ -123,6 +126,8 @@ std::optional<ASTNode> Parser::parse_func_declaration_stmt() {
 	if (!parse_block(TokenKind::ENDFUNC, node->body)) {
 		return std::nullopt;
 	}
+
+	ENSURE_NOT_EOF();
 
 	if (!expect(TokenKind::SEMICOLON, DiagnosticKind::EXPECTED_SEMICOLON)) {
 		return std::nullopt;
@@ -152,7 +157,7 @@ static std::tuple<u8, u8> resolve_binding_power(TokenKind kind) {
 	case TokenKind::STAR:
 	case TokenKind::SLASH:
 		return {3, 4};
-	case TokenKind::LEFT_BRACE:
+	case TokenKind::LEFT_PAREN:
 		return {5, 6};
 	default:
 		return {0, 0};
@@ -185,14 +190,15 @@ std::optional<ASTNode> Parser::pratt_led(Token op, ASTNode left, u8 min_bp) {
 		OPT_ASSIGN_OR_RETURN(node->right, pratt_parser(min_bp));
 		return ASTNode(&node->kind);
 	}
-	case TokenKind::LEFT_BRACE: {
+	case TokenKind::LEFT_PAREN: {
 		if (*left.adr != ASTNodeKind::IDENTIFIER) {
+			Diagnostic(DiagnosticKind::EXPECTED_IDENTIFIER, op).emit(std::cout);
 			return std::nullopt;
 		}
 
 		auto node = new_node<CallExpr>(ASTNodeKind::CALL);
 		node->name = left;
-		if (!parse_func_args(node->args)) {
+		if (!parse_func_args(node->args, true)) {
 			return std::nullopt;
 		}
 
@@ -231,7 +237,7 @@ std::optional<ASTNode> Parser::pratt_parser(u8 min_bp) {
 bool Parser::parse_block(TokenKind end, std::vector<ASTNode>& buf) {
 	while (true) {
 		if (this->tokens.is_eof()) {
-			Diagnostic(DiagnosticKind::UNEXPECTED_END_OF_FILE, this->tokens.prev())
+			Diagnostic(DiagnosticKind::UNEXPECTED_EOF, this->tokens.prev())
 				.emit(std::cout);
 			return false;
 		}
@@ -249,28 +255,38 @@ bool Parser::parse_block(TokenKind end, std::vector<ASTNode>& buf) {
 	}
 }
 
-bool Parser::parse_func_args(std::vector<ASTNode>& buf) {
+bool Parser::parse_func_args(std::vector<ASTNode>& buf, bool as_expr) {
 	while (true) {
-		if (this->tokens.is_eof()) {
-			Diagnostic(DiagnosticKind::UNEXPECTED_END_OF_FILE, this->tokens.prev())
-				.emit(std::cout);
-			return false;
-		}
-		// Check prev because parse_expr consume the terminator token.
-		if (this->tokens.prev().kind == TokenKind::RIGHT_BRACE) {
+		ENSURE_NOT_EOF_BOOL();
+
+		if (match_token(TokenKind::RIGHT_PAREN)) {
 			return true;
 		}
 
-		auto token = this->tokens.peek();
+		if (!as_expr) {
+			auto node = new_node<FuncArgument>(ASTNodeKind::FUNC_ARGUMENTS);
 
-		if (token.kind == TokenKind::COMMA) {
-			continue;
+			if (!parse_type_annotation<FuncArgument*>(node)) {
+				return false;
+			}
+			buf.push_back(std::move(ASTNode(&node->kind)));
+		} else {
+			if (auto expr = pratt_parser(); !expr) { 
+				return false;
+			} else {
+				buf.push_back(std::move(*expr));
+			}
 		}
 
-		if (auto node = parse_expr(); !node) {
+		ENSURE_NOT_EOF_BOOL();
+
+		// RIGHT_PAREN will be handle in the next iteration of the loop.
+		if (auto kind = this->tokens.peek().kind; kind == TokenKind::COMMA) { 
+			this->tokens.advance();
+		} else if (kind != TokenKind::RIGHT_PAREN) {
+			Diagnostic(DiagnosticKind::EXPECTED_COMMA, this->tokens.peek())
+				.emit(std::cout);
 			return false;
-		} else {
-			buf.push_back(*node);
 		}
 	}
 }

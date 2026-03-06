@@ -14,6 +14,8 @@ enum class TokenKind : u8 {
 	RIGHT_BRACE,
 	LEFT_BRACKET,
 	RIGHT_BRACKET,
+	LEFT_PAREN,
+	RIGHT_PAREN,
 	COMMA,
 	MINUS,
 	PLUS,
@@ -21,6 +23,7 @@ enum class TokenKind : u8 {
 	STAR,
 	EQUAL,
 	SEMICOLON,
+	COLON,
 	BANG,
 	GREATER,
 	LESS,
@@ -50,8 +53,7 @@ enum class TokenKind : u8 {
 	PASS,
 	LET,
 	FUNC,
-	ENDFUNC,
-	PRINT
+	ENDFUNC
 };
 
 struct Token {

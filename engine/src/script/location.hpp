@@ -5,10 +5,11 @@
 namespace scr {
 
 struct Location {
-	size_t line;
+	size_t row;
+	size_t col;
 
-	explicit Location(size_t line) :
-		line(line)
+	explicit Location(size_t row, size_t col) :
+		row(row), col(col)
 	{ }
 };
 

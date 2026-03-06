@@ -8,8 +8,18 @@
 
 #include <cstddef>
 #include <optional>
+#include <type_traits>
 #include <vector>
 #include <iostream>
+
+#define ENSURE_NOT_EOF_BOOL()                                                 \
+do                                                                            \
+if (this->tokens.is_eof()) {                                                  \
+	Diagnostic(DiagnosticKind::UNEXPECTED_EOF, this->tokens.prev())   \
+		.emit(std::cout);                                                     \
+	return false;                                                             \
+}                                                                             \
+while (0)                                                                     
 
 namespace scr {
 
@@ -49,8 +59,41 @@ private:
 	std::optional<ASTNode> pratt_led(Token op, ASTNode left, u8 min_bp);
 	std::optional<ASTNode> pratt_parser(u8 min_bp = 0);
 
+	// Parse `IDENTIFIER : "type"`, only work for variable declaration and
+	// function arguments.
+	template<typename T>
+	requires (std::is_same_v<T, VarDeclarationStmt*> 
+		|| std::is_same_v<T, FuncArgument*>)
+	bool parse_type_annotation(T node) {
+		ENSURE_NOT_EOF_BOOL();
+		
+		if (!expect_peek(
+				TokenKind::IDENTIFIER, DiagnosticKind::UNEXPECTED_TOKEN)) {
+			return false;
+		}
+		node->name = 
+			new_primary_node(ASTNodeKind::IDENTIFIER, this->tokens.advance());
+
+		ENSURE_NOT_EOF_BOOL();
+
+		if (!expect(TokenKind::COLON, DiagnosticKind::EXPECTED_COLON)) {
+			return false;
+		}
+
+		ENSURE_NOT_EOF_BOOL();
+
+		if (!expect_peek(
+				TokenKind::IDENTIFIER, DiagnosticKind::UNEXPECTED_TOKEN)) {
+			return false;
+		}
+		node->type =
+			new_primary_node(ASTNodeKind::TYPE, this->tokens.advance());
+
+		return true;
+	}
+
 	bool parse_block(TokenKind end, std::vector<ASTNode>& buf);
-	bool parse_func_args(std::vector<ASTNode>& buf);
+	bool parse_func_args(std::vector<ASTNode>& buf, bool as_expr = false);
 
 	inline bool expect(TokenKind kind, DiagnosticKind err) {
 		if (match_token(kind)) {

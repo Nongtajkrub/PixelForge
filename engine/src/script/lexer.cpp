@@ -19,19 +19,25 @@ static const std::unordered_map<std::string, TokenKind> keywords = {
 	{"pass", TokenKind::PASS},
 	{"let", TokenKind::LET},
 	{"func", TokenKind::FUNC},
-	{"endfunc", TokenKind::ENDFUNC},
-	{"print", TokenKind::PRINT}
+	{"endfunc", TokenKind::ENDFUNC}
 };
 
 void Lexer::lex() {
 	while (!this->source.is_eof()) {
 		char c = this->source.advance();
+		this->location.col++;
 
 		switch (c) {
 			case '(':
-				add_token(TokenKind::LEFT_BRACE);
+				add_token(TokenKind::LEFT_PAREN);
 				break;
 			case ')':
+				add_token(TokenKind::RIGHT_PAREN);
+				break;
+			case '{':
+				add_token(TokenKind::LEFT_BRACE);
+				break;
+			case '}':
 				add_token(TokenKind::RIGHT_BRACE);
 				break;
 			case '[':
@@ -58,6 +64,9 @@ void Lexer::lex() {
 			case ';':
 				add_token(TokenKind::SEMICOLON);
 				break;
+			case ':':
+				add_token(TokenKind::COLON);
+				break;
 			case '0':
 			case '1':
 			case '2':
@@ -75,6 +84,7 @@ void Lexer::lex() {
 				add_token(
 					TokenKind::NUMBER,
 					this->source.data().substr(sub_info.begin, sub_info.size));
+				this->location.col += sub_info.size;
 
 				break;
 			}
@@ -106,6 +116,7 @@ void Lexer::lex() {
 				add_token(
 					TokenKind::STRING,
 					this->source.data().substr(sub_info.begin, sub_info.size));
+				this->location.col += sub_info.size;
 
 				// Advance again to skip the last quote.
 				this->source.advance();
@@ -113,7 +124,8 @@ void Lexer::lex() {
 			}
 			case '\n':
 			case '\r':
-				this->location.line++;
+				this->location.row++;
+				this->location.col = 0;
 				break;
 			case ' ':
 			case '\t':
@@ -124,6 +136,7 @@ void Lexer::lex() {
 						[](auto c) -> bool { return !std::isalpha(c) && c != '_'; });
 				const std::string lexeme =
 						this->source.data().substr(sub_info.begin, sub_info.size);
+				this->location.col += sub_info.size;
 
 				if (auto it = keywords.find(lexeme); it != keywords.end()) {
 					add_token(it->second);

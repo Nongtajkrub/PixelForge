@@ -13,12 +13,14 @@ enum class ASTNodeKind : u8 {
 
 	VAR_DECLARATION,
 	FUNC_DECLARATION,
+	FUNC_ARGUMENTS,
 
 	BINARY,
 	CALL,
 
 	LITERAL,
 	IDENTIFIER,
+	TYPE,
 };
 
 // Store info about where the node is stored in memory and how to interpret it.
@@ -64,7 +66,15 @@ struct VarDeclarationStmt {
 	ASTNodeKind kind;
 
 	ASTNode name;
+	ASTNode type;
 	std::optional<ASTNode> init;
+};
+
+struct FuncArgument {
+	ASTNodeKind kind;
+
+	ASTNode name;
+	ASTNode type;
 };
 
 struct FuncDeclarationStmt {
