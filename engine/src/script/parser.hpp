@@ -7,6 +7,7 @@
 #include "diagnostic.hpp"
 
 #include <cstddef>
+#include <functional>
 #include <optional>
 #include <type_traits>
 #include <vector>
@@ -15,7 +16,7 @@
 #define ENSURE_NOT_EOF_BOOL()                                                 \
 do                                                                            \
 if (this->tokens.is_eof()) {                                                  \
-	Diagnostic(DiagnosticKind::UNEXPECTED_EOF, this->tokens.prev())   \
+	Diagnostic(DiagnosticKind::UNEXPECTED_EOF, this->tokens.prev())           \
 		.emit(std::cout);                                                     \
 	return false;                                                             \
 }                                                                             \
@@ -54,10 +55,13 @@ private:
 	std::optional<ASTNode> parse_nop();
 	std::optional<ASTNode> parse_var_declaration_stmt();
 	std::optional<ASTNode> parse_func_declaration_stmt();
+	std::optional<ASTNode> parse_if_stmt();
 	std::optional<ASTNode> parse_expr();
 	std::optional<ASTNode> pratt_nud();
 	std::optional<ASTNode> pratt_led(Token op, ASTNode left, u8 min_bp);
 	std::optional<ASTNode> pratt_parser(u8 min_bp = 0);
+	std::optional<ASTNode> parse_block(
+		std::function<bool(TokenKind kind)> end_predicate);
 
 	// Parse `IDENTIFIER : "type"`, only work for variable declaration and
 	// function arguments.
@@ -92,7 +96,7 @@ private:
 		return true;
 	}
 
-	bool parse_block(TokenKind end, std::vector<ASTNode>& buf);
+	// Usually parse arguments as `FuncArgument` but can also parse as expression.
 	bool parse_func_args(std::vector<ASTNode>& buf, bool as_expr = false);
 
 	inline bool expect(TokenKind kind, DiagnosticKind err) {

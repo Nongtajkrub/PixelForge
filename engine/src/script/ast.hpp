@@ -11,9 +11,11 @@ namespace scr {
 enum class ASTNodeKind : u8 {
 	NOP,
 
+	BLOCK,
 	VAR_DECLARATION,
 	FUNC_DECLARATION,
 	FUNC_ARGUMENTS,
+	IF,
 
 	BINARY,
 	CALL,
@@ -62,12 +64,28 @@ struct CallExpr {
 	std::vector<ASTNode> args;
 };
 
+struct BlockStmt {
+	ASTNodeKind kind;
+
+	// separated into statements.
+	std::vector<ASTNode> block;
+};
+
 struct VarDeclarationStmt {
 	ASTNodeKind kind;
 
 	ASTNode name;
 	ASTNode type;
 	std::optional<ASTNode> init;
+};
+
+struct IfStmt {
+	ASTNodeKind kind;
+
+	ASTNode expr;
+
+	ASTNode then_branch;
+	std::optional<ASTNode> else_branch;
 };
 
 struct FuncArgument {
@@ -83,8 +101,7 @@ struct FuncDeclarationStmt {
 	ASTNode name;
 	std::vector<ASTNode> args;
 
-	// Function definition separated into statements.
-	std::vector<ASTNode> body;
+	ASTNode body;
 };
 
 void ast_output(std::ostream& stream, ASTNode root, const u32 level = 0);

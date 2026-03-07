@@ -5,9 +5,11 @@ namespace scr {
 const char* ASTNode::kind_as_str() const {
     switch (*this->adr) {
 		case ASTNodeKind::NOP: return "NOP";
+        case ASTNodeKind::BLOCK: return "BLOCK";
         case ASTNodeKind::VAR_DECLARATION: return "VAR_DECLARATION";
         case ASTNodeKind::FUNC_DECLARATION: return "FUNC_DECLARATION";
         case ASTNodeKind::FUNC_ARGUMENTS: return "FUNC_ARGUMENTS";
+        case ASTNodeKind::IF: return "IF";
         case ASTNodeKind::BINARY: return "BINARY";
 		case ASTNodeKind::CALL: return "CALL";
         case ASTNodeKind::LITERAL: return "LITERAL";
@@ -41,6 +43,15 @@ void ast_output(std::ostream &stream, ASTNode root, const u32 level) {
 		stream << indent << "type: " << *node->token.lexeme << '\n';
 		break;
 	}
+	case ASTNodeKind::BLOCK: {
+		auto node = reinterpret_cast<const BlockStmt*>(root.adr);
+
+		for (const auto node : node->block) {
+			ast_output(stream, node, level + 1);
+		}
+
+		break;
+	}
 	case ASTNodeKind::VAR_DECLARATION: {
 		auto node = reinterpret_cast<const VarDeclarationStmt*>(root.adr);
 
@@ -64,10 +75,8 @@ void ast_output(std::ostream &stream, ASTNode root, const u32 level) {
 			ast_output(stream, arg, level + 1);
 		}
 
-		stream << indent << "body: \n";
-		for (const auto& stmt : node->body) {
-			ast_output(stream, stmt, level + 1);
-		}
+		stream << indent << "body:\n";
+		ast_output(stream, node->body, level + 1);
 
 		break;
 	}
@@ -76,6 +85,22 @@ void ast_output(std::ostream &stream, ASTNode root, const u32 level) {
 
 		ast_output(stream, node->name, level + 1);
 		ast_output(stream, node->type, level + 1);
+
+		break;
+	}
+	case ASTNodeKind::IF: {
+		auto node = reinterpret_cast<const IfStmt*>(root.adr);
+
+		stream << indent << "condition:\n";
+		ast_output(stream, node->expr, level + 1);
+
+		stream << indent << "then:\n";
+		ast_output(stream, node->then_branch, level + 1);
+
+		if (node->else_branch) {
+			stream << indent << "else:\n";
+			ast_output(stream, *(node->else_branch), level + 1);
+		}
 
 		break;
 	}

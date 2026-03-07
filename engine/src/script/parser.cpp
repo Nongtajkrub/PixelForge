@@ -41,6 +41,8 @@ std::optional<ASTNode> Parser::parse_stmt() {
 		return parse_var_declaration_stmt();
 	case TokenKind::FUNC:
 		return parse_func_declaration_stmt();
+	case TokenKind::IF:
+		return parse_if_stmt();
 	case TokenKind::IDENTIFIER:
 		return parse_expr();
 	default:
@@ -99,7 +101,6 @@ std::optional<ASTNode> Parser::parse_func_declaration_stmt() {
 	// Ensure an identifier follow func.
 	if (!expect_peek(
 			TokenKind::IDENTIFIER, DiagnosticKind::EXPECTED_IDENTIFIER)) {
-		std::println("Found: {}", this->tokens.advance().kind_as_str());
 		return std::nullopt;
 	}
 	node->name =
@@ -123,9 +124,76 @@ std::optional<ASTNode> Parser::parse_func_declaration_stmt() {
 	}
 
 	// Parse function body.
-	if (!parse_block(TokenKind::ENDFUNC, node->body)) {
+	OPT_ASSIGN_OR_RETURN(
+		node->body,
+		parse_block(
+			[](auto kind) -> bool { return kind == TokenKind::ENDFUNC; }));
+
+	// Ignore the "endfunc" keyword.
+	this->tokens.advance();
+
+	ENSURE_NOT_EOF();
+
+	if (!expect(TokenKind::SEMICOLON, DiagnosticKind::EXPECTED_SEMICOLON)) {
 		return std::nullopt;
 	}
+
+	return ASTNode(&node->kind);
+}
+
+std::optional<ASTNode> Parser::parse_if_stmt() {
+	auto node = new_node<IfStmt>(ASTNodeKind::IF);
+
+	// Ignore "if" keyword.
+	this->tokens.advance();
+
+	ENSURE_NOT_EOF();
+
+	if (!expect(TokenKind::LEFT_PAREN, DiagnosticKind::EXPECTED_LEFT_PAREN)) {
+		return std::nullopt;
+	}
+
+	OPT_ASSIGN_OR_RETURN(node->expr, pratt_parser());
+
+	ENSURE_NOT_EOF();
+
+	if (!expect(TokenKind::RIGHT_PAREN, DiagnosticKind::EXPECTED_RIGHT_PAREN)) {
+		return std::nullopt;
+	}
+
+	ENSURE_NOT_EOF();
+
+	if (!expect(TokenKind::SEMICOLON, DiagnosticKind::EXPECTED_SEMICOLON)) {
+		return std::nullopt;
+	}
+
+	// parse then branch.
+	OPT_ASSIGN_OR_RETURN(
+		node->then_branch,
+		parse_block(
+			[](auto kind) -> bool {
+				return kind == TokenKind::ENDIF || kind == TokenKind::ELSE; }));
+
+	ENSURE_NOT_EOF();
+
+	// parse else branch if exist.
+	if (match_token(TokenKind::ELSE)) {
+		ENSURE_NOT_EOF();
+
+		if (!expect(TokenKind::SEMICOLON, DiagnosticKind::EXPECTED_SEMICOLON)) {
+			return std::nullopt;
+		}
+
+		OPT_ASSIGN_OR_RETURN(
+			node->else_branch,
+			parse_block(
+				[](auto kind) -> bool { return kind == TokenKind::ENDIF; }));
+	} else {
+		node->else_branch = std::nullopt;
+	}
+
+	// Ignore "endif" keyword.
+	this->tokens.advance();
 
 	ENSURE_NOT_EOF();
 
@@ -151,14 +219,16 @@ std::optional<ASTNode> Parser::parse_expr() {
 
 static std::tuple<u8, u8> resolve_binding_power(TokenKind kind) {
 	switch (kind) {
+	case TokenKind::DOUBLE_EQUAL:
+		return {1, 2};
 	case TokenKind::PLUS:
 	case TokenKind::MINUS:
-		return {1, 2};
+		return {2, 3};
 	case TokenKind::STAR:
 	case TokenKind::SLASH:
-		return {3, 4};
+		return {4, 5};
 	case TokenKind::LEFT_PAREN:
-		return {5, 6};
+		return {6, 7};
 	default:
 		return {0, 0};
 	}
@@ -180,6 +250,7 @@ std::optional<ASTNode> Parser::pratt_nud() {
 
 std::optional<ASTNode> Parser::pratt_led(Token op, ASTNode left, u8 min_bp) {
 	switch (op.kind) {
+	case TokenKind::DOUBLE_EQUAL:
 	case TokenKind::PLUS:
 	case TokenKind::MINUS:
 	case TokenKind::STAR:
@@ -234,23 +305,25 @@ std::optional<ASTNode> Parser::pratt_parser(u8 min_bp) {
 	return left;
 }
 
-bool Parser::parse_block(TokenKind end, std::vector<ASTNode>& buf) {
+std::optional<ASTNode> Parser::parse_block(
+	std::function<bool(TokenKind kind)> end_predicate) {
+	auto node = new_node<BlockStmt>(ASTNodeKind::BLOCK);
+	
 	while (true) {
 		if (this->tokens.is_eof()) {
 			Diagnostic(DiagnosticKind::UNEXPECTED_EOF, this->tokens.prev())
 				.emit(std::cout);
-			return false;
+			return std::nullopt;
 		}
 
-		if (this->tokens.peek().kind == end) {
-			this->tokens.advance();
-			return true;
+		if (end_predicate(this->tokens.peek().kind)) {
+			return ASTNode(&node->kind);
 		}
 
 		if (auto stmt = parse_stmt(); !stmt) {
-			return false;
+			return std::nullopt;
 		} else {
-			buf.push_back(*stmt);
+			node->block.push_back(*stmt);
 		}
 	}
 }
@@ -264,6 +337,7 @@ bool Parser::parse_func_args(std::vector<ASTNode>& buf, bool as_expr) {
 		}
 
 		if (!as_expr) {
+			// Parse arguments as `FuncArgument`.
 			auto node = new_node<FuncArgument>(ASTNodeKind::FUNC_ARGUMENTS);
 
 			if (!parse_type_annotation<FuncArgument*>(node)) {
@@ -271,6 +345,7 @@ bool Parser::parse_func_args(std::vector<ASTNode>& buf, bool as_expr) {
 			}
 			buf.push_back(std::move(ASTNode(&node->kind)));
 		} else {
+			// Parse arguments as expression.
 			if (auto expr = pratt_parser(); !expr) { 
 				return false;
 			} else {
