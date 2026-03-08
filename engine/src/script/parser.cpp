@@ -258,16 +258,24 @@ std::optional<ASTNode> Parser::parse_expr() {
 
 static std::tuple<u8, u8> resolve_binding_power(TokenKind kind) {
 	switch (kind) {
-	case TokenKind::DOUBLE_EQUAL:
+	case TokenKind::AND:
+	case TokenKind::OR:
 		return {1, 2};
+	case TokenKind::BANG_EQUAL:
+	case TokenKind::DOUBLE_EQUAL:
+	case TokenKind::GREATER:
+	case TokenKind::GREATER_EQUAL:
+	case TokenKind::LESS:
+	case TokenKind::LESS_EQUAL:
+		return {3, 4};
 	case TokenKind::PLUS:
 	case TokenKind::MINUS:
-		return {2, 3};
+		return {5, 6};
 	case TokenKind::STAR:
 	case TokenKind::SLASH:
-		return {4, 5};
+		return {7, 8};
 	case TokenKind::LEFT_PAREN:
-		return {6, 7};
+		return {9, 10};
 	default:
 		return {0, 0};
 	}
@@ -290,6 +298,13 @@ std::optional<ASTNode> Parser::pratt_nud() {
 std::optional<ASTNode> Parser::pratt_led(Token op, ASTNode left, u8 min_bp) {
 	switch (op.kind) {
 	case TokenKind::DOUBLE_EQUAL:
+	case TokenKind::BANG_EQUAL:
+	case TokenKind::GREATER:
+	case TokenKind::GREATER_EQUAL:
+	case TokenKind::LESS:
+	case TokenKind::LESS_EQUAL:
+	case TokenKind::AND:
+	case TokenKind::OR:
 	case TokenKind::PLUS:
 	case TokenKind::MINUS:
 	case TokenKind::STAR:

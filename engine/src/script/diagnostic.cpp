@@ -37,7 +37,6 @@ DiagnosticKind resolve_diag_expect_kind(TokenKind kind) {
 	case TokenKind::CMD_GOTO:
 		return DiagnosticKind::EXPECTED_COMMAND;
 	default:
-		std::println("from: {}", static_cast<int>(kind));
 		return DiagnosticKind::UNEXPECTED_TOKEN;
 	}
 }
