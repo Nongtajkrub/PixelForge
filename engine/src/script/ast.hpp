@@ -1,7 +1,9 @@
 #pragma once
 
 #include "../global.hpp"
+#include "../util/bump_arena.hpp"
 #include "token.hpp"
+
 #include <optional>
 #include <ostream>
 #include <vector>
@@ -20,9 +22,12 @@ enum class ASTNodeKind : u8 {
 	BINARY,
 	CALL,
 
+	COMMAND,
+
 	LITERAL,
 	IDENTIFIER,
 	TYPE,
+	KEYWORD,
 };
 
 // Store info about where the node is stored in memory and how to interpret it.
@@ -38,6 +43,17 @@ struct ASTNode {
 	// Turn ASTNodeKind enum into string.
 	const char* kind_as_str() const;
 };
+
+// Buffer allowing external function without onwership of the arena containing
+// nodes to operate with a node buffer like "BlockStmt".
+struct ASTNodeBuffer {
+	BumpArena& arena;
+	std::vector<ASTNode>& buf;
+
+	ASTNodeBuffer(BumpArena& arena, std::vector<ASTNode>& buf) :
+		arena(arena), buf(buf)
+	{ }
+}; 
 
 struct NopNode {
 	ASTNodeKind kind;
@@ -102,6 +118,15 @@ struct FuncDeclarationStmt {
 	std::vector<ASTNode> args;
 
 	ASTNode body;
+};
+
+
+struct CommandStmt {
+	ASTNodeKind kind;
+
+	ASTNode target;
+	ASTNode command;
+	std::vector<ASTNode> operands;
 };
 
 void ast_output(std::ostream& stream, ASTNode root, const u32 level = 0);

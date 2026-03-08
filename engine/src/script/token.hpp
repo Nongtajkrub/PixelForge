@@ -53,7 +53,14 @@ enum class TokenKind : u8 {
 	PASS,
 	LET,
 	FUNC,
-	ENDFUNC
+	ENDFUNC,
+
+	CMD,
+	CMD_UP,
+	CMD_DOWN,
+	CMD_RIGHT,
+	CMD_LEFT,
+	CMD_GOTO,
 };
 
 struct Token {
@@ -75,7 +82,7 @@ struct Token {
 
 	const char* kind_as_str() const;
 	bool is_arithmetic_operator() const;
-	
+	bool is_command() const;
 };
 
-} // namespace scr
+}

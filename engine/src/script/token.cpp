@@ -48,16 +48,37 @@ const char* Token::kind_as_str() const {
 		case TokenKind::LET: return "LET";
         case TokenKind::FUNC: return "FUNC";
         case TokenKind::ENDFUNC: return "ENDFUNC";
+
+		case TokenKind::CMD: return "CMD";
+		case TokenKind::CMD_UP: return "CMD_UP";
+		case TokenKind::CMD_DOWN: return "CMD_DOWN";
+		case TokenKind::CMD_RIGHT: return "CMD_RIGHT";
+		case TokenKind::CMD_LEFT: return "CMD_LEFT";
+		case TokenKind::CMD_GOTO: return "CMD_GOTO";
     }
 
     return "UNKNOWN_TOKEN";
 }
+
 bool Token::is_arithmetic_operator() const {
 	switch (this->kind) {
 	case TokenKind::MINUS:
 	case TokenKind::PLUS:
 	case TokenKind::SLASH:
 	case TokenKind::STAR:
+		return true;
+	default:
+		return false;
+	}
+}
+
+bool Token::is_command() const {
+	switch (this->kind) {
+	case TokenKind::CMD_UP:
+	case TokenKind::CMD_DOWN:
+	case TokenKind::CMD_RIGHT:
+	case TokenKind::CMD_LEFT:
+	case TokenKind::CMD_GOTO:
 		return true;
 	default:
 		return false;

@@ -20,7 +20,11 @@ enum class DiagnosticKind : u8 {
 	EXPECTED_LEFT_PAREN,
 	EXPECTED_RIGHT_PAREN,
 	EXPECTED_COMMA,
+	EXPECTED_COMMAND,
+	EXPECTED_NUMBER,
 };
+
+DiagnosticKind resolve_diag_expect_kind(TokenKind kind);
 
 struct Diagnostic {
 	DiagnosticKind kind;

@@ -2,6 +2,7 @@
 #include "diagnostic.hpp"
 #include "token.hpp"
 #include "ast.hpp"
+#include "pattern.hpp"
 
 #include <cassert>
 #include <optional>
@@ -43,6 +44,8 @@ std::optional<ASTNode> Parser::parse_stmt() {
 		return parse_func_declaration_stmt();
 	case TokenKind::IF:
 		return parse_if_stmt();
+	case TokenKind::CMD:
+		return parse_cmd_stmt();
 	case TokenKind::IDENTIFIER:
 		return parse_expr();
 	default:
@@ -55,7 +58,7 @@ std::optional<ASTNode> Parser::parse_stmt() {
 std::optional<ASTNode> Parser::parse_nop() {
 	auto node = new_node<NopNode>(ASTNodeKind::NOP);
 	this->tokens.advance();
-	if (!expect(TokenKind::SEMICOLON, DiagnosticKind::EXPECTED_SEMICOLON)) {
+	if (!expect(TokenKind::SEMICOLON)) {
 		return std::nullopt;
 	}
 	return ASTNode(&node->kind);
@@ -99,8 +102,7 @@ std::optional<ASTNode> Parser::parse_func_declaration_stmt() {
 	ENSURE_NOT_EOF();
 
 	// Ensure an identifier follow func.
-	if (!expect_peek(
-			TokenKind::IDENTIFIER, DiagnosticKind::EXPECTED_IDENTIFIER)) {
+	if (!expect_peek(TokenKind::IDENTIFIER)) {
 		return std::nullopt;
 	}
 	node->name =
@@ -108,7 +110,7 @@ std::optional<ASTNode> Parser::parse_func_declaration_stmt() {
 
 	ENSURE_NOT_EOF();
 
-	if (!expect(TokenKind::LEFT_PAREN, DiagnosticKind::EXPECTED_LEFT_PAREN)) {
+	if (!expect(TokenKind::LEFT_PAREN)) {
 		return std::nullopt;
 	}
 
@@ -119,7 +121,7 @@ std::optional<ASTNode> Parser::parse_func_declaration_stmt() {
 
 	ENSURE_NOT_EOF();
 
-	if (!expect(TokenKind::SEMICOLON, DiagnosticKind::EXPECTED_SEMICOLON)) {
+	if (!expect(TokenKind::SEMICOLON)) {
 		return std::nullopt;
 	}
 
@@ -134,7 +136,7 @@ std::optional<ASTNode> Parser::parse_func_declaration_stmt() {
 
 	ENSURE_NOT_EOF();
 
-	if (!expect(TokenKind::SEMICOLON, DiagnosticKind::EXPECTED_SEMICOLON)) {
+	if (!expect(TokenKind::SEMICOLON)) {
 		return std::nullopt;
 	}
 
@@ -149,21 +151,15 @@ std::optional<ASTNode> Parser::parse_if_stmt() {
 
 	ENSURE_NOT_EOF();
 
-	if (!expect(TokenKind::LEFT_PAREN, DiagnosticKind::EXPECTED_LEFT_PAREN)) {
+	if (!expect(TokenKind::LEFT_PAREN)) {
 		return std::nullopt;
 	}
 
 	OPT_ASSIGN_OR_RETURN(node->expr, pratt_parser());
 
-	ENSURE_NOT_EOF();
-
-	if (!expect(TokenKind::RIGHT_PAREN, DiagnosticKind::EXPECTED_RIGHT_PAREN)) {
-		return std::nullopt;
-	}
-
-	ENSURE_NOT_EOF();
-
-	if (!expect(TokenKind::SEMICOLON, DiagnosticKind::EXPECTED_SEMICOLON)) {
+	 if (!Pattern<
+			TokenKind::RIGHT_PAREN,
+			TokenKind::SEMICOLON>::match(this->tokens, std::cout)) {
 		return std::nullopt;
 	}
 
@@ -180,7 +176,7 @@ std::optional<ASTNode> Parser::parse_if_stmt() {
 	if (match_token(TokenKind::ELSE)) {
 		ENSURE_NOT_EOF();
 
-		if (!expect(TokenKind::SEMICOLON, DiagnosticKind::EXPECTED_SEMICOLON)) {
+		if (!expect(TokenKind::SEMICOLON)) {
 			return std::nullopt;
 		}
 
@@ -197,7 +193,50 @@ std::optional<ASTNode> Parser::parse_if_stmt() {
 
 	ENSURE_NOT_EOF();
 
-	if (!expect(TokenKind::SEMICOLON, DiagnosticKind::EXPECTED_SEMICOLON)) {
+	if (!expect(TokenKind::SEMICOLON)) {
+		return std::nullopt;
+	}
+
+	return ASTNode(&node->kind);
+}
+
+std::optional<ASTNode> Parser::parse_cmd_stmt() {
+	auto node = new_node<CommandStmt>(ASTNodeKind::COMMAND);
+
+	// Ignore the "cmd" keyword.
+	this->tokens.advance();
+
+	ENSURE_NOT_EOF();
+
+	if (!expect_peek(TokenKind::IDENTIFIER)) {
+		return std::nullopt;
+	}
+	node->target =
+		new_primary_node(ASTNodeKind::IDENTIFIER, this->tokens.advance());
+
+	ENSURE_NOT_EOF();
+
+	if (!this->tokens.peek().is_command()) {
+		Diagnostic(DiagnosticKind::EXPECTED_COMMAND, this->tokens.peek())
+			.emit(std::cout);
+		return std::nullopt;
+	}
+	node->command =
+		new_primary_node(ASTNodeKind::KEYWORD, this->tokens.advance());
+
+	ENSURE_NOT_EOF();
+
+	if (!expect(TokenKind::LEFT_PAREN)) {
+		return std::nullopt;
+	}
+
+	if (!parse_func_args(node->operands, true)) {
+		return std::nullopt;
+	}
+
+	ENSURE_NOT_EOF();
+
+	if (!expect(TokenKind::SEMICOLON)) {
 		return std::nullopt;
 	}
 

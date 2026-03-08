@@ -19,7 +19,13 @@ static const std::unordered_map<std::string, TokenKind> keywords = {
 	{"pass", TokenKind::PASS},
 	{"let", TokenKind::LET},
 	{"func", TokenKind::FUNC},
-	{"endfunc", TokenKind::ENDFUNC}
+	{"endfunc", TokenKind::ENDFUNC},
+	{"cmd", TokenKind::CMD},
+	{"UP", TokenKind::CMD_UP},
+	{"DOWN", TokenKind::CMD_DOWN},
+	{"RIGHT", TokenKind::CMD_RIGHT},
+	{"LEFT", TokenKind::CMD_LEFT},
+	{"GOTO", TokenKind::CMD_GOTO},
 };
 
 void Lexer::lex() {

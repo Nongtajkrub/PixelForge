@@ -12,9 +12,11 @@ const char* ASTNode::kind_as_str() const {
         case ASTNodeKind::IF: return "IF";
         case ASTNodeKind::BINARY: return "BINARY";
 		case ASTNodeKind::CALL: return "CALL";
+        case ASTNodeKind::COMMAND: return "COMMAND";
         case ASTNodeKind::LITERAL: return "LITERAL";
         case ASTNodeKind::IDENTIFIER: return "IDENTIFIER";
         case ASTNodeKind::TYPE: return "TYPE";
+		case ASTNodeKind::KEYWORD: return "KEYWORD";
     }
 
     return "UNKNOWN_AST_NODE";
@@ -41,6 +43,11 @@ void ast_output(std::ostream &stream, ASTNode root, const u32 level) {
 	case ASTNodeKind::TYPE: {
 		auto node = reinterpret_cast<const PrimaryExpr*>(root.adr);
 		stream << indent << "type: " << *node->token.lexeme << '\n';
+		break;
+	}
+	case ASTNodeKind::KEYWORD: {
+		auto node = reinterpret_cast<const PrimaryExpr*>(root.adr);
+		stream << indent << "keyword: " << node->token.kind_as_str() << '\n';
 		break;
 	}
 	case ASTNodeKind::BLOCK: {
@@ -125,6 +132,22 @@ void ast_output(std::ostream &stream, ASTNode root, const u32 level) {
 		stream << indent << "args (" << node->args.size() << "):\n";
 		for (const auto& arg : node->args) {
 			ast_output(stream, arg, level + 1);
+		}
+
+		break;
+	}
+	case ASTNodeKind::COMMAND: {
+		auto node = reinterpret_cast<const CommandStmt*>(root.adr);
+
+		stream << indent << "target:\n";
+		ast_output(stream, node->target, level + 1);
+
+		stream << indent << "command:\n";
+		ast_output(stream, node->command, level + 1);
+
+		stream << indent << "args (" << node->operands.size() << "):\n";
+		for (const auto operand : node->operands) {
+			ast_output(stream, operand, level + 1);
 		}
 
 		break;

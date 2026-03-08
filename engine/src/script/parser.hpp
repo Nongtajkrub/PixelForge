@@ -56,6 +56,7 @@ private:
 	std::optional<ASTNode> parse_var_declaration_stmt();
 	std::optional<ASTNode> parse_func_declaration_stmt();
 	std::optional<ASTNode> parse_if_stmt();
+	std::optional<ASTNode> parse_cmd_stmt();
 	std::optional<ASTNode> parse_expr();
 	std::optional<ASTNode> pratt_nud();
 	std::optional<ASTNode> pratt_led(Token op, ASTNode left, u8 min_bp);
@@ -71,8 +72,7 @@ private:
 	bool parse_type_annotation(T node) {
 		ENSURE_NOT_EOF_BOOL();
 		
-		if (!expect_peek(
-				TokenKind::IDENTIFIER, DiagnosticKind::UNEXPECTED_TOKEN)) {
+		if (!expect_peek(TokenKind::IDENTIFIER)) {
 			return false;
 		}
 		node->name = 
@@ -80,14 +80,13 @@ private:
 
 		ENSURE_NOT_EOF_BOOL();
 
-		if (!expect(TokenKind::COLON, DiagnosticKind::EXPECTED_COLON)) {
+		if (!expect(TokenKind::COLON)) {
 			return false;
 		}
 
 		ENSURE_NOT_EOF_BOOL();
 
-		if (!expect_peek(
-				TokenKind::IDENTIFIER, DiagnosticKind::UNEXPECTED_TOKEN)) {
+		if (!expect_peek(TokenKind::IDENTIFIER)) {
 			return false;
 		}
 		node->type =
@@ -99,21 +98,21 @@ private:
 	// Usually parse arguments as `FuncArgument` but can also parse as expression.
 	bool parse_func_args(std::vector<ASTNode>& buf, bool as_expr = false);
 
-	inline bool expect(TokenKind kind, DiagnosticKind err) {
+	inline bool expect(TokenKind kind) {
 		if (match_token(kind)) {
 			return true;
 		} else {
-			Diagnostic(err, this->tokens.prev())
+			Diagnostic(resolve_diag_expect_kind(kind), this->tokens.prev())
 				.emit(std::cout);
 			return false;
 		}
 	}
 
-	inline bool expect_peek(TokenKind kind, DiagnosticKind err) {
+	inline bool expect_peek(TokenKind kind) {
 		if (this->tokens.peek().kind == kind) {
 			return true;
 		} else {
-			Diagnostic(err, this->tokens.peek())
+			Diagnostic(resolve_diag_expect_kind(kind), this->tokens.peek())
 				.emit(std::cout);
 			return false;
 		}
