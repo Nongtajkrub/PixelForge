@@ -7,6 +7,7 @@ const char* ASTNode::kind_as_str() const {
 		case ASTNodeKind::NOP: return "NOP";
         case ASTNodeKind::BLOCK: return "BLOCK";
         case ASTNodeKind::VAR_DECLARATION: return "VAR_DECLARATION";
+		case ASTNodeKind::DIRECTIVE: return "DIRECTIVE";
         case ASTNodeKind::FUNC_DECLARATION: return "FUNC_DECLARATION";
         case ASTNodeKind::FUNC_ARGUMENTS: return "FUNC_ARGUMENTS";
         case ASTNodeKind::IF: return "IF";
@@ -48,6 +49,19 @@ void ast_output(std::ostream &stream, ASTNode root, const u32 level) {
 	case ASTNodeKind::KEYWORD: {
 		auto node = reinterpret_cast<const PrimaryExpr*>(root.adr);
 		stream << indent << "keyword: " << node->token.kind_as_str() << '\n';
+		break;
+	}
+	case ASTNodeKind::DIRECTIVE: {
+		auto node = reinterpret_cast<const DirectiveStmt*>(root.adr);
+
+		stream << "directive:\n";
+		ast_output(stream, node->directive, level + 1);
+
+		stream << "expr:\n";
+		if (node->expr) {
+			ast_output(stream, *node->expr, level + 1);
+		}
+
 		break;
 	}
 	case ASTNodeKind::BLOCK: {
@@ -139,11 +153,11 @@ void ast_output(std::ostream &stream, ASTNode root, const u32 level) {
 	case ASTNodeKind::COMMAND: {
 		auto node = reinterpret_cast<const CommandStmt*>(root.adr);
 
-		stream << indent << "target:\n";
-		ast_output(stream, node->target, level + 1);
-
 		stream << indent << "command:\n";
 		ast_output(stream, node->command, level + 1);
+
+		stream << indent << "target:\n";
+		ast_output(stream, node->target, level + 1);
 
 		stream << indent << "args (" << node->operands.size() << "):\n";
 		for (const auto operand : node->operands) {

@@ -28,7 +28,7 @@ int main() {
 
 	auto arena = BumpArena(3200); 
 
-	auto parser = scr::Parser(lexer.get_token(), arena);
+	auto parser = scr::Parser(lexer.get_token(), arena, std::cout);
 	if (!parser.parse()) {
 		std::cout << "Prase Fail" << '\n';
 		return -1;

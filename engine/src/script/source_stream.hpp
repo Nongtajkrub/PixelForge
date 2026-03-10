@@ -37,6 +37,10 @@ public:
 		return v;
 	}
 
+	inline void revert(size_t n) {
+		this->pos -= n;
+	}
+
 	inline V prev() {
 		return this->soruce[this->pos - 1];
 	}
@@ -102,6 +106,10 @@ public:
 
 	inline const T& data() const {
 		return this->soruce;
+	}
+
+	inline const V first() const {
+		return this->soruce[0];
 	}
 
 	inline const V last() const {

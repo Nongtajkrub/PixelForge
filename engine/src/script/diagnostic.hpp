@@ -22,6 +22,7 @@ enum class DiagnosticKind : u8 {
 	EXPECTED_COMMA,
 	EXPECTED_COMMAND,
 	EXPECTED_NUMBER,
+	EXPECTED_SPRITE_DIRECT,
 };
 
 DiagnosticKind resolve_diag_expect_kind(TokenKind kind);
@@ -33,6 +34,11 @@ struct Diagnostic {
 	explicit Diagnostic(DiagnosticKind kind, const Token& from) :
 		kind(kind),
 		location(from.location)
+	{ } 
+
+	explicit Diagnostic(DiagnosticKind kind, Location location) :
+		kind(kind),
+		location(location)
 	{ } 
 
 	std::string_view resolve_msg() const;

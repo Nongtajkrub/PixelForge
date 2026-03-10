@@ -22,6 +22,7 @@ enum class ASTNodeKind : u8 {
 	BINARY,
 	CALL,
 
+	DIRECTIVE,
 	COMMAND,
 
 	LITERAL,
@@ -57,6 +58,13 @@ struct ASTNodeBuffer {
 
 struct NopNode {
 	ASTNodeKind kind;
+};
+
+struct DirectiveStmt {
+	ASTNodeKind kind;
+	
+	ASTNode directive;
+	std::optional<ASTNode> expr;
 };
 
 struct PrimaryExpr {
@@ -124,8 +132,8 @@ struct FuncDeclarationStmt {
 struct CommandStmt {
 	ASTNodeKind kind;
 
-	ASTNode target;
 	ASTNode command;
+	ASTNode target;
 	std::vector<ASTNode> operands;
 };
 

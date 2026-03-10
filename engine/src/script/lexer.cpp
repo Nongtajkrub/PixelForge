@@ -12,6 +12,7 @@ static const std::unordered_map<std::string, TokenKind> keywords = {
 	{"endif", TokenKind::ENDIF},
 	{"else", TokenKind::ELSE},
 	{"true", TokenKind::TRUE},
+	{"self", TokenKind::SELF},
 	{"false", TokenKind::FALSE},
 	{"while", TokenKind::WHILE},
 	{"for", TokenKind::FOR},
@@ -20,12 +21,14 @@ static const std::unordered_map<std::string, TokenKind> keywords = {
 	{"let", TokenKind::LET},
 	{"func", TokenKind::FUNC},
 	{"endfunc", TokenKind::ENDFUNC},
-	{"cmd", TokenKind::CMD},
+	{"@sprite", TokenKind::DIRECT_SPRITE},
+	{"@import", TokenKind::DIRECT_IMPORT},
 	{"UP", TokenKind::CMD_UP},
 	{"DOWN", TokenKind::CMD_DOWN},
 	{"RIGHT", TokenKind::CMD_RIGHT},
 	{"LEFT", TokenKind::CMD_LEFT},
 	{"GOTO", TokenKind::CMD_GOTO},
+	{"SPAWN", TokenKind::CMD_SPAWN},
 };
 
 void Lexer::lex() {

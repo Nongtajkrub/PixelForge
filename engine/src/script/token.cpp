@@ -41,6 +41,7 @@ const char* Token::kind_as_str() const {
         case TokenKind::ELSE: return "ELSE";
         case TokenKind::TRUE: return "TRUE";
         case TokenKind::FALSE: return "FALSE";
+		case TokenKind::SELF: return "SELF";
         case TokenKind::WHILE: return "WHILE";
         case TokenKind::FOR: return "FOR";
         case TokenKind::RETURN: return "RETURN";
@@ -48,8 +49,11 @@ const char* Token::kind_as_str() const {
 		case TokenKind::LET: return "LET";
         case TokenKind::FUNC: return "FUNC";
         case TokenKind::ENDFUNC: return "ENDFUNC";
+		
+		case TokenKind::DIRECT_SPRITE: return "DIRECT_SPRITE";
+		case TokenKind::DIRECT_IMPORT: return "DIRECT_IMPORT";
 
-		case TokenKind::CMD: return "CMD";
+		case TokenKind::CMD_SPAWN: return "CMD_SPAWN";
 		case TokenKind::CMD_UP: return "CMD_UP";
 		case TokenKind::CMD_DOWN: return "CMD_DOWN";
 		case TokenKind::CMD_RIGHT: return "CMD_RIGHT";
@@ -74,6 +78,7 @@ bool Token::is_arithmetic_operator() const {
 
 bool Token::is_command() const {
 	switch (this->kind) {
+	case TokenKind::CMD_SPAWN:
 	case TokenKind::CMD_UP:
 	case TokenKind::CMD_DOWN:
 	case TokenKind::CMD_RIGHT:
@@ -85,4 +90,12 @@ bool Token::is_command() const {
 	}
 }
 
+bool Token::is_directive() const {
+	switch (this->kind) {
+	case TokenKind::DIRECT_SPRITE:
+		return true;
+	default:
+		return false;
+	}
+}
 } // namespace scr

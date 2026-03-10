@@ -17,6 +17,8 @@ std::string_view Diagnostic::resolve_msg() const {
 	case DiagnosticKind::EXPECTED_COMMA: return "Expected comma"; 
 	case DiagnosticKind::EXPECTED_COMMAND: return "Expected command"; 
 	case DiagnosticKind::EXPECTED_NUMBER: return "Expected number"; 
+	case DiagnosticKind::EXPECTED_SPRITE_DIRECT:
+			return "Expected sprite directive";
     }
 
 	return "Error message not implemented.";

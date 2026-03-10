@@ -47,6 +47,7 @@ enum class TokenKind : u8 {
 	ELSE,
 	TRUE,
 	FALSE,
+	SELF,
 	WHILE,
 	FOR,
 	RETURN,
@@ -55,7 +56,10 @@ enum class TokenKind : u8 {
 	FUNC,
 	ENDFUNC,
 
-	CMD,
+	DIRECT_SPRITE,
+	DIRECT_IMPORT,
+
+	CMD_SPAWN,
 	CMD_UP,
 	CMD_DOWN,
 	CMD_RIGHT,
@@ -83,6 +87,7 @@ struct Token {
 	const char* kind_as_str() const;
 	bool is_arithmetic_operator() const;
 	bool is_command() const;
+	bool is_directive() const;
 };
 
 }

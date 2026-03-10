@@ -11,13 +11,13 @@
 #include <optional>
 #include <type_traits>
 #include <vector>
-#include <iostream>
+#include <ostream>
 
 #define ENSURE_NOT_EOF_BOOL()                                                 \
 do                                                                            \
 if (this->tokens.is_eof()) {                                                  \
 	Diagnostic(DiagnosticKind::UNEXPECTED_EOF, this->tokens.prev())           \
-		.emit(std::cout);                                                     \
+		.emit(this->err_stream);                                              \
 	return false;                                                             \
 }                                                                             \
 while (0)                                                                     
@@ -31,13 +31,18 @@ private:
 
 	SourceStream<const std::span<Token>, Token, const Token&> tokens;
 
+	std::ostream& err_stream;
+
 	// Abstract Syntax Tree separated into each statements.
 	std::vector<ASTNode> ast;
 
 public:
-	Parser(const std::span<Token> tokens, BumpArena& arena) :
+	Parser(
+		const std::span<Token> tokens,
+		BumpArena& arena, std::ostream& err_stream) :
 		tokens(tokens),
-		arena(arena)
+		arena(arena),
+		err_stream(err_stream)
 	{ }
 
 	bool parse();
@@ -51,13 +56,16 @@ public:
 	}
 
 private:
+	bool validate_sprite_directive();
+	
 	std::optional<ASTNode> parse_stmt();
 	std::optional<ASTNode> parse_nop();
+	std::optional<ASTNode> parse_directive();
 	std::optional<ASTNode> parse_var_declaration_stmt();
 	std::optional<ASTNode> parse_func_declaration_stmt();
 	std::optional<ASTNode> parse_if_stmt();
 	std::optional<ASTNode> parse_cmd_stmt();
-	std::optional<ASTNode> parse_expr();
+	std::optional<ASTNode> parse_expr(TokenKind terminator);
 	std::optional<ASTNode> pratt_nud();
 	std::optional<ASTNode> pratt_led(Token op, ASTNode left, u8 min_bp);
 	std::optional<ASTNode> pratt_parser(u8 min_bp = 0);
@@ -103,7 +111,7 @@ private:
 			return true;
 		} else {
 			Diagnostic(resolve_diag_expect_kind(kind), this->tokens.prev())
-				.emit(std::cout);
+				.emit(this->err_stream);
 			return false;
 		}
 	}
@@ -113,7 +121,7 @@ private:
 			return true;
 		} else {
 			Diagnostic(resolve_diag_expect_kind(kind), this->tokens.peek())
-				.emit(std::cout);
+				.emit(this->err_stream);
 			return false;
 		}
 	}
