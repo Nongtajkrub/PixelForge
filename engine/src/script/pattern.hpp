@@ -15,18 +15,21 @@ template <TokenKind... Expect>
 struct Pattern {
 	using OstreamRef = std::reference_wrapper<std::ostream>;
 
+	using TokensStream =
+		SourceStream<const std::span<Token>, Token, const Token&>;
+
 	static constexpr std::array<TokenKind, sizeof...(Expect)> expects{Expect...};
 
 	// Match pattern and return the result, can also accept an ASTNodeBuffer to 
 	// add the match tokens to the buffer as node.
 	static bool match(
-		SourceStream<const std::span<Token>, Token, const Token&>& stream,
-		std::optional<OstreamRef> emit_to = std::nullopt) {
+		TokensStream& stream,
+		std::optional<OstreamRef> err_stream = std::nullopt) {
 		for (const auto expect : expects) {
 			if (stream.is_eof()) {
-				if (emit_to) {
+				if (err_stream) {
 					Diagnostic(DiagnosticKind::UNEXPECTED_EOF, stream.prev())
-						.emit(*emit_to);
+						.emit(*err_stream);
 				}
 				return false;
 			}
@@ -34,13 +37,24 @@ struct Pattern {
 			if (expect == stream.peek().kind) {
 				stream.advance();
 			} else {
-				if (emit_to) {
+				if (err_stream) {
 					Diagnostic(resolve_diag_expect_kind(expect), stream.peek())
-						.emit(*emit_to);
+						.emit(*err_stream);
 				}
 				return false;
 			}
 		}
+		return true;
+	}
+
+	static bool match_peek(
+		TokensStream& stream,
+		std::optional<OstreamRef> err_stream = std::nullopt) {
+		if (!match(stream, err_stream)) {
+			return false;
+		}
+
+		stream.revert(sizeof...(Expect));
 		return true;
 	}
 };

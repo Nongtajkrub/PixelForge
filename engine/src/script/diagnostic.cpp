@@ -7,13 +7,14 @@ namespace scr {
 
 std::string_view Diagnostic::resolve_msg() const {
     switch (this->kind) {
-	case DiagnosticKind::UNEXPECTED_EOF: return "Unexpected EOF.";
-	case DiagnosticKind::UNEXPECTED_TOKEN: return "Unexpected token.";
+	case DiagnosticKind::UNEXPECTED_EOF: return "Unexpected EOF";
+	case DiagnosticKind::UNEXPECTED_TOKEN: return "Unexpected token";
 	case DiagnosticKind::EXPECTED_SEMICOLON: return "expected semicolon";
 	case DiagnosticKind::EXPECTED_COLON: return "Expected colon";
 	case DiagnosticKind::EXPECTED_IDENTIFIER: return "Expected identifier";
 	case DiagnosticKind::EXPECTED_LEFT_PAREN: return "Expected left paren"; 
 	case DiagnosticKind::EXPECTED_RIGHT_PAREN: return "Expected right paren";
+	case DiagnosticKind::EXPECTED_ARROW: return "Expected arrow";
 	case DiagnosticKind::EXPECTED_COMMA: return "Expected comma"; 
 	case DiagnosticKind::EXPECTED_COMMAND: return "Expected command"; 
 	case DiagnosticKind::EXPECTED_NUMBER: return "Expected number"; 
@@ -21,7 +22,7 @@ std::string_view Diagnostic::resolve_msg() const {
 			return "Expected sprite directive";
     }
 
-	return "Error message not implemented.";
+	return "Error message not implemented";
 }
 
 DiagnosticKind resolve_diag_expect_kind(TokenKind kind) {
@@ -31,6 +32,7 @@ DiagnosticKind resolve_diag_expect_kind(TokenKind kind) {
 	case TokenKind::IDENTIFIER: return DiagnosticKind::EXPECTED_IDENTIFIER;
 	case TokenKind::LEFT_PAREN: return DiagnosticKind::EXPECTED_LEFT_PAREN;
 	case TokenKind::RIGHT_PAREN: return DiagnosticKind::EXPECTED_RIGHT_PAREN;
+	case TokenKind::ARROW: return DiagnosticKind::EXPECTED_ARROW;
 	case TokenKind::COMMA: return DiagnosticKind::EXPECTED_COMMA;
 	case TokenKind::NUMBER: return DiagnosticKind::EXPECTED_NUMBER;
 	case TokenKind::CMD_UP:

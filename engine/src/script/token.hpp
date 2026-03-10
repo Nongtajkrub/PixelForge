@@ -33,6 +33,7 @@ enum class TokenKind : u8 {
 	BANG_EQUAL,
 	GREATER_EQUAL,
 	LESS_EQUAL,
+	ARROW,
 
 	// Literals
 	IDENTIFIER,

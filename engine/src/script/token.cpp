@@ -27,6 +27,7 @@ const char* Token::kind_as_str() const {
         case TokenKind::BANG_EQUAL: return "BANG_EQUAL";
         case TokenKind::GREATER_EQUAL: return "GREATER_EQUAL";
         case TokenKind::LESS_EQUAL: return "LESS_EQUAL";
+        case TokenKind::ARROW: return "ARROW";
 
         // Literals
         case TokenKind::IDENTIFIER: return "IDENTIFIER";

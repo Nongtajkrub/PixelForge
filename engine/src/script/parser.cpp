@@ -6,7 +6,6 @@
 
 #include <cassert>
 #include <optional>
-#include <iostream>
 #include <tuple>
 #include <utility>
 #include <vector>
@@ -15,7 +14,7 @@
 do                                                                            \
 if (this->tokens.is_eof()) {                                                  \
 	Diagnostic(DiagnosticKind::UNEXPECTED_EOF, this->tokens.prev())           \
-		.emit(this->err_stream);                                                     \
+		.emit(this->err_stream);                                              \
 	return std::nullopt;                                                      \
 }                                                                             \
 while (0)                                                                     
@@ -25,13 +24,11 @@ namespace scr {
 bool Parser::validate_sprite_directive(){
 	if (!Pattern<
 			TokenKind::DIRECT_SPRITE,
-			TokenKind::IDENTIFIER>::match(this->tokens)) {
+			TokenKind::IDENTIFIER>::match_peek(this->tokens)) {
 		Diagnostic(DiagnosticKind::EXPECTED_SPRITE_DIRECT, Location(0, 0))
 			.emit(this->err_stream);
 		return false;
 	}
-	// Revert back after pattern matching consume tokens. 
-	this->tokens.revert(2);
 
 	return true;
 }
@@ -161,9 +158,17 @@ std::optional<ASTNode> Parser::parse_func_declaration_stmt() {
 
 	ENSURE_NOT_EOF();
 
-	if (!expect(TokenKind::SEMICOLON)) {
+	// Ensure correct return type annotation syntax.
+	if (!Pattern<
+			TokenKind::ARROW,
+			TokenKind::IDENTIFIER,
+			TokenKind::SEMICOLON>::match_peek(this->tokens, this->err_stream)) {
 		return std::nullopt;
 	}
+	this->tokens.advance(); // Skip arrow ('->').
+	node->type =
+		new_primary_node(ASTNodeKind::IDENTIFIER, this->tokens.advance());
+	this->tokens.advance(); // Skip semicoln (';').
 
 	// Parse function body.
 	OPT_ASSIGN_OR_RETURN(

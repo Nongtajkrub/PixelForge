@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../util/bump_arena.hpp"
+#include "pattern.hpp"
 #include "source_stream.hpp"
 #include "token.hpp"
 #include "ast.hpp"
@@ -78,25 +79,18 @@ private:
 	requires (std::is_same_v<T, VarDeclarationStmt*> 
 		|| std::is_same_v<T, FuncArgument*>)
 	bool parse_type_annotation(T node) {
-		ENSURE_NOT_EOF_BOOL();
-		
-		if (!expect_peek(TokenKind::IDENTIFIER)) {
+		// Ensure correct type annotation syntax.
+		if (!Pattern<
+				TokenKind::IDENTIFIER,
+				TokenKind::COLON,
+				TokenKind::IDENTIFIER>
+					::match_peek(this->tokens, this->err_stream)) {
 			return false;
 		}
+		
 		node->name = 
 			new_primary_node(ASTNodeKind::IDENTIFIER, this->tokens.advance());
-
-		ENSURE_NOT_EOF_BOOL();
-
-		if (!expect(TokenKind::COLON)) {
-			return false;
-		}
-
-		ENSURE_NOT_EOF_BOOL();
-
-		if (!expect_peek(TokenKind::IDENTIFIER)) {
-			return false;
-		}
+		this->tokens.advance(); // Skip colon (':').
 		node->type =
 			new_primary_node(ASTNodeKind::TYPE, this->tokens.advance());
 

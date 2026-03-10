@@ -58,9 +58,6 @@ void Lexer::lex() {
 			case ',':
 				add_token(TokenKind::COMMA);
 				break;
-			case '-':
-				add_token(TokenKind::MINUS);
-				break;
 			case '+':
 				add_token(TokenKind::PLUS);
 				break;
@@ -75,6 +72,11 @@ void Lexer::lex() {
 				break;
 			case ':':
 				add_token(TokenKind::COLON);
+				break;
+			case '-':
+				add_token(
+					(this->source.match('>')) ?
+						TokenKind::ARROW: TokenKind::MINUS);
 				break;
 			case '=':
 				add_token(

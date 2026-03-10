@@ -96,6 +96,9 @@ void ast_output(std::ostream &stream, ASTNode root, const u32 level) {
 			ast_output(stream, arg, level + 1);
 		}
 
+		stream << indent << "return:\n";
+		ast_output(stream, node->type, level + 1);
+
 		stream << indent << "body:\n";
 		ast_output(stream, node->body, level + 1);
 
