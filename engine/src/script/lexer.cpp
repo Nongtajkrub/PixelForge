@@ -22,13 +22,16 @@ static const std::unordered_map<std::string, TokenKind> keywords = {
 	{"func", TokenKind::FUNC},
 	{"endfunc", TokenKind::ENDFUNC},
 	{"@sprite", TokenKind::DIRECT_SPRITE},
-	{"@import", TokenKind::DIRECT_IMPORT},
-	{"UP", TokenKind::CMD_UP},
-	{"DOWN", TokenKind::CMD_DOWN},
-	{"RIGHT", TokenKind::CMD_RIGHT},
-	{"LEFT", TokenKind::CMD_LEFT},
-	{"GOTO", TokenKind::CMD_GOTO},
-	{"SPAWN", TokenKind::CMD_SPAWN},
+	{"@use", TokenKind::DIRECT_USE},
+	{CMD_SPAWN_LEX, TokenKind::COMMAND},
+	{CMD_DESPAWN_LEX, TokenKind::COMMAND},
+	{CMD_UP_LEX, TokenKind::COMMAND},
+	{CMD_DOWN_LEX, TokenKind::COMMAND},
+	{CMD_LEFT_LEX, TokenKind::COMMAND},
+	{CMD_GOTO_LEX, TokenKind::COMMAND},
+	{CMD_SHOW_LEX, TokenKind::COMMAND},
+	{CMD_UPDATE_LEX, TokenKind::COMMAND},
+	{CMD_COLLIDE_LEX, TokenKind::COMMAND},
 };
 
 void Lexer::lex() {
@@ -158,8 +161,15 @@ void Lexer::lex() {
 						this->source.data().substr(sub_info.begin, sub_info.size);
 				this->location.col += sub_info.size;
 
+				// If the keyword is a command then keep it's lexeme as well.
 				if (auto it = keywords.find(lexeme); it != keywords.end()) {
-					add_token(it->second);
+					const auto kind = it->second;
+
+					if (kind == TokenKind::COMMAND) {
+						add_token(kind, lexeme);
+					} else {
+						add_token(kind);
+					}
 				} else {
 					add_token(TokenKind::IDENTIFIER, lexeme);
 				}

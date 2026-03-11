@@ -17,6 +17,7 @@ enum class ASTNodeKind : u8 {
 	VAR_DECLARATION,
 	FUNC_DECLARATION,
 	FUNC_ARGUMENTS,
+	ASSIGN,
 	IF,
 
 	BINARY,
@@ -103,15 +104,6 @@ struct VarDeclarationStmt {
 	std::optional<ASTNode> init;
 };
 
-struct IfStmt {
-	ASTNodeKind kind;
-
-	ASTNode expr;
-
-	ASTNode then_branch;
-	std::optional<ASTNode> else_branch;
-};
-
 struct FuncArgument {
 	ASTNodeKind kind;
 
@@ -129,6 +121,21 @@ struct FuncDeclarationStmt {
 	ASTNode body;
 };
 
+struct AssignStmt {
+	ASTNodeKind kind;
+
+	ASTNode iden;
+	ASTNode expr;
+};
+
+struct IfStmt {
+	ASTNodeKind kind;
+
+	ASTNode expr;
+
+	ASTNode then_branch;
+	std::optional<ASTNode> else_branch;
+};
 
 struct CommandStmt {
 	ASTNodeKind kind;

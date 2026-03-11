@@ -3,6 +3,7 @@
 #include "pattern.hpp"
 #include "token.hpp"
 #include "ast.hpp"
+#include "../io/log.hpp"
 
 #include <cassert>
 #include <optional>
@@ -62,16 +63,15 @@ std::optional<ASTNode> Parser::parse_stmt() {
 		return parse_if_stmt();
 	case TokenKind::IDENTIFIER:
 		return parse_expr(TokenKind::SEMICOLON);
+	case TokenKind::COMMAND:
+		return parse_cmd_stmt();
 	default:
 		const auto& token = this->tokens.peek();
 
-		if (token.is_command()) {
-			return parse_cmd_stmt();
-		}
 		if (token.is_directive()) {
 			return parse_directive();
 		}
-	
+
 		Diagnostic(DiagnosticKind::UNEXPECTED_TOKEN, this->tokens.advance())
 			.emit(this->err_stream);
 		return std::nullopt;
@@ -301,24 +301,26 @@ std::optional<ASTNode> Parser::parse_expr(TokenKind terminator) {
 
 static std::tuple<u8, u8> resolve_binding_power(TokenKind kind) {
 	switch (kind) {
+	case TokenKind::EQUAL: 
+		return {2, 1};
 	case TokenKind::AND:
 	case TokenKind::OR:
-		return {1, 2};
+		return {2, 3};
 	case TokenKind::BANG_EQUAL:
 	case TokenKind::DOUBLE_EQUAL:
 	case TokenKind::GREATER:
 	case TokenKind::GREATER_EQUAL:
 	case TokenKind::LESS:
 	case TokenKind::LESS_EQUAL:
-		return {3, 4};
+		return {4, 5};
 	case TokenKind::PLUS:
 	case TokenKind::MINUS:
-		return {5, 6};
+		return {7, 8};
 	case TokenKind::STAR:
 	case TokenKind::SLASH:
-		return {7, 8};
-	case TokenKind::LEFT_PAREN:
 		return {9, 10};
+	case TokenKind::LEFT_PAREN:
+		return {11, 12};
 	default:
 		return {0, 0};
 	}
@@ -362,7 +364,8 @@ std::optional<ASTNode> Parser::pratt_led(Token op, ASTNode left, u8 min_bp) {
 	}
 	case TokenKind::LEFT_PAREN: {
 		if (*left.adr != ASTNodeKind::IDENTIFIER) {
-			Diagnostic(DiagnosticKind::EXPECTED_IDENTIFIER, op).emit(this->err_stream);
+			Diagnostic(DiagnosticKind::EXPECTED_IDENTIFIER, op)
+				.emit(this->err_stream);
 			return std::nullopt;
 		}
 
@@ -371,6 +374,26 @@ std::optional<ASTNode> Parser::pratt_led(Token op, ASTNode left, u8 min_bp) {
 		if (!parse_func_args(node->args, true)) {
 			return std::nullopt;
 		}
+
+		return ASTNode(&node->kind);
+	}
+	case TokenKind::EQUAL: {
+		if (*left.adr != ASTNodeKind::IDENTIFIER) {
+			Diagnostic(DiagnosticKind::EXPECTED_IDENTIFIER, op)
+				.emit(this->err_stream);
+			return std::nullopt;
+		}
+
+		if (*left.adr != ASTNodeKind::IDENTIFIER) {
+			Diagnostic(DiagnosticKind::EXPECTED_IDENTIFIER, op)
+				.emit(this->err_stream);
+			return std::nullopt;
+		}
+
+		auto node = new_node<AssignStmt>(ASTNodeKind::ASSIGN);
+
+		node->iden = left;
+		OPT_ASSIGN_OR_RETURN(node->expr, pratt_parser());
 
 		return ASTNode(&node->kind);
 	}

@@ -6,6 +6,7 @@
 #include <cstddef>
 #include <cstdlib>
 #include <cstring>
+#include <utility>
 
 class BumpArena {
 private:
@@ -30,7 +31,10 @@ public:
 
 		if (this->offset + sizeof(T) > this->capacity) {
 			LOG_ERR("Out of memory.");
-			return nullptr;
+			free(this->data);
+
+			std::abort();
+			std::unreachable();
 		} 
 
 		T* ptr = reinterpret_cast<T*>(this->data + this->offset);

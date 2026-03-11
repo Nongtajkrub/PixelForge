@@ -58,15 +58,22 @@ enum class TokenKind : u8 {
 	ENDFUNC,
 
 	DIRECT_SPRITE,
-	DIRECT_IMPORT,
+	DIRECT_USE,
 
-	CMD_SPAWN,
-	CMD_UP,
-	CMD_DOWN,
-	CMD_RIGHT,
-	CMD_LEFT,
-	CMD_GOTO,
+	COMMAND,
 };
+
+// Differents lexeme for each commands.
+constexpr const char* CMD_SPAWN_LEX = "SPAWN";
+constexpr const char* CMD_DESPAWN_LEX = "DESPAWN";
+constexpr const char* CMD_UP_LEX = "UP";
+constexpr const char* CMD_DOWN_LEX = "DOWN";
+constexpr const char* CMD_RIGHT_LEX = "RIGHT";
+constexpr const char* CMD_LEFT_LEX = "LEFT";
+constexpr const char* CMD_GOTO_LEX = "GOTO";
+constexpr const char* CMD_SHOW_LEX = "SHOW";
+constexpr const char* CMD_UPDATE_LEX = "UPDATE";
+constexpr const char* CMD_COLLIDE_LEX = "COLLIDE";
 
 struct Token {
 	TokenKind kind;
@@ -87,7 +94,6 @@ struct Token {
 
 	const char* kind_as_str() const;
 	bool is_arithmetic_operator() const;
-	bool is_command() const;
 	bool is_directive() const;
 };
 

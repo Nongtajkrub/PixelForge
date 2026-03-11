@@ -10,6 +10,7 @@ const char* ASTNode::kind_as_str() const {
 		case ASTNodeKind::DIRECTIVE: return "DIRECTIVE";
         case ASTNodeKind::FUNC_DECLARATION: return "FUNC_DECLARATION";
         case ASTNodeKind::FUNC_ARGUMENTS: return "FUNC_ARGUMENTS";
+        case ASTNodeKind::ASSIGN: return "ASSIGN";
         case ASTNodeKind::IF: return "IF";
         case ASTNodeKind::BINARY: return "BINARY";
 		case ASTNodeKind::CALL: return "CALL";
@@ -48,7 +49,15 @@ void ast_output(std::ostream &stream, ASTNode root, const u32 level) {
 	}
 	case ASTNodeKind::KEYWORD: {
 		auto node = reinterpret_cast<const PrimaryExpr*>(root.adr);
-		stream << indent << "keyword: " << node->token.kind_as_str() << '\n';
+
+		// Some keyword kind like COMMAND have a lexeme.
+		stream 
+			<< indent 
+			<< "keyword: " 
+			<< ((node->token.lexeme) ?
+					*node->token.lexeme : node->token.kind_as_str()) 
+			<< '\n';
+
 		break;
 	}
 	case ASTNodeKind::DIRECTIVE: {
@@ -58,7 +67,7 @@ void ast_output(std::ostream &stream, ASTNode root, const u32 level) {
 		ast_output(stream, node->directive, level + 1);
 
 		stream << "expr:\n";
-		if (node->expr) {
+			if (node->expr) {
 			ast_output(stream, *node->expr, level + 1);
 		}
 
@@ -109,6 +118,14 @@ void ast_output(std::ostream &stream, ASTNode root, const u32 level) {
 
 		ast_output(stream, node->name, level + 1);
 		ast_output(stream, node->type, level + 1);
+
+		break;
+	}
+	case ASTNodeKind::ASSIGN: {
+		auto node = reinterpret_cast<const AssignStmt*>(root.adr);
+
+		ast_output(stream, node->iden, level + 1);
+		ast_output(stream, node->expr, level + 1);
 
 		break;
 	}

@@ -1,4 +1,5 @@
 #include <iostream>
+#include <fstream>
 
 #include "script/lexer.hpp"
 #include "script/ast.hpp"
@@ -26,7 +27,7 @@ int main() {
 	}
 	*/
 
-	auto arena = BumpArena(3200); 
+	auto arena = BumpArena(8000); 
 
 	auto parser = scr::Parser(lexer.get_token(), arena, std::cout);
 	if (!parser.parse()) {
@@ -34,9 +35,13 @@ int main() {
 		return -1;
 	}
 
+	auto file = std::ofstream("ast_output.txt"); 
+
 	for (auto ast : parser.get_ast()) {
-		scr::ast_output(std::cout, ast);
+		scr::ast_output(file, ast);
 	}
+
+	file.close();
 
 	/*
 	auto inner_expression = 

@@ -35,13 +35,8 @@ DiagnosticKind resolve_diag_expect_kind(TokenKind kind) {
 	case TokenKind::ARROW: return DiagnosticKind::EXPECTED_ARROW;
 	case TokenKind::COMMA: return DiagnosticKind::EXPECTED_COMMA;
 	case TokenKind::NUMBER: return DiagnosticKind::EXPECTED_NUMBER;
-	case TokenKind::CMD_UP:
-	case TokenKind::CMD_DOWN:
-	case TokenKind::CMD_RIGHT:
-	case TokenKind::CMD_GOTO:
-		return DiagnosticKind::EXPECTED_COMMAND;
-	default:
-		return DiagnosticKind::UNEXPECTED_TOKEN;
+	case TokenKind::COMMAND: return DiagnosticKind::EXPECTED_COMMAND;
+	default: return DiagnosticKind::UNEXPECTED_TOKEN;
 	}
 }
 
