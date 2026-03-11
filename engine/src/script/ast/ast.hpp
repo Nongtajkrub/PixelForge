@@ -1,8 +1,8 @@
 #pragma once
 
-#include "../global.hpp"
-#include "../util/bump_arena.hpp"
-#include "token.hpp"
+#include "../../global.hpp"
+#include "../../core/arena/bump_arena.hpp"
+#include "../common/token.hpp"
 
 #include <optional>
 #include <ostream>

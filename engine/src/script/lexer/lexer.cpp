@@ -1,5 +1,6 @@
+#include "../common/token.hpp"
 #include "lexer.hpp"
-#include "token.hpp"
+
 #include <cctype>
 #include <unordered_map>
 

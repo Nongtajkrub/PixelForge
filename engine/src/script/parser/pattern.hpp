@@ -1,8 +1,8 @@
 #pragma once
 
-#include "diagnostic.hpp"
-#include "token.hpp"
-#include "source_stream.hpp"
+#include "../common/diagnostic.hpp"
+#include "../common/token.hpp"
+#include "../common/source_stream.hpp"
 
 #include <array>
 #include <functional>

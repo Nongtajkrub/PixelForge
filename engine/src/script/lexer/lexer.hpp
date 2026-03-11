@@ -1,8 +1,8 @@
 #pragma once
 
-#include "location.hpp"
-#include "token.hpp"
-#include "source_stream.hpp"
+#include "../common/location.hpp"
+#include "../common/token.hpp"
+#include "../common/source_stream.hpp"
 
 #include <cstddef>
 #include <span>

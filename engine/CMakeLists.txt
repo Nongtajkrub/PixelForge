@@ -12,30 +12,23 @@ target_sources(engine
 	PRIVATE
 
 	src/main.cpp
-
-	src/io/file.hpp
-	src/io/file.cpp
-	src/io/byte.hpp
-	src/io/byte.cpp
-
-	src/instruction/type.hpp
-	src/instruction/block.hpp
-	src/instruction/group.cpp
-	src/instruction/group.hpp
-
-	src/script/token.hpp
-	src/script/token.cpp
-	src/script/lexer.hpp
-	src/script/lexer.cpp
-	src/script/source_stream.hpp
-	src/script/parser.hpp
-	src/script/parser.cpp
-	src/script/ast.hpp
-	src/script/ast.cpp
-	src/script/diagnostic.hpp
-	src/script/diagnostic.cpp
-
 	src/global.hpp
 
-	src/instruction/block.cpp
+	src/core/io/file.hpp
+	src/core/io/file.cpp
+	src/core/io/byte.hpp
+	src/core/io/byte.cpp
+	src/core/arena/bump_arena.hpp
+
+	src/script/common/token.hpp
+	src/script/common/token.cpp
+	src/script/common/diagnostic.hpp
+	src/script/common/diagnostic.cpp
+	src/script/common/source_stream.hpp
+	src/script/lexer/lexer.hpp
+	src/script/lexer/lexer.cpp
+	src/script/parser/parser.hpp
+	src/script/parser/parser.cpp
+	src/script/ast/ast.hpp
+	src/script/ast/ast.cpp
 )

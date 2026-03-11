@@ -1,11 +1,11 @@
 #include <iostream>
 #include <fstream>
 
-#include "script/lexer.hpp"
-#include "script/ast.hpp"
-#include "script/parser.hpp"
-#include "util/bump_arena.hpp"
-#include "io/file.hpp"
+#include "script/lexer/lexer.hpp"
+#include "script/ast/ast.hpp"
+#include "script/parser/parser.hpp"
+#include "core/arena/bump_arena.hpp"
+#include "core/io/file.hpp"
 
 int main() {
 	const auto code = io::file::load_str("script.gby"); 

@@ -1,9 +1,8 @@
-#include "parser.hpp"
-#include "diagnostic.hpp"
+#include "../parser/parser.hpp"
+#include "../common/diagnostic.hpp"
+#include "../common/token.hpp"
+#include "../ast/ast.hpp"
 #include "pattern.hpp"
-#include "token.hpp"
-#include "ast.hpp"
-#include "../io/log.hpp"
 
 #include <cassert>
 #include <optional>

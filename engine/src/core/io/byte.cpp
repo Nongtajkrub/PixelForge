@@ -1,7 +1,5 @@
 #include "byte.hpp"
 
-#include "../global.hpp"
-
 #include <span>
 #include <iostream>
 

@@ -1,11 +1,11 @@
 #pragma once
 
-#include "../util/bump_arena.hpp"
+#include "../../core/arena/bump_arena.hpp"
+#include "../common/source_stream.hpp"
+#include "../common/token.hpp"
+#include "../common/diagnostic.hpp"
+#include "../ast/ast.hpp"
 #include "pattern.hpp"
-#include "source_stream.hpp"
-#include "token.hpp"
-#include "ast.hpp"
-#include "diagnostic.hpp"
 
 #include <cstddef>
 #include <functional>
