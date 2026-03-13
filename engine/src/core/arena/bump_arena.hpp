@@ -8,6 +8,8 @@
 #include <cstring>
 #include <utility>
 
+namespace core {
+
 class BumpArena {
 private:
 	char *const data;
@@ -48,3 +50,5 @@ private:
 		this->offset = (this->offset + alignof(T) - 1) & ~(alignof(T) - 1);
 	}
 };
+
+} // namespace core

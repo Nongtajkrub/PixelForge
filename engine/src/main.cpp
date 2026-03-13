@@ -7,8 +7,10 @@
 #include "core/arena/bump_arena.hpp"
 #include "core/io/file.hpp"
 
+using namespace core;
+
 int main() {
-	const auto code = io::file::load_str("script.gby"); 
+	const auto code = fload_str("script.gby"); 
 
 	if (!code.has_value()) {
 		std::cout << "No code file.\n";
@@ -38,7 +40,7 @@ int main() {
 	auto file = std::ofstream("ast_output.txt"); 
 
 	for (auto ast : parser.get_ast()) {
-		scr::ast_output(file, ast);
+		scr::ast_output(std::cout, ast);
 	}
 
 	file.close();

@@ -5,9 +5,9 @@
 	#include <string_view>
 	#include <iostream>
 
-	#define LOG_INFO(MSG) ::io::log::info(MSG)
-	#define LOG_WARN(MSG) ::io::log::warn(MSG)
-	#define LOG_ERR(MSG)  ::io::log::error(MSG)
+	#define LOG_INFO(MSG) ::core::log_info(MSG)
+	#define LOG_WARN(MSG) ::core::log_warn(MSG)
+	#define LOG_ERR(MSG)  ::core::log_error(MSG)
 #else
 	#define LOG_INFO(MSG) ((void)0)
 	#define LOG_WARN(MSG) ((void)0)
@@ -16,11 +16,9 @@
 
 #ifdef ENABLE_LOG
 
-namespace io {
+namespace core {
 
-namespace log {
-
-inline void info(
+inline void log_info(
 	const std::string_view msg,
 	std::source_location location = std::source_location::current()) {
 	std::cout 
@@ -31,7 +29,7 @@ inline void info(
 		<< ", " << location.line() << ": " << msg << '\n';
 }
 
-inline void warn(
+inline void log_warn(
 	const std::string_view msg,
 	std::source_location location = std::source_location::current()) {
 	std::cout 
@@ -42,7 +40,7 @@ inline void warn(
 		<< ", " << location.line() << ": " << msg << '\n';
 }
 
-inline void error(
+inline void log_error(
 	const std::string_view msg,
 	std::source_location location = std::source_location::current()) {
 	std::cout 
@@ -52,9 +50,6 @@ inline void error(
 		<< location.function_name() 
 		<< ", " << location.line() << ": " << msg << '\n';
 }
-
-
-} // namespace log
 
 } // namespace io
 

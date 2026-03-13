@@ -20,6 +20,7 @@ std::string_view Diagnostic::resolve_msg() const {
 	case DiagnosticKind::EXPECTED_NUMBER: return "Expected number"; 
 	case DiagnosticKind::EXPECTED_SPRITE_DIRECT:
 			return "Expected sprite directive";
+	case DiagnosticKind::UNKNOWN_IDENTIFIER: return "Unknown identifier";
     }
 
 	return "Error message not implemented";

@@ -4,12 +4,8 @@
 #include <string>
 #include <filesystem>
 
-namespace io {
+namespace core {
 
-namespace file {
-
-std::optional<std::string> load_str(const std::filesystem::path& path);
-
-} // namespace file
+std::optional<std::string> fload_str(const std::filesystem::path& path);
 
 } // namespace io

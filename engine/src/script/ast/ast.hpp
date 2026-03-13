@@ -1,7 +1,6 @@
 #pragma once
 
 #include "../../global.hpp"
-#include "../../core/arena/bump_arena.hpp"
 #include "../common/token.hpp"
 
 #include <optional>
@@ -46,17 +45,6 @@ struct ASTNode {
 	const char* kind_as_str() const;
 };
 
-// Buffer allowing external function without onwership of the arena containing
-// nodes to operate with a node buffer like "BlockStmt".
-struct ASTNodeBuffer {
-	BumpArena& arena;
-	std::vector<ASTNode>& buf;
-
-	ASTNodeBuffer(BumpArena& arena, std::vector<ASTNode>& buf) :
-		arena(arena), buf(buf)
-	{ }
-}; 
-
 struct NopNode {
 	ASTNodeKind kind;
 };
@@ -65,7 +53,7 @@ struct DirectiveStmt {
 	ASTNodeKind kind;
 	
 	ASTNode directive;
-	std::optional<ASTNode> expr;
+	ASTNode identifier;
 };
 
 struct PrimaryExpr {

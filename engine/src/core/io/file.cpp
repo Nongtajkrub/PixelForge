@@ -4,11 +4,9 @@
 #include <fstream>
 #include <iterator>
 
-namespace io {
+namespace core {
 
-namespace file {
-
-std::optional<std::string> load_str(const std::filesystem::path& path) {
+std::optional<std::string> fload_str(const std::filesystem::path& path) {
 	auto fd = std::ifstream(path);
 	if (!fd.is_open()) {
 		return std::nullopt;
@@ -21,6 +19,4 @@ std::optional<std::string> load_str(const std::filesystem::path& path) {
 	return content;
 }
 
-} // namespace file
-
-} // namespace io
+} // namespace core

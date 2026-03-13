@@ -1,8 +1,10 @@
 #pragma once
 
 #include "../../core/arena/bump_arena.hpp"
-#include "../common/source_stream.hpp"
+#include "../../core/stack/iterable.hpp"
 #include "../common/token.hpp"
+#include "../common/source_stream.hpp"
+#include "../common/symbol_table.hpp"
 #include "../common/diagnostic.hpp"
 #include "../ast/ast.hpp"
 #include "pattern.hpp"
@@ -14,24 +16,24 @@
 #include <vector>
 #include <ostream>
 
-#define ENSURE_NOT_EOF_BOOL()                                                 \
-do                                                                            \
-if (this->tokens.is_eof()) {                                                  \
-	Diagnostic(DiagnosticKind::UNEXPECTED_EOF, this->tokens.prev())           \
-		.emit(this->err_stream);                                              \
-	return false;                                                             \
-}                                                                             \
-while (0)                                                                     
-
 namespace scr {
+
+using namespace core;
 
 class Parser {
 private:
 	// Arena allocator for nodes.
 	BumpArena& arena;
 
+	// Token stream.
 	SourceStream<const std::span<Token>, Token, const Token&> tokens;
 
+	SymbolTable symbols;
+
+	// A stack containing scope IDs.
+	IterableStack<UniversalIdType> scopes;
+
+	// The stream to output error to.
 	std::ostream& err_stream;
 
 	// Abstract Syntax Tree separated into each statements.
@@ -58,6 +60,7 @@ public:
 
 private:
 	bool validate_sprite_directive();
+	bool is_symbol_exist(const std::string& symbol);
 	
 	std::optional<ASTNode> parse_stmt();
 	std::optional<ASTNode> parse_nop();

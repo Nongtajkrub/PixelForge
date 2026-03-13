@@ -75,6 +75,9 @@ constexpr const char* CMD_SHOW_LEX = "SHOW";
 constexpr const char* CMD_UPDATE_LEX = "UPDATE";
 constexpr const char* CMD_COLLIDE_LEX = "COLLIDE";
 
+// Built in types lexemes.
+constexpr const char* BI_TYPE_SPRITE_LEX = "Sprite";
+
 struct Token {
 	TokenKind kind;
 	std::optional<std::string> lexeme;

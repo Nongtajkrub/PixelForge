@@ -24,6 +24,8 @@ enum class DiagnosticKind : u8 {
 	EXPECTED_COMMAND,
 	EXPECTED_NUMBER,
 	EXPECTED_SPRITE_DIRECT,
+
+	UNKNOWN_IDENTIFIER,
 };
 
 DiagnosticKind resolve_diag_expect_kind(TokenKind kind);

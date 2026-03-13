@@ -4,12 +4,8 @@
 
 #include <span>
 
-namespace io {
+namespace core {
 
-namespace byte {
+void bytes_output_stdout(const std::span<u8> bytes);
 
-void output_stdout(const std::span<u8> bytes);
-
-} // namespace byte
-
-} // namespace io
+} // namespace core

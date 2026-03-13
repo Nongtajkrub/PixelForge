@@ -3,17 +3,13 @@
 #include <span>
 #include <iostream>
 
-namespace io {
+namespace core {
 
-namespace byte {
-
-void output_stdout(const std::span<u8> bytes) {
+void byte_output_stdout(const std::span<u8> bytes) {
 	for (const u8 byte : bytes) {
 		std::cout << std::hex << static_cast<int>(byte) << ' ';
 	}
 	std::cout << '\n';
 }
 
-} // namespace byte
-
-} // namespace io
+} // namespace core

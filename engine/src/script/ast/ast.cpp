@@ -63,13 +63,11 @@ void ast_output(std::ostream &stream, ASTNode root, const u32 level) {
 	case ASTNodeKind::DIRECTIVE: {
 		auto node = reinterpret_cast<const DirectiveStmt*>(root.adr);
 
-		stream << "directive:\n";
+		stream << indent << "directive:\n";
 		ast_output(stream, node->directive, level + 1);
 
-		stream << "expr:\n";
-			if (node->expr) {
-			ast_output(stream, *node->expr, level + 1);
-		}
+		stream << indent << "identifier:\n";
+		ast_output(stream, node->identifier, level + 1);
 
 		break;
 	}
@@ -85,11 +83,14 @@ void ast_output(std::ostream &stream, ASTNode root, const u32 level) {
 	case ASTNodeKind::VAR_DECLARATION: {
 		auto node = reinterpret_cast<const VarDeclarationStmt*>(root.adr);
 
+		stream << indent << "identifier:\n";
 		ast_output(stream, node->name, level + 1);
 
+		stream << indent << "type:\n";
 		ast_output(stream, node->type, level + 1);
 
 		if (node->init) {
+			stream << indent << "init:\n";
 			ast_output(stream, *node->init, level + 1);
 		}
 
