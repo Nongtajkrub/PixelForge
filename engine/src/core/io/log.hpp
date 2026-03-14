@@ -1,5 +1,7 @@
 #pragma once
 
+#define ENABLE_LOG
+
 #ifdef ENABLE_LOG
 	#include <source_location>
 	#include <string_view>

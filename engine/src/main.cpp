@@ -29,7 +29,7 @@ int main() {
 	}
 	*/
 
-	auto arena = BumpArena(8000); 
+	auto arena = BumpArena(320000); 
 
 	auto parser = scr::Parser(lexer.get_token(), arena, std::cout);
 	if (!parser.parse()) {
@@ -38,9 +38,10 @@ int main() {
 	}
 
 	auto file = std::ofstream("ast_output.txt"); 
+	std::println("size; {}", parser.get_ast().size());
 
 	for (auto ast : parser.get_ast()) {
-		scr::ast_output(std::cout, ast);
+		scr::ast_output(file, ast);
 	}
 
 	file.close();

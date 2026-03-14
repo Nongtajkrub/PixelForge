@@ -25,6 +25,8 @@ target_sources(engine
 	src/script/common/diagnostic.hpp
 	src/script/common/diagnostic.cpp
 	src/script/common/source_stream.hpp
+	src/script/common/symbol_table.cpp
+	src/script/common/symbol_table.hpp
 	src/script/lexer/lexer.hpp
 	src/script/lexer/lexer.cpp
 	src/script/parser/parser.hpp

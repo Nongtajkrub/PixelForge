@@ -1,7 +1,6 @@
 #pragma once
 
 #include "../../core/arena/bump_arena.hpp"
-#include "../../core/stack/iterable.hpp"
 #include "../common/token.hpp"
 #include "../common/source_stream.hpp"
 #include "../common/symbol_table.hpp"
@@ -30,9 +29,6 @@ private:
 
 	SymbolTable symbols;
 
-	// A stack containing scope IDs.
-	IterableStack<UniversalIdType> scopes;
-
 	// The stream to output error to.
 	std::ostream& err_stream;
 
@@ -59,8 +55,8 @@ public:
 	}
 
 private:
+	void setup_global_symbols();
 	bool validate_sprite_directive();
-	bool is_symbol_exist(const std::string& symbol);
 	
 	std::optional<ASTNode> parse_stmt();
 	std::optional<ASTNode> parse_nop();
@@ -76,6 +72,9 @@ private:
 	std::optional<ASTNode> parse_block(
 		std::function<bool(TokenKind kind)> end_predicate);
 
+	// Usually parse arguments as `FuncArgument` but can also parse as expression.
+	bool parse_func_args(std::vector<ASTNode>& buf, bool as_expr = false);
+
 	// Parse `IDENTIFIER : "type"`, only work for variable declaration and
 	// function arguments.
 	template<typename T>
@@ -90,18 +89,22 @@ private:
 					::match_peek(this->tokens, this->err_stream)) {
 			return false;
 		}
-		
+
 		node->name = 
 			new_primary_node(ASTNodeKind::IDENTIFIER, this->tokens.advance());
 		this->tokens.advance(); // Skip colon (':').
-		node->type =
+		
+		// Ensure parsed type actually exist.
+		if (!this->symbols.is_type_exis(*this->tokens.peek().lexeme)) {
+			Diagnostic(DiagnosticKind::UNKNOWN_TYPE, this->tokens.peek())
+				.emit(this->err_stream);
+			return false;
+		}
+		node->type = 
 			new_primary_node(ASTNodeKind::TYPE, this->tokens.advance());
 
 		return true;
 	}
-
-	// Usually parse arguments as `FuncArgument` but can also parse as expression.
-	bool parse_func_args(std::vector<ASTNode>& buf, bool as_expr = false);
 
 	inline bool expect(TokenKind kind) {
 		if (match_token(kind)) {

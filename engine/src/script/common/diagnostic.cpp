@@ -21,6 +21,7 @@ std::string_view Diagnostic::resolve_msg() const {
 	case DiagnosticKind::EXPECTED_SPRITE_DIRECT:
 			return "Expected sprite directive";
 	case DiagnosticKind::UNKNOWN_IDENTIFIER: return "Unknown identifier";
+	case DiagnosticKind::UNKNOWN_TYPE: return "Unknown type";
     }
 
 	return "Error message not implemented";

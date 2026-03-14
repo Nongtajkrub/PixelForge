@@ -157,7 +157,9 @@ void Lexer::lex() {
 			default: {
 				const auto sub_info = 
 					this->source.advance_until(
-						[](auto c) -> bool { return !std::isalpha(c) && c != '_'; });
+						[](auto c) -> bool { 
+							return !std::isalpha(c) 
+								&& c != '_' && !std::isdigit(c); });
 				const std::string lexeme =
 						this->source.data().substr(sub_info.begin, sub_info.size);
 				this->location.col += sub_info.size;

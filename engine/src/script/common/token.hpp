@@ -76,6 +76,11 @@ constexpr const char* CMD_UPDATE_LEX = "UPDATE";
 constexpr const char* CMD_COLLIDE_LEX = "COLLIDE";
 
 // Built in types lexemes.
+constexpr const char* BI_TYPE_VOID_LEX = "void";
+constexpr const char* BI_TYPE_INT_LEX = "int";
+constexpr const char* BI_TYPE_FLOAT_LEX = "float";
+constexpr const char* BI_TYPE_BOOL_LEX = "bool";
+constexpr const char* BI_TYPE_STRING_LEX = "str";
 constexpr const char* BI_TYPE_SPRITE_LEX = "Sprite";
 
 struct Token {
@@ -84,12 +89,13 @@ struct Token {
 
 	Location location;
 
-	Token(TokenKind kind, Location location) :
+	explicit Token() = default;
+	explicit Token(TokenKind kind, Location location) :
 		kind(kind),
 		lexeme(std::nullopt),
 		location(location)
 	{ }
-	Token(TokenKind kind, const std::string_view lexeme, Location location) :
+	explicit Token(TokenKind kind, const std::string_view lexeme, Location location) :
 		kind(kind),
 		lexeme(lexeme),
 		location(location)

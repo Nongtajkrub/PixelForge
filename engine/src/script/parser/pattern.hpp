@@ -38,7 +38,7 @@ struct Pattern {
 				stream.advance();
 			} else {
 				if (err_stream) {
-					Diagnostic(resolve_diag_expect_kind(expect), stream.peek())
+					Diagnostic(resolve_diag_expect_kind(expect), stream.prev())
 						.emit(*err_stream);
 				}
 				return false;

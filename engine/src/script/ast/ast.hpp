@@ -37,7 +37,8 @@ struct ASTNode {
 	// Hold a pointer to different nodes.
 	const ASTNodeKind* adr;
 
-	ASTNode(const ASTNodeKind* adr) :
+	explicit ASTNode() = default;
+	explicit ASTNode(const ASTNodeKind* adr) :
 		adr(adr)
 	{ }
 

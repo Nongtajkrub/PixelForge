@@ -26,9 +26,13 @@ public:
 		free(this->data);
 	}
 
+	// Prevent copying
+	BumpArena(const BumpArena&) = delete;
+	BumpArena& operator=(const BumpArena&) = delete;
+
 public:
-	template <typename T>
-	T* alloc() {
+	template <typename T, typename ...Args>
+	T* alloc(Args&&... args) {
 		align_offset<T>();
 
 		if (this->offset + sizeof(T) > this->capacity) {
@@ -39,9 +43,10 @@ public:
 			std::unreachable();
 		} 
 
-		T* ptr = reinterpret_cast<T*>(this->data + this->offset);
+		void* ptr = this->data + this->offset;
 		this->offset += sizeof(T);
-		return ptr;
+
+		return new (ptr) T(std::forward<Args>(args)...);
 	}
 
 private:
