@@ -55,9 +55,9 @@ public:
 	}
 
 private:
-	void setup_global_symbols();
 	bool validate_sprite_directive();
-	
+
+	std::optional<ASTNode> resolve_expr_type(ASTNode exps);
 	std::optional<ASTNode> parse_stmt();
 	std::optional<ASTNode> parse_nop();
 	std::optional<ASTNode> parse_directive();
@@ -84,19 +84,21 @@ private:
 		// Ensure correct type annotation syntax.
 		if (!Pattern<
 				TokenKind::IDENTIFIER,
-				TokenKind::COLON,
-				TokenKind::IDENTIFIER>
+				TokenKind::COLON>
 					::match_peek(this->tokens, this->err_stream)) {
 			return false;
 		}
 
-		node->name = 
-			new_primary_node(ASTNodeKind::IDENTIFIER, this->tokens.advance());
+		const auto id =
+			this->symbols.intern_iden(*(this->tokens.advance().lexeme)); 
+		node->identifier = new_identifier_node(id);
+		this->symbols.new_identifier(id);
+
 		this->tokens.advance(); // Skip colon (':').
 		
 		// Ensure parsed type actually exist.
-		if (!this->symbols.is_type_exis(*this->tokens.peek().lexeme)) {
-			Diagnostic(DiagnosticKind::UNKNOWN_TYPE, this->tokens.peek())
+		if (!this->tokens.peek().is_type()) {
+			Diagnostic(DiagnosticKind::EXPECTED_TYPE, this->tokens.peek())
 				.emit(this->err_stream);
 			return false;
 		}
@@ -135,6 +137,20 @@ private:
 		auto node = this->arena.alloc<PrimaryExpr>();
 		node->kind = kind;
 		node->token = token;
+		return ASTNode(&node->kind);
+	}
+
+	inline ASTNode new_identifier_node(const std::string& symbol) {
+		auto node = this->arena.alloc<IdentifierExpr>();
+		node->kind = ASTNodeKind::IDENTIFIER;
+		node->id = this->symbols.intern_iden(symbol);
+		return ASTNode(&node->kind);
+	}
+
+	inline ASTNode new_identifier_node(UniversalIdType id) {
+		auto node = this->arena.alloc<IdentifierExpr>();
+		node->kind = ASTNodeKind::IDENTIFIER;
+		node->id = id;
 		return ASTNode(&node->kind);
 	}
 

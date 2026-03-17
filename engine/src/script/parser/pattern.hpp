@@ -11,6 +11,7 @@
 
 namespace scr {
 
+// Simple pattern matching system using C++ type system.
 template <TokenKind... Expect>
 struct Pattern {
 	using OstreamRef = std::reference_wrapper<std::ostream>;

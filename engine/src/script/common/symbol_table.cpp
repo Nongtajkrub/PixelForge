@@ -4,7 +4,7 @@ namespace scr {
 
 SymbolTable::SymbolTable() {
 	// Global scope
-	push_scope();
+	enter_scope();
 }
 
 } // namespace scr

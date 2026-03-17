@@ -50,6 +50,13 @@ const char* Token::kind_as_str() const {
 		case TokenKind::LET: return "LET";
         case TokenKind::FUNC: return "FUNC";
         case TokenKind::ENDFUNC: return "ENDFUNC";
+
+		case TokenKind::VOID_T: return "VOID_T";
+		case TokenKind::INT_T: return "INT_T";
+		case TokenKind::FLOAT_T: return "FLOAT_T";
+		case TokenKind::BOOL_T: return "BOOL_T";
+		case TokenKind::STRING_T: return "STRING_T";
+		case TokenKind::SPRITE_T: return "SPRITE_T";
 		
 		case TokenKind::DIRECT_SPRITE: return "DIRECT_SPRITE";
 		case TokenKind::DIRECT_USE: return "DIRECT_USE";
@@ -81,4 +88,19 @@ bool Token::is_directive() const {
 		return false;
 	}
 }
+
+bool Token::is_type() const {
+	switch (this->kind) {
+	case TokenKind::VOID_T:
+	case TokenKind::INT_T:
+	case TokenKind::FLOAT_T:
+	case TokenKind::BOOL_T:
+	case TokenKind::STRING_T:
+	case TokenKind::SPRITE_T:
+		return true;
+	default:
+		return false;
+	}
+}
+
 } // namespace scr

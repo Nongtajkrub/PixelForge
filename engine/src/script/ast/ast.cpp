@@ -38,8 +38,8 @@ void ast_output(std::ostream &stream, ASTNode root, const u32 level) {
 		break;
 	}
 	case ASTNodeKind::IDENTIFIER: {
-		auto node = reinterpret_cast<const PrimaryExpr*>(root.adr);
-		stream << indent << "identifier: " << *node->token.lexeme << '\n';
+		auto node = reinterpret_cast<const IdentifierExpr*>(root.adr);
+		stream << indent << "identifier: " << node->id << '\n';
 		break;
 	}
 	case ASTNodeKind::TYPE: {
@@ -84,7 +84,7 @@ void ast_output(std::ostream &stream, ASTNode root, const u32 level) {
 		auto node = reinterpret_cast<const VarDeclarationStmt*>(root.adr);
 
 		stream << indent << "identifier:\n";
-		ast_output(stream, node->name, level + 1);
+		ast_output(stream, node->identifier, level + 1);
 
 		stream << indent << "type:\n";
 		ast_output(stream, node->type, level + 1);
@@ -99,7 +99,7 @@ void ast_output(std::ostream &stream, ASTNode root, const u32 level) {
 	case ASTNodeKind::FUNC_DECLARATION: {
 		auto node = reinterpret_cast<const FuncDeclarationStmt*>(root.adr);
 
-		ast_output(stream, node->name, level);
+		ast_output(stream, node->identifier, level);
 
 		stream << indent << "args (" << node->args.size() << "):\n";
 		for (const auto& arg : node->args) {
@@ -117,7 +117,7 @@ void ast_output(std::ostream &stream, ASTNode root, const u32 level) {
 	case ASTNodeKind::FUNC_ARGUMENTS: {
 		auto node = reinterpret_cast<const FuncArgument*>(root.adr);
 
-		ast_output(stream, node->name, level + 1);
+		ast_output(stream, node->identifier, level + 1);
 		ast_output(stream, node->type, level + 1);
 
 		break;
@@ -162,7 +162,7 @@ void ast_output(std::ostream &stream, ASTNode root, const u32 level) {
 	case ASTNodeKind::CALL: {
 		auto node = reinterpret_cast<const CallExpr*>(root.adr);
 
-		ast_output(stream, node->name, level);
+		ast_output(stream, node->identifier, level);
 
 		stream << indent << "args (" << node->args.size() << "):\n";
 		for (const auto& arg : node->args) {

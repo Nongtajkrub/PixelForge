@@ -57,6 +57,13 @@ enum class TokenKind : u8 {
 	FUNC,
 	ENDFUNC,
 
+	VOID_T,
+	INT_T,
+	FLOAT_T,
+	BOOL_T,
+	STRING_T,
+	SPRITE_T,
+
 	DIRECT_SPRITE,
 	DIRECT_USE,
 
@@ -76,12 +83,12 @@ constexpr const char* CMD_UPDATE_LEX = "UPDATE";
 constexpr const char* CMD_COLLIDE_LEX = "COLLIDE";
 
 // Built in types lexemes.
-constexpr const char* BI_TYPE_VOID_LEX = "void";
-constexpr const char* BI_TYPE_INT_LEX = "int";
-constexpr const char* BI_TYPE_FLOAT_LEX = "float";
-constexpr const char* BI_TYPE_BOOL_LEX = "bool";
-constexpr const char* BI_TYPE_STRING_LEX = "str";
-constexpr const char* BI_TYPE_SPRITE_LEX = "Sprite";
+constexpr const char* VOID_T_LEX = "void";
+constexpr const char* INT_T_LEX = "int";
+constexpr const char* FLOAT_T_LEX = "float";
+constexpr const char* BOOL_T_LEX = "bool";
+constexpr const char* STRING_T_LEX = "str";
+constexpr const char* SPRITE_T_LEX = "Sprite";
 
 struct Token {
 	TokenKind kind;
@@ -104,6 +111,7 @@ struct Token {
 	const char* kind_as_str() const;
 	bool is_arithmetic_operator() const;
 	bool is_directive() const;
+	bool is_type() const;
 };
 
 }

@@ -1,12 +1,11 @@
 #pragma once
 
-#include "../ast/ast.hpp"
-#include "../../core/id/incremental.hpp"
 #include "../../core/stack/iterable.hpp"
+#include "../../core/id/incremental.hpp"
 
+#include <cassert>
 #include <cstddef>
 #include <unordered_map>
-#include <utility>
 #include <unordered_set>
 #include <ranges>
 
@@ -14,70 +13,55 @@ namespace scr {
 
 using namespace core;
  
-struct IdenAttr {
-	// Symbol data type (Can also be return type).
-	ASTNode type;
-
-	explicit IdenAttr(ASTNode type) :
-		type(type)
-	{ }
-};
-
 class SymbolTable {
-// Identifier table store information about scopes and additional attr.
-using IdenTable =
-	std::unordered_map<
-		UniversalIdType, std::unordered_map<std::string, IdenAttr>>;
-// Type pool store datatypes that exist, types are alway global.
-using TypePool = std::unordered_set<std::string>; 
-
 private:
-	IdenTable idens;
-	TypePool types;
-	IterableStack<UniversalIdType> scopes;
+	// Assigns a unique ID to each string; identical strings share the same ID.
+	std::unordered_map<std::string, UniversalIdType> iden_interner; 
+
+	// Identifier table store in a stack to manage scope.
+	IterableStack<std::unordered_set<UniversalIdType>> scopes;
 
 public:
 	SymbolTable();
 
-	inline void push_scope() {
-		this->scopes.push(IncrementalIdGen::generate());
+	inline void enter_scope() {
+		this->scopes.emplace_back();
 	}
 
-	inline void pop_scope() {
+	inline void leave_scope() {
+		// Ensure do not pop global scope.
+		assert(this->scopes.size() > 1);
 		this->scopes.pop();
 	}
 
-	inline bool is_scope_global() {
-		return this->scopes.top() == this->scopes.bottom();
+	inline UniversalIdType intern_iden(const std::string& iden) {
+		auto [it, inserted] = iden_interner.try_emplace(iden, UniversalIdType{});
+
+		if (inserted) {
+			it->second = IncrementalIdGen::generate();
+		}
+
+		return it->second;
 	}
 
 	// Add a new or replace symbol.
-	inline void set_iden(const std::string& symbol, IdenAttr attr) {
-		this->idens[this->scopes.top()].emplace(symbol, attr);
+	inline void new_identifier(UniversalIdType id) {
+		this->scopes.top().insert(id);
 	}
 
 	// Add a new or replace global symbol.
-	inline void set_iden_global(const std::string& symbol, IdenAttr attr) {
-		this->idens[this->scopes.bottom()].emplace(symbol, attr);
+	inline void new_identifier_global(UniversalIdType id) {
+		this->scopes.bottom().insert(id);
 	}
 
 	// Check whether a symbol exist.
-	inline bool is_iden_exist(const std::string& symbol) {
+	inline bool is_iden_exist(UniversalIdType id) {
 		for (const auto& scope : std::views::reverse(this->scopes)) {
-			const auto scope_it = idens.find(scope);
-			if (scope_it != idens.end() && scope_it->second.contains(symbol)) {
+			if (scope.contains(id)) {
 				return true;
 			}
 		}
 		return false;
-	}
-
-	inline void new_type(const std::string& symbol) {
-		this->types.insert(symbol);
-	}
-
-	inline bool is_type_exis(const std::string& symbol) {
-		return this->types.contains(symbol);
 	}
 };
 

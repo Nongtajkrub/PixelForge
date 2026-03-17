@@ -37,27 +37,23 @@ if (!this->symbols.is_iden_exist(SYMBOL)) {                                   \
 }                                                                             \
 while (0)                                                                     
 
-#define ENSURE_TYPE_EXIST(TOKEN)                                              \
-do                                                                            \
-	if (!this->symbols.is_type_exis(*(TOKEN).lexeme)) {                       \
-		Diagnostic(DiagnosticKind::UNKNOWN_TYPE, TOKEN)                       \
-			.emit(this->err_stream);                                          \
-		return std::nullopt;                                                  \
-	}                                                                         \
-while (0)
-
-
 namespace scr {
 
-void Parser::setup_global_symbols() {
-	assert(this->symbols.is_scope_global());
+bool Parser::parse() {
+	// Ensure code start with the sprite directive.
+	if (!validate_sprite_directive()) {
+		return false;
+	}
 
-	this->symbols.new_type(BI_TYPE_VOID_LEX);
-	this->symbols.new_type(BI_TYPE_INT_LEX);
-	this->symbols.new_type(BI_TYPE_FLOAT_LEX);
-	this->symbols.new_type(BI_TYPE_BOOL_LEX);
-	this->symbols.new_type(BI_TYPE_STRING_LEX);
-	this->symbols.new_type(BI_TYPE_SPRITE_LEX);
+	while (!this->tokens.is_eof()) {
+		// Recursively parse the code.
+		if (auto node = parse_stmt(); node) {
+			this->ast.push_back(*node);
+		} else {
+			return false;
+		}
+	}
+	return true;
 }
 
 bool Parser::validate_sprite_directive(){
@@ -73,23 +69,8 @@ bool Parser::validate_sprite_directive(){
 	return true;
 }
 
-bool Parser::parse() {
-	// Ensure code start with the sprite directive.
-	if (!validate_sprite_directive()) {
-		return false;
-	}
-
-	setup_global_symbols();
-
-	while (!this->tokens.is_eof()) {
-		// Recursively parse the code.
-		if (auto node = parse_stmt(); node) {
-			this->ast.push_back(*node);
-		} else {
-			return false;
-		}
-	}
-	return true;
+std::optional<ASTNode> Parser::resolve_expr_type(ASTNode expr) {
+	return std::nullopt;
 }
 
 std::optional<ASTNode> Parser::parse_stmt() {
@@ -134,37 +115,17 @@ std::optional<ASTNode> Parser::parse_directive() {
 	node->directive =
 		new_primary_node(ASTNodeKind::KEYWORD, this->tokens.advance());
 
-	// Ensure correct directive pattern.
+	// Ensure correct pattern.
 	if (!Pattern<
 			TokenKind::IDENTIFIER,
 			TokenKind::SEMICOLON>::match_peek(this->tokens, this->err_stream)) {
 		return std::nullopt;
 	}
 
-	// Add new symbols depending on the directive.
-	switch (this->tokens.prev().kind) {
-	// Sprite and use directive will declare a Sprite type identifier.
-	case TokenKind::DIRECT_SPRITE:
-	case TokenKind::DIRECT_USE: {
-		const Token& iden = this->tokens.peek();
+	const auto id = this->symbols.intern_iden(*(this->tokens.advance().lexeme));
+	node->identifier = new_identifier_node(id);
+	this->symbols.new_identifier_global(id); 
 
-		// Add a symbol to the global scope.
-		this->symbols.set_iden_global(
-			*iden.lexeme,
-			IdenAttr(
-				new_primary_node(
-					ASTNodeKind::TYPE,
-					Token(
-						TokenKind::IDENTIFIER, 
-						BI_TYPE_SPRITE_LEX, iden.location))));
-		break;
-	}
-	default:
-		std::unreachable();
-	};
-
-	node->identifier =
-		new_primary_node(ASTNodeKind::IDENTIFIER, this->tokens.advance());
 	this->tokens.advance(); // Skip semicolon.
 
 	return ASTNode(&node->kind);
@@ -179,11 +140,6 @@ std::optional<ASTNode> Parser::parse_var_declaration_stmt() {
 	if (!parse_type_annotation<VarDeclarationStmt*>(node)) {
 		return std::nullopt;
 	}
-
-	// Create new symbol.
-	this->symbols.set_iden(
-		*reinterpret_cast<const PrimaryExpr*>(node->name.adr)->token.lexeme,
-		IdenAttr(node->type));
 
 	ENSURE_NOT_EOF();
 
@@ -216,35 +172,30 @@ std::optional<ASTNode> Parser::parse_func_declaration_stmt() {
 	if (!expect_peek(TokenKind::IDENTIFIER)) {
 		return std::nullopt;
 	}
-	const std::string& func_iden = *this->tokens.peek().lexeme;
-	node->name =
-		new_primary_node(ASTNodeKind::IDENTIFIER, this->tokens.advance());
+	const auto id = this->symbols.intern_iden(*(this->tokens.advance().lexeme)); 
+	node->identifier = new_identifier_node(id);
+	this->symbols.new_identifier(id);
 
-	// Ensure correct return type annotation syntax.
-	if (!Pattern<
-			TokenKind::ARROW,
-			TokenKind::IDENTIFIER>
-				::match_peek(this->tokens, this->err_stream)) {
+	if (!expect(TokenKind::ARROW)) {
 		return std::nullopt;
 	}
-	this->tokens.advance(); // Skip arrow ('->').
-	ENSURE_TYPE_EXIST(this->tokens.peek());
-	node->type =
-		new_primary_node(ASTNodeKind::IDENTIFIER, this->tokens.advance());
 
-	// Create new function scope and symbol.
-	this->symbols.set_iden(func_iden, IdenAttr(node->type));
+	if (!this->tokens.peek().is_type()) {
+		Diagnostic(DiagnosticKind::EXPECTED_TYPE, this->tokens.peek())
+			.emit(this->err_stream);
+		return std::nullopt;
+	}
+	node->type =
+		new_primary_node(ASTNodeKind::TYPE, this->tokens.advance());
 
 	// Push scope here to include function arguments in the scope as well.
-	this->symbols.push_scope();
+	this->symbols.enter_scope();
 
 	ENSURE_NOT_EOF();
 
 	if (!expect(TokenKind::LEFT_PAREN)) {
 		return std::nullopt;
 	}
-
-	// Parse function arguments.
 	if (!parse_func_args(node->args)) {
 		return std::nullopt;
 	}
@@ -260,7 +211,7 @@ std::optional<ASTNode> Parser::parse_func_declaration_stmt() {
 
 	// Ignore the "endfunc" keyword and go out of function scope.
 	this->tokens.advance();
-	this->symbols.pop_scope();
+	this->symbols.leave_scope();
 
 	ENSURE_NOT_EOF();
 
@@ -279,7 +230,7 @@ std::optional<ASTNode> Parser::parse_if_stmt() {
 
 	OPT_ASSIGN_OR_RETURN(node->expr, parse_expr(TokenKind::SEMICOLON));
 
-	this->symbols.push_scope();
+	this->symbols.enter_scope();
 	
 	// parse then branch.
 	OPT_ASSIGN_OR_RETURN(
@@ -308,7 +259,7 @@ std::optional<ASTNode> Parser::parse_if_stmt() {
 
 	// Ignore "endif" keyword and go out of if scope.
 	this->tokens.advance();
-	this->symbols.pop_scope();
+	this->symbols.leave_scope();
 
 	ENSURE_NOT_EOF();
 
@@ -330,9 +281,7 @@ std::optional<ASTNode> Parser::parse_cmd_stmt() {
 	// Expect both an identifier and the self keyword.
 	switch (this->tokens.peek().kind) {
 	case TokenKind::IDENTIFIER:
-
-		node->target =
-			new_primary_node(ASTNodeKind::IDENTIFIER, this->tokens.advance());
+		node->target = new_identifier_node(*(this->tokens.advance().lexeme));
 		break;
 	case TokenKind::SELF:
 		node->target =
@@ -417,9 +366,8 @@ std::optional<ASTNode> Parser::pratt_nud() {
 		return new_primary_node(ASTNodeKind::LITERAL, this->tokens.advance());
 	case TokenKind::SELF:
 		return new_primary_node(ASTNodeKind::KEYWORD, this->tokens.advance());
-	case TokenKind::IDENTIFIER:
-		ENSURE_IDEN_EXIST(*this->tokens.peek().lexeme);
-		return new_primary_node(ASTNodeKind::IDENTIFIER, this->tokens.advance());
+	case TokenKind::IDENTIFIER: 
+		return new_identifier_node(*(this->tokens.advance().lexeme));
 	case TokenKind::LEFT_PAREN: 
 		// Skip the left paren.
 		this->tokens.advance(); 
@@ -459,7 +407,7 @@ std::optional<ASTNode> Parser::pratt_led(Token op, ASTNode left, u8 min_bp) {
 		}
 
 		auto node = new_node<CallExpr>(ASTNodeKind::CALL);
-		node->name = left;
+		node->identifier = left;
 		if (!parse_func_args(node->args, true)) {
 			return std::nullopt;
 		}

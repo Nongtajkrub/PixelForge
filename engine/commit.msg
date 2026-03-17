@@ -1,0 +1,1 @@
+Implement emplace_back for IteratableStack. Implement a separate ASTNode for Identifiers. Use ID to classify identifiers insteead of using strings. Implement datatype as TokenKind directly. Change push_scope and pop_scope to enter_scope and leave_scope.

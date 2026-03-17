@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstddef>
+#include <utility>
 #include <vector>
 
 namespace core {
@@ -15,18 +17,27 @@ public:
 		this->stack.push_back(v);
 	}
 
+	template <typename ...Args>
+	inline void emplace_back(Args&& ...args) {
+		this->stack.emplace_back(std::forward(args)...);
+	}
+
 	inline T pop() {
 		T v = this->stack.back();
 		this->stack.pop_back();
 		return v;
 	}
 
-	inline const T& top() const {
+	inline T& top() {
 		return this->stack.back();
 	}
 
-	inline auto bottom() {
+	inline T& bottom() {
 		return this->stack[0];
+	}
+
+	inline size_t size() const {
+		return this->stack.size();
 	}
 
 	inline auto begin() {

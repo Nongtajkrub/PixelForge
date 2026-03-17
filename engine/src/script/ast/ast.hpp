@@ -2,12 +2,15 @@
 
 #include "../../global.hpp"
 #include "../common/token.hpp"
+#include "../../core/id/incremental.hpp"
 
 #include <optional>
 #include <ostream>
 #include <vector>
 
 namespace scr {
+
+using namespace core;
 
 enum class ASTNodeKind : u8 {
 	NOP,
@@ -63,6 +66,12 @@ struct PrimaryExpr {
 	Token token;
 }; 
 
+struct IdentifierExpr {
+	ASTNodeKind kind;
+
+	UniversalIdType id;
+};
+
 struct BinaryExpr {
 	ASTNodeKind kind;
 
@@ -74,7 +83,7 @@ struct BinaryExpr {
 struct CallExpr {
 	ASTNodeKind kind;
 
-	ASTNode name;
+	ASTNode identifier;
 	std::vector<ASTNode> args;
 };
 
@@ -88,7 +97,7 @@ struct BlockStmt {
 struct VarDeclarationStmt {
 	ASTNodeKind kind;
 
-	ASTNode name;
+	ASTNode identifier;
 	ASTNode type;
 	std::optional<ASTNode> init;
 };
@@ -96,14 +105,14 @@ struct VarDeclarationStmt {
 struct FuncArgument {
 	ASTNodeKind kind;
 
-	ASTNode name;
+	ASTNode identifier;
 	ASTNode type;
 };
 
 struct FuncDeclarationStmt {
 	ASTNodeKind kind;
-
-	ASTNode name;
+	
+	ASTNode identifier;
 	std::vector<ASTNode> args;
 	ASTNode type;
 
