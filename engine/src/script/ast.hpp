@@ -1,8 +1,8 @@
 #pragma once
 
-#include "../../global.hpp"
-#include "../common/token.hpp"
-#include "../../core/id/incremental.hpp"
+#include "../global.hpp"
+#include "token.hpp"
+#include "../core/id/incremental.hpp"
 
 #include <optional>
 #include <ostream>
@@ -98,8 +98,8 @@ struct VarDeclarationStmt {
 	ASTNodeKind kind;
 
 	ASTNode identifier;
-	ASTNode type;
 	std::optional<ASTNode> init;
+	ASTNode type;
 };
 
 struct FuncArgument {
@@ -122,7 +122,7 @@ struct FuncDeclarationStmt {
 struct AssignStmt {
 	ASTNodeKind kind;
 
-	ASTNode iden;
+	ASTNode identifier;
 	ASTNode expr;
 };
 

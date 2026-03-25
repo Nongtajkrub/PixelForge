@@ -1,11 +1,10 @@
 #pragma once
 
-#include "../common/location.hpp"
-#include "../common/token.hpp"
-#include "../common/source_stream.hpp"
+#include "location.hpp"
+#include "token.hpp"
+#include "source_stream.hpp"
 
 #include <cstddef>
-#include <span>
 #include <string_view>
 #include <vector>
 
@@ -26,7 +25,7 @@ public:
 		this->lex();
 	}
 
-	inline const std::span<Token> get_token() {
+	inline std::vector<Token>& get_token() {
 		return this->tokens;
 	}
 

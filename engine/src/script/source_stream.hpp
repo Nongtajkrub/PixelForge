@@ -19,19 +19,19 @@ public:
 		size_t size;
 	};
 
-private:
-	const T soruce;
+protected:
+	T source;
 	size_t pos;
 
 public:
-	explicit SourceStream(T soruce) :
-		soruce(soruce),
+	explicit SourceStream(T source) :
+		source(source),
 		pos(0)
 	{ }
 
 	// Consume the current charactor and move to the next.
 	inline V advance() {
-		V v = this->soruce[this->pos];
+		V v = this->source[this->pos];
 		this->pos++;
 
 		return v;
@@ -42,7 +42,7 @@ public:
 	}
 
 	inline V prev() {
-		return this->soruce[this->pos - 1];
+		return this->source[this->pos - 1];
 	}
 	
 	// Consume and move only if the current charactor is `c`.
@@ -85,15 +85,15 @@ public:
 
 	// Peek at the current charactor without consuming.
 	inline V peek() const {
-		return this->soruce[this->pos];
+		return this->source[this->pos];
 	}
 
 	inline bool can_look_ahead(size_t n) {
-		return (this->pos + n) < std::ranges::size(this->soruce);
+		return (this->pos + n) < std::ranges::size(this->source);
 	}
 
 	inline V look_ahead(size_t n) {
-		return this->soruce[this->pos + n];
+		return this->source[this->pos + n];
 	}
 
 	inline size_t get_pos() const {
@@ -101,19 +101,19 @@ public:
 	}
 
 	inline bool is_eof() const {
-		return this->pos == this->soruce.size();
+		return this->pos == this->source.size();
 	}
 
 	inline const T& data() const {
-		return this->soruce;
+		return this->source;
 	}
 
 	inline const V first() const {
-		return this->soruce[0];
+		return this->source[0];
 	}
 
 	inline const V last() const {
-		return this->soruce[std::size(this->soruce) - 1];
+		return this->source[std::size(this->source) - 1];
 	}
 };
 

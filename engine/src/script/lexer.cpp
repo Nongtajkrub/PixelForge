@@ -1,4 +1,4 @@
-#include "../common/token.hpp"
+#include "token.hpp"
 #include "lexer.hpp"
 
 #include <cctype>
@@ -24,7 +24,8 @@ static const std::unordered_map<std::string, TokenKind> keywords = {
 	{"endfunc", TokenKind::ENDFUNC},
 	{"@sprite", TokenKind::DIRECT_SPRITE},
 	{"@use", TokenKind::DIRECT_USE},
-	{VOID_T_LEX, TokenKind::VOID_T},
+	{"@update", TokenKind::DIRECT_UPDATE},
+	{"@collide", TokenKind::DIRECT_COLLIDE},
 	{INT_T_LEX, TokenKind::INT_T},
 	{FLOAT_T_LEX, TokenKind::FLOAT_T},
 	{BOOL_T_LEX, TokenKind::BOOL_T},
@@ -34,6 +35,7 @@ static const std::unordered_map<std::string, TokenKind> keywords = {
 	{CMD_DESPAWN_LEX, TokenKind::COMMAND},
 	{CMD_UP_LEX, TokenKind::COMMAND},
 	{CMD_DOWN_LEX, TokenKind::COMMAND},
+	{CMD_RIGHT_LEX, TokenKind::COMMAND},
 	{CMD_LEFT_LEX, TokenKind::COMMAND},
 	{CMD_GOTO_LEX, TokenKind::COMMAND},
 	{CMD_SHOW_LEX, TokenKind::COMMAND},
@@ -136,11 +138,13 @@ void Lexer::lex() {
 					this->source.advance_until(
 						[](auto c) -> bool {
 							return !std::isdigit(c) && c != '.'; });
+				const auto lexeme = 
+					this->source.data().substr(sub_info.begin, sub_info.size);
 				add_token(
-					TokenKind::NUMBER,
-					this->source.data().substr(sub_info.begin, sub_info.size));
-				this->location.col += sub_info.size;
+					(lexeme.contains('.')) ?
+						TokenKind::FLOAT : TokenKind::INTEGER, lexeme);
 
+				this->location.col += sub_info.size;
 				break;
 			}
 			case '#':

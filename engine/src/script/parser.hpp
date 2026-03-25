@@ -1,13 +1,13 @@
 #pragma once
 
-#include "../../core/arena/bump_arena.hpp"
-#include "../common/token.hpp"
-#include "../common/source_stream.hpp"
-#include "../common/symbol_table.hpp"
-#include "../common/diagnostic.hpp"
-#include "../ast/ast.hpp"
+#include "../core/arena/bump_arena.hpp"
+#include "token.hpp"
+#include "symbol_table.hpp"
+#include "diagnostic.hpp"
+#include "ast.hpp"
 #include "pattern.hpp"
 
+#include <cassert>
 #include <cstddef>
 #include <functional>
 #include <optional>
@@ -24,10 +24,9 @@ private:
 	// Arena allocator for nodes.
 	BumpArena& arena;
 
-	// Token stream.
-	SourceStream<const std::span<Token>, Token, const Token&> tokens;
+	TokenStream tokens;
 
-	SymbolTable symbols;
+	SymbolTable& symbols;
 
 	// The stream to output error to.
 	std::ostream& err_stream;
@@ -38,8 +37,9 @@ private:
 public:
 	Parser(
 		const std::span<Token> tokens,
-		BumpArena& arena, std::ostream& err_stream) :
-		tokens(tokens),
+		SymbolTable& symbols, BumpArena& arena, std::ostream& err_stream) :
+		tokens(tokens, err_stream),
+		symbols(symbols),
 		arena(arena),
 		err_stream(err_stream)
 	{ }
@@ -55,9 +55,9 @@ public:
 	}
 
 private:
-	bool validate_sprite_directive();
+	// Resolve data type of expression, take source location to emit errors.
+	std::optional<TokenKind> resolve_expr_type(ASTNode expr, Location loc);
 
-	std::optional<ASTNode> resolve_expr_type(ASTNode exps);
 	std::optional<ASTNode> parse_stmt();
 	std::optional<ASTNode> parse_nop();
 	std::optional<ASTNode> parse_directive();
@@ -83,6 +83,7 @@ private:
 	bool parse_type_annotation(T node) {
 		// Ensure correct type annotation syntax.
 		if (!Pattern<
+				TokenStream,
 				TokenKind::IDENTIFIER,
 				TokenKind::COLON>
 					::match_peek(this->tokens, this->err_stream)) {
@@ -91,46 +92,58 @@ private:
 
 		const auto id =
 			this->symbols.intern_iden(*(this->tokens.advance().lexeme)); 
-		node->identifier = new_identifier_node(id);
-		this->symbols.new_identifier(id);
 
 		this->tokens.advance(); // Skip colon (':').
 		
 		// Ensure parsed type actually exist.
-		if (!this->tokens.peek().is_type()) {
+		if (!token_is_type(this->tokens.peek().kind)) {
 			Diagnostic(DiagnosticKind::EXPECTED_TYPE, this->tokens.peek())
 				.emit(this->err_stream);
 			return false;
 		}
-		node->type = 
-			new_primary_node(ASTNodeKind::TYPE, this->tokens.advance());
+		const auto& type_token = this->tokens.advance();
+		this->symbols.new_identifier(id, IdenAttr(type_token.kind));
+		node->identifier = new_identifier_node(id);
+		node->type = new_primary_node(ASTNodeKind::TYPE, type_token); 
 
 		return true;
 	}
 
-	inline bool expect(TokenKind kind) {
-		if (match_token(kind)) {
-			return true;
-		} else {
-			Diagnostic(resolve_diag_expect_kind(kind), this->tokens.prev())
+	inline bool ensure_iden_exist(UniversalIdType id) {
+		if (!this->symbols.contains(id)) {
+			Diagnostic(DiagnosticKind::UNKNOWN_IDENTIFIER, this->tokens.peek()) 
 				.emit(this->err_stream);
 			return false;
 		}
+		return true;
 	}
 
-	inline bool expect_peek(TokenKind kind) {
-		if (this->tokens.peek().kind == kind) {
-			return true;
+	inline bool ensure_iden_type(UniversalIdType id, TokenKind type) {
+		assert(token_is_type(type));
+
+		if (const auto attr = this->symbols.lookup(id); attr) {
+			if ((*attr).type != type) {
+				Diagnostic(DiagnosticKind::TYPE_ERROR, this->tokens.advance())
+					.emit(this->err_stream);
+				return false;
+			}
 		} else {
-			Diagnostic(resolve_diag_expect_kind(kind), this->tokens.peek())
+			Diagnostic(DiagnosticKind::UNKNOWN_IDENTIFIER, this->tokens.advance())
 				.emit(this->err_stream);
 			return false;
 		}
+		return true;
 	}
 
-	inline bool match_token(TokenKind kind) {
-		return this->tokens.match(
-			[kind](auto token) -> bool { return token.kind == kind; });
+	// Take source location to emit errors.
+	inline bool ensure_type_same(TokenKind t1, TokenKind t2, Location loc) {
+		assert(token_is_type(t1) && token_is_type(t2));
+
+		if (t1 != t2) {
+			Diagnostic(DiagnosticKind::TYPE_ERROR, loc).emit(this->err_stream);
+			return false;
+		}
+		return true;
 	}
 
 	inline ASTNode new_primary_node(ASTNodeKind kind, const Token& token) {

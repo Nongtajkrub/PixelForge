@@ -20,17 +20,19 @@ target_sources(engine
 	src/core/io/byte.cpp
 	src/core/arena/bump_arena.hpp
 
-	src/script/common/token.hpp
-	src/script/common/token.cpp
-	src/script/common/diagnostic.hpp
-	src/script/common/diagnostic.cpp
-	src/script/common/source_stream.hpp
-	src/script/common/symbol_table.cpp
-	src/script/common/symbol_table.hpp
-	src/script/lexer/lexer.hpp
-	src/script/lexer/lexer.cpp
-	src/script/parser/parser.hpp
-	src/script/parser/parser.cpp
-	src/script/ast/ast.hpp
-	src/script/ast/ast.cpp
+	src/script/token.hpp
+	src/script/token.cpp
+	src/script/diagnostic.hpp
+	src/script/diagnostic.cpp
+	src/script/source_stream.hpp
+	src/script/symbol_table.cpp
+	src/script/symbol_table.hpp
+	src/script/lexer.hpp
+	src/script/lexer.cpp
+	src/script/preprocessor.hpp
+	src/script/preprocessor.cpp
+	src/script/parser.hpp
+	src/script/parser.cpp
+	src/script/ast.hpp
+	src/script/ast.cpp
 )

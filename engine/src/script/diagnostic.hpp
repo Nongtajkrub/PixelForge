@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../../global.hpp"
+#include "../global.hpp"
 #include "location.hpp"
 #include "token.hpp"
 
@@ -22,11 +22,13 @@ enum class DiagnosticKind : u8 {
 	EXPECTED_ARROW,
 	EXPECTED_COMMA,
 	EXPECTED_COMMAND,
-	EXPECTED_NUMBER,
+	EXPECTED_INTEGER,
 	EXPECTED_SPRITE_DIRECT,
 	EXPECTED_TYPE,
 
 	UNKNOWN_IDENTIFIER,
+
+	TYPE_ERROR,
 };
 
 DiagnosticKind resolve_diag_expect_kind(TokenKind kind);

@@ -44,7 +44,9 @@ void ast_output(std::ostream &stream, ASTNode root, const u32 level) {
 	}
 	case ASTNodeKind::TYPE: {
 		auto node = reinterpret_cast<const PrimaryExpr*>(root.adr);
-		stream << indent << "type: " << *node->token.lexeme << '\n';
+		stream 
+			<< indent 
+			<< "type: " <<  token_kind_as_str(node->token.kind) << '\n';
 		break;
 	}
 	case ASTNodeKind::KEYWORD: {
@@ -55,7 +57,7 @@ void ast_output(std::ostream &stream, ASTNode root, const u32 level) {
 			<< indent 
 			<< "keyword: " 
 			<< ((node->token.lexeme) ?
-					*node->token.lexeme : node->token.kind_as_str()) 
+					*node->token.lexeme : token_kind_as_str(node->token.kind)) 
 			<< '\n';
 
 		break;
@@ -125,7 +127,7 @@ void ast_output(std::ostream &stream, ASTNode root, const u32 level) {
 	case ASTNodeKind::ASSIGN: {
 		auto node = reinterpret_cast<const AssignStmt*>(root.adr);
 
-		ast_output(stream, node->iden, level + 1);
+		ast_output(stream, node->identifier, level + 1);
 		ast_output(stream, node->expr, level + 1);
 
 		break;
@@ -152,7 +154,9 @@ void ast_output(std::ostream &stream, ASTNode root, const u32 level) {
 		stream << indent << "left: \n";
 		ast_output(stream, node->left, level + 1);
 
-		stream << indent << "operator: " << node->op.kind_as_str() << '\n';
+		stream 
+			<< indent 
+			<< "operator: " << token_kind_as_str(node->op.kind) << '\n';
 
 		stream << indent << "right: \n";
 		ast_output(stream, node->right, level + 1);

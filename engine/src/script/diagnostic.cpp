@@ -17,11 +17,12 @@ std::string_view Diagnostic::resolve_msg() const {
 	case DiagnosticKind::EXPECTED_ARROW: return "Expected arrow";
 	case DiagnosticKind::EXPECTED_COMMA: return "Expected comma"; 
 	case DiagnosticKind::EXPECTED_COMMAND: return "Expected command"; 
-	case DiagnosticKind::EXPECTED_NUMBER: return "Expected number"; 
+	case DiagnosticKind::EXPECTED_INTEGER: return "Expected integer"; 
 	case DiagnosticKind::EXPECTED_SPRITE_DIRECT:
 			return "Expected sprite directive";
 	case DiagnosticKind::EXPECTED_TYPE: return "Expected type";
 	case DiagnosticKind::UNKNOWN_IDENTIFIER: return "Unknown identifier";
+	case DiagnosticKind::TYPE_ERROR: return "Type error";
     }
 
 	return "Error message not implemented";
@@ -36,7 +37,7 @@ DiagnosticKind resolve_diag_expect_kind(TokenKind kind) {
 	case TokenKind::RIGHT_PAREN: return DiagnosticKind::EXPECTED_RIGHT_PAREN;
 	case TokenKind::ARROW: return DiagnosticKind::EXPECTED_ARROW;
 	case TokenKind::COMMA: return DiagnosticKind::EXPECTED_COMMA;
-	case TokenKind::NUMBER: return DiagnosticKind::EXPECTED_NUMBER;
+	case TokenKind::INTEGER: return DiagnosticKind::EXPECTED_INTEGER;
 	case TokenKind::COMMAND: return DiagnosticKind::EXPECTED_COMMAND;
 	default: return DiagnosticKind::UNEXPECTED_TOKEN;
 	}

@@ -1,9 +1,11 @@
 #include <iostream>
 #include <fstream>
 
-#include "script/lexer/lexer.hpp"
-#include "script/ast/ast.hpp"
-#include "script/parser/parser.hpp"
+#include "script/symbol_table.hpp"
+#include "script/lexer.hpp"
+#include "script/ast.hpp"
+#include "script/parser.hpp"
+#include "script/preprocessor.hpp"
 #include "core/arena/bump_arena.hpp"
 #include "core/io/file.hpp"
 
@@ -22,16 +24,26 @@ int main() {
 	/*
 	for (const auto token : lexer.get_token()) {
 		if (token.lexeme.has_value()) {
-			std::cout << token.kind_as_str() << ", " << token.lexeme.value() << '\n'; 
+			std::cout 
+				<< scr::token_kind_as_str(token.kind) 
+				<< ", " << token.lexeme.value() << '\n'; 
 		} else {
-			std::cout << token.kind_as_str() << '\n'; 
+			std::cout << scr::token_kind_as_str(token.kind)<< '\n'; 
 		}
 	}
 	*/
 
+	auto symbols = scr::SymbolTable(); 
 	auto arena = BumpArena(320000); 
 
-	auto parser = scr::Parser(lexer.get_token(), arena, std::cout);
+	auto preprocessor = scr::Preprocessor(lexer.get_token(), symbols, std::cout); 
+
+	if (!preprocessor.process()) {
+		std::cout << "Preprocessor fail\n";
+		return -1;
+	}
+
+	auto parser = scr::Parser(lexer.get_token(), symbols, arena, std::cout);
 	if (!parser.parse()) {
 		std::cout << "Prase Fail" << '\n';
 		return -1;
@@ -41,7 +53,7 @@ int main() {
 	std::println("size; {}", parser.get_ast().size());
 
 	for (auto ast : parser.get_ast()) {
-		scr::ast_output(file, ast);
+		scr::ast_output(std::cout, ast);
 	}
 
 	file.close();

@@ -40,7 +40,6 @@ public:
 			free(this->data);
 
 			std::abort();
-			std::unreachable();
 		} 
 
 		void* ptr = this->data + this->offset;

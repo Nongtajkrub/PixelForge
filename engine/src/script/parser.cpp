@@ -1,51 +1,26 @@
-#include "../common/diagnostic.hpp"
-#include "../common/token.hpp"
-#include "../parser/parser.hpp"
-#include "../ast/ast.hpp"
+#include "../core/io/log.hpp"
+#include "diagnostic.hpp"
+#include "token.hpp"
+#include "parser.hpp"
+#include "ast.hpp"
 #include "pattern.hpp"
 
 #include <cassert>
+#include <cstddef>
 #include <optional>
 #include <tuple>
 #include <utility>
 #include <vector>
 
-#define ENSURE_NOT_EOF()                                                      \
-do                                                                            \
-if (this->tokens.is_eof()) {                                                  \
-	Diagnostic(DiagnosticKind::UNEXPECTED_EOF, this->tokens.prev())           \
-		.emit(this->err_stream);                                              \
-	return std::nullopt;                                                      \
-}                                                                             \
-while (0)                                                                     
-
-#define ENSURE_NOT_EOF_BOOL()                                                 \
-do                                                                            \
-if (this->tokens.is_eof()) {                                                  \
-	Diagnostic(DiagnosticKind::UNEXPECTED_EOF, this->tokens.prev())           \
-		.emit(this->err_stream);                                              \
-	return false;                                                             \
-}                                                                             \
-while (0)                                                                     
-
-#define ENSURE_IDEN_EXIST(SYMBOL)                                             \
-do                                                                            \
-if (!this->symbols.is_iden_exist(SYMBOL)) {                                   \
-	Diagnostic(DiagnosticKind::UNKNOWN_IDENTIFIER, this->tokens.peek())       \
-		.emit(this->err_stream);                                              \
-	return std::nullopt;                                                      \
-}                                                                             \
-while (0)                                                                     
-
 namespace scr {
 
 bool Parser::parse() {
-	// Ensure code start with the sprite directive.
-	if (!validate_sprite_directive()) {
-		return false;
-	}
-
 	while (!this->tokens.is_eof()) {
+		if (this->tokens.peek().skip) {
+			this->tokens.advance();
+			continue;
+		}
+
 		// Recursively parse the code.
 		if (auto node = parse_stmt(); node) {
 			this->ast.push_back(*node);
@@ -56,21 +31,28 @@ bool Parser::parse() {
 	return true;
 }
 
-bool Parser::validate_sprite_directive(){
-	// Missing semicolon will be treated as a separate error.
-	if (!Pattern<
-			TokenKind::DIRECT_SPRITE,
-			TokenKind::IDENTIFIER>::match_peek(this->tokens)) {
-		Diagnostic(DiagnosticKind::EXPECTED_SPRITE_DIRECT, Location(0, 0))
+std::optional<TokenKind> Parser::resolve_expr_type(ASTNode expr, Location loc) {
+	switch (*expr.adr) {
+	case ASTNodeKind::LITERAL:
+		return 
+			token_kind_as_type(
+				reinterpret_cast<const PrimaryExpr*>(expr.adr)->token.kind);
+	case ASTNodeKind::IDENTIFIER:
+		if (const auto attr = 
+				this->symbols.lookup(
+					reinterpret_cast<const IdentifierExpr*>(expr.adr)->id);
+				attr) {
+			return (*attr).type;
+		}
+
+		Diagnostic(DiagnosticKind::UNKNOWN_IDENTIFIER, loc)
 			.emit(this->err_stream);
-		return false;
+		return std::nullopt;
+	default:
+		Diagnostic(DiagnosticKind::TYPE_ERROR, loc)
+			.emit(this->err_stream);
+		return std::nullopt;
 	}
-
-	return true;
-}
-
-std::optional<ASTNode> Parser::resolve_expr_type(ASTNode expr) {
-	return std::nullopt;
 }
 
 std::optional<ASTNode> Parser::parse_stmt() {
@@ -90,7 +72,7 @@ std::optional<ASTNode> Parser::parse_stmt() {
 	default:
 		const auto& token = this->tokens.peek();
 
-		if (token.is_directive()) {
+		if (token_is_directive(token.kind)) {
 			return parse_directive();
 		}
 
@@ -103,7 +85,7 @@ std::optional<ASTNode> Parser::parse_stmt() {
 std::optional<ASTNode> Parser::parse_nop() {
 	auto node = new_node<NopNode>(ASTNodeKind::NOP);
 	this->tokens.advance();
-	if (!expect(TokenKind::SEMICOLON)) {
+	if (!this->tokens.expect(TokenKind::SEMICOLON)) {
 		return std::nullopt;
 	}
 	return ASTNode(&node->kind);
@@ -112,11 +94,12 @@ std::optional<ASTNode> Parser::parse_nop() {
 std::optional<ASTNode> Parser::parse_directive() {
 	auto node = new_node<DirectiveStmt>(ASTNodeKind::DIRECTIVE);
 
-	node->directive =
+	node->directive =  
 		new_primary_node(ASTNodeKind::KEYWORD, this->tokens.advance());
 
 	// Ensure correct pattern.
 	if (!Pattern<
+			TokenStream,
 			TokenKind::IDENTIFIER,
 			TokenKind::SEMICOLON>::match_peek(this->tokens, this->err_stream)) {
 		return std::nullopt;
@@ -124,7 +107,7 @@ std::optional<ASTNode> Parser::parse_directive() {
 
 	const auto id = this->symbols.intern_iden(*(this->tokens.advance().lexeme));
 	node->identifier = new_identifier_node(id);
-	this->symbols.new_identifier_global(id); 
+	this->symbols.new_identifier_global(id, IdenAttr(TokenKind::SPRITE_T)); 
 
 	this->tokens.advance(); // Skip semicolon.
 
@@ -140,19 +123,35 @@ std::optional<ASTNode> Parser::parse_var_declaration_stmt() {
 	if (!parse_type_annotation<VarDeclarationStmt*>(node)) {
 		return std::nullopt;
 	}
+	const auto iden_type =
+		reinterpret_cast<const PrimaryExpr*>(node->type.adr)->token.kind;
 
-	ENSURE_NOT_EOF();
+	if (!this->tokens.ensure_not_eof()) {
+		return std::nullopt;
+	}
 
 	// Resolve whether the declaration statment initialize anything.
 	switch (this->tokens.advance().kind) {
 	case TokenKind::SEMICOLON:
 		node->init = std::nullopt;
 		return ASTNode(&node->kind);
-	case TokenKind::EQUAL:
+	case TokenKind::EQUAL: {
+		const auto eq_loc = this->tokens.prev().location;
+
 		if (node->init = parse_expr(TokenKind::SEMICOLON); !node->init) {
 			return std::nullopt;
 		}
+
+		if (const auto expr_type = resolve_expr_type(*node->init, eq_loc)) {
+			if (!ensure_type_same(iden_type, *expr_type, eq_loc)) {
+				return std::nullopt;
+			}
+		} else {
+			return std::nullopt;
+		}
+
 		return ASTNode(&node->kind);
+	}
 	default:
 		Diagnostic(DiagnosticKind::UNEXPECTED_TOKEN, this->tokens.prev())
 			.emit(this->err_stream);
@@ -166,40 +165,36 @@ std::optional<ASTNode> Parser::parse_func_declaration_stmt() {
 	// Ignore "func" keyword.
 	this->tokens.advance();
 
-	ENSURE_NOT_EOF();
-
 	// Ensure an identifier follow func.
-	if (!expect_peek(TokenKind::IDENTIFIER)) {
+	if (!this->tokens.expect_peek(TokenKind::IDENTIFIER)) {
 		return std::nullopt;
 	}
-	const auto id = this->symbols.intern_iden(*(this->tokens.advance().lexeme)); 
-	node->identifier = new_identifier_node(id);
-	this->symbols.new_identifier(id);
+	const auto id = this->symbols.intern_iden(*(this->tokens.advance()).lexeme);
 
-	if (!expect(TokenKind::ARROW)) {
+	if (!this->tokens.expect(TokenKind::ARROW)) {
 		return std::nullopt;
 	}
 
-	if (!this->tokens.peek().is_type()) {
+	if (!token_is_type(this->tokens.peek().kind)) {
 		Diagnostic(DiagnosticKind::EXPECTED_TYPE, this->tokens.peek())
 			.emit(this->err_stream);
 		return std::nullopt;
 	}
-	node->type =
-		new_primary_node(ASTNodeKind::TYPE, this->tokens.advance());
+	const auto& type_token = this->tokens.advance();
+	node->identifier = new_identifier_node(id);
+	node->type = new_primary_node(ASTNodeKind::TYPE, type_token);
+	this->symbols.new_identifier(id, IdenAttr(type_token.kind));
 
 	// Push scope here to include function arguments in the scope as well.
 	this->symbols.enter_scope();
 
-	ENSURE_NOT_EOF();
-
-	if (!expect(TokenKind::LEFT_PAREN)) {
+	if (!this->tokens.expect(TokenKind::LEFT_PAREN)) {
 		return std::nullopt;
 	}
 	if (!parse_func_args(node->args)) {
 		return std::nullopt;
 	}
-	if (!expect(TokenKind::SEMICOLON)) {
+	if (!this->tokens.expect(TokenKind::SEMICOLON)) {
 		return std::nullopt;
 	}
 
@@ -213,9 +208,7 @@ std::optional<ASTNode> Parser::parse_func_declaration_stmt() {
 	this->tokens.advance();
 	this->symbols.leave_scope();
 
-	ENSURE_NOT_EOF();
-
-	if (!expect(TokenKind::SEMICOLON)) {
+	if (!this->tokens.expect(TokenKind::SEMICOLON)) {
 		return std::nullopt;
 	}
 
@@ -239,13 +232,9 @@ std::optional<ASTNode> Parser::parse_if_stmt() {
 			[](auto kind) -> bool {
 				return kind == TokenKind::ENDIF || kind == TokenKind::ELSE; }));
 
-	ENSURE_NOT_EOF();
-
 	// parse else branch if exist.
-	if (match_token(TokenKind::ELSE)) {
-		ENSURE_NOT_EOF();
-
-		if (!expect(TokenKind::SEMICOLON)) {
+	if (this->tokens.match_kind(TokenKind::ELSE)) {
+		if (!this->tokens.expect(TokenKind::SEMICOLON)) {
 			return std::nullopt;
 		}
 
@@ -261,9 +250,7 @@ std::optional<ASTNode> Parser::parse_if_stmt() {
 	this->tokens.advance();
 	this->symbols.leave_scope();
 
-	ENSURE_NOT_EOF();
-
-	if (!expect(TokenKind::SEMICOLON)) {
+	if (!this->tokens.expect(TokenKind::SEMICOLON)) {
 		return std::nullopt;
 	}
 
@@ -276,13 +263,21 @@ std::optional<ASTNode> Parser::parse_cmd_stmt() {
 	node->command =
 		new_primary_node(ASTNodeKind::KEYWORD, this->tokens.advance());
 
-	ENSURE_NOT_EOF();
+	if (!this->tokens.ensure_not_eof()) {
+		return std::nullopt;
+	}
 
 	// Expect both an identifier and the self keyword.
 	switch (this->tokens.peek().kind) {
-	case TokenKind::IDENTIFIER:
-		node->target = new_identifier_node(*(this->tokens.advance().lexeme));
+	case TokenKind::IDENTIFIER: {
+		const auto id =
+			this->symbols.intern_iden(*(this->tokens.advance().lexeme)); 
+		if (!ensure_iden_type(id, TokenKind::SPRITE_T)) {
+			return std::nullopt;
+		}
+		node->target = new_identifier_node(id);
 		break;
+	}
 	case TokenKind::SELF:
 		node->target =
 			new_primary_node(ASTNodeKind::KEYWORD, this->tokens.advance());
@@ -293,14 +288,12 @@ std::optional<ASTNode> Parser::parse_cmd_stmt() {
 		return std::nullopt;
 	}
 
-	ENSURE_NOT_EOF();
-
-	if (match_token(TokenKind::SEMICOLON)) {
+	if (this->tokens.match_kind(TokenKind::SEMICOLON)) {
 		node->operands = {};
 		return ASTNode(&node->kind);
 	}
 
-	if (!expect(TokenKind::LEFT_PAREN)) {
+	if (!this->tokens.expect(TokenKind::LEFT_PAREN)) {
 		return std::nullopt;
 	}
 
@@ -308,9 +301,7 @@ std::optional<ASTNode> Parser::parse_cmd_stmt() {
 		return std::nullopt;
 	}
 
-	ENSURE_NOT_EOF();
-
-	if (!expect(TokenKind::SEMICOLON)) {
+	if (!this->tokens.expect(TokenKind::SEMICOLON)) {
 		return std::nullopt;
 	}
 
@@ -325,7 +316,7 @@ std::optional<ASTNode> Parser::parse_expr(TokenKind terminator) {
 	}
 
 	// Ensure correct expression terminaltor token and consume it.
-	if (!expect(terminator)) {
+	if (!this->tokens.expect(terminator)) {
 		return std::nullopt;
 	}
 
@@ -361,13 +352,20 @@ static std::tuple<u8, u8> resolve_binding_power(TokenKind kind) {
 
 std::optional<ASTNode> Parser::pratt_nud() {
 	switch (this->tokens.peek().kind) {
-	case TokenKind::NUMBER:
+	case TokenKind::INTEGER:
+	case TokenKind::FLOAT:
 	case TokenKind::STRING:
 		return new_primary_node(ASTNodeKind::LITERAL, this->tokens.advance());
 	case TokenKind::SELF:
 		return new_primary_node(ASTNodeKind::KEYWORD, this->tokens.advance());
-	case TokenKind::IDENTIFIER: 
-		return new_identifier_node(*(this->tokens.advance().lexeme));
+	case TokenKind::IDENTIFIER: { 
+		const auto id  =
+			this->symbols.intern_iden(*(this->tokens.advance().lexeme));
+		if (!ensure_iden_exist(id)) {
+			return std::nullopt;
+		}
+		return new_identifier_node(id);
+	}
 	case TokenKind::LEFT_PAREN: 
 		// Skip the left paren.
 		this->tokens.advance(); 
@@ -423,8 +421,23 @@ std::optional<ASTNode> Parser::pratt_led(Token op, ASTNode left, u8 min_bp) {
 
 		auto node = new_node<AssignStmt>(ASTNodeKind::ASSIGN);
 
-		node->iden = left;
+		node->identifier = left;
 		OPT_ASSIGN_OR_RETURN(node->expr, pratt_parser());
+
+		// Type checking
+		const auto id = reinterpret_cast<const IdentifierExpr*>(left.adr)->id;
+
+		if (const auto left_attr = this->symbols.lookup(id); !left_attr) {
+			LOG_ERR("Unkown identifier, ensure pratt parser checked existence.");
+			std::unreachable();
+		} else if (const auto expr_type =
+				resolve_expr_type(node->expr, op.location)) {
+			if (!ensure_type_same(left_attr->type, *expr_type, op.location)) {
+				return std::nullopt;
+			}
+		} else {
+			return std::nullopt;
+		}
 
 		return ASTNode(&node->kind);
 	}
@@ -441,9 +454,7 @@ std::optional<ASTNode> Parser::pratt_parser(u8 min_bp) {
 		return std::nullopt;
 	}
 
-	while (true) {
-		ENSURE_NOT_EOF();
-
+	while (true && this->tokens.ensure_not_eof()) {
 		const Token op = this->tokens.peek();
 
 		const auto [lbp, rbp] = resolve_binding_power(op.kind);
@@ -462,13 +473,7 @@ std::optional<ASTNode> Parser::parse_block(
 	std::function<bool(TokenKind kind)> end_predicate) {
 	auto node = new_node<BlockStmt>(ASTNodeKind::BLOCK);
 	
-	while (true) {
-		if (this->tokens.is_eof()) {
-			Diagnostic(DiagnosticKind::UNEXPECTED_EOF, this->tokens.prev())
-				.emit(this->err_stream);
-			return std::nullopt;
-		}
-
+	while (true && this->tokens.ensure_not_eof()) {
 		if (end_predicate(this->tokens.peek().kind)) {
 			return ASTNode(&node->kind);
 		}
@@ -479,13 +484,13 @@ std::optional<ASTNode> Parser::parse_block(
 			node->block.push_back(*stmt);
 		}
 	}
+
+	return std::nullopt;
 }
 
 bool Parser::parse_func_args(std::vector<ASTNode>& buf, bool as_expr) {
-	while (true) {
-		ENSURE_NOT_EOF_BOOL();
-
-		if (match_token(TokenKind::RIGHT_PAREN)) {
+	while (true && this->tokens.ensure_not_eof()) {
+		if (this->tokens.match_kind(TokenKind::RIGHT_PAREN)) {
 			return true;
 		}
 
@@ -506,7 +511,9 @@ bool Parser::parse_func_args(std::vector<ASTNode>& buf, bool as_expr) {
 			}
 		}
 
-		ENSURE_NOT_EOF_BOOL();
+		if (!this->tokens.ensure_not_eof()) {
+			return false;
+		}
 
 		// RIGHT_PAREN will be handle in the next iteration of the loop.
 		if (auto kind = this->tokens.peek().kind; kind == TokenKind::COMMA) { 
@@ -517,6 +524,8 @@ bool Parser::parse_func_args(std::vector<ASTNode>& buf, bool as_expr) {
 			return false;
 		}
 	}
+
+	return false;
 }
 
 ;} // namespace scr
