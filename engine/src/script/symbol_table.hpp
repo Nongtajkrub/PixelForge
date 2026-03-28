@@ -6,6 +6,7 @@
 
 #include <cassert>
 #include <cstddef>
+#include <functional>
 #include <optional>
 #include <unordered_map>
 
@@ -13,14 +14,28 @@ namespace scr {
 
 using namespace core;
 
+enum class IdenKind : u8 {
+	VAR,
+	FUNC,
+};
+
 struct IdenAttr {
+	IdenKind kind;
+	
 	// Identifier data types.
 	TokenKind type;
 
+	// Argument type list for wehn kind is FUNC.
+	std::optional<std::vector<TokenKind>> arg_type_list = std::nullopt;
+
 	IdenAttr() = default;
-	explicit IdenAttr(TokenKind type) :
-		type(type)
+	explicit IdenAttr(IdenKind kind, TokenKind type) :
+		kind(kind), type(type)
 	{
+		if (kind == IdenKind::FUNC) {
+			arg_type_list = std::vector<TokenKind>{};
+		}
+	
 		assert(token_is_type(type));
 	}
 };
@@ -42,8 +57,8 @@ public:
 	// Check whether a symbol exist.
 	bool contains(UniversalIdType id);
 
-	// Check whether a symbol exist.
-	std::optional<IdenAttr> lookup(UniversalIdType id);
+	// Look up a symbol and return the reference to its attr.
+	std::optional<Ref<IdenAttr>> lookup(UniversalIdType id);
 
 	inline void enter_scope() {
 		this->table.emplace_back();
@@ -56,8 +71,9 @@ public:
 	}
 
 	// Add a new or replace symbol.
-	inline void new_identifier(UniversalIdType id, IdenAttr attr) {
-		this->table.top().emplace(id, attr);
+	inline IdenAttr& new_identifier(UniversalIdType id, IdenAttr attr) {
+		auto [it, _] = this->table.top().emplace(id, attr);
+		return it->second;
 	}
 
 	// Add a new or replace global symbol.

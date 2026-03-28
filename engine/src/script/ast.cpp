@@ -14,11 +14,13 @@ const char* ASTNode::kind_as_str() const {
         case ASTNodeKind::IF: return "IF";
         case ASTNodeKind::BINARY: return "BINARY";
 		case ASTNodeKind::CALL: return "CALL";
+		case ASTNodeKind::DOT: return "DOT";
         case ASTNodeKind::COMMAND: return "COMMAND";
         case ASTNodeKind::LITERAL: return "LITERAL";
         case ASTNodeKind::IDENTIFIER: return "IDENTIFIER";
         case ASTNodeKind::TYPE: return "TYPE";
 		case ASTNodeKind::KEYWORD: return "KEYWORD";
+		case ASTNodeKind::SELF: return "SELF";
     }
 
     return "UNKNOWN_AST_NODE";
@@ -31,6 +33,7 @@ void ast_output(std::ostream &stream, ASTNode root, const u32 level) {
 
 	switch (*root.adr) {
 	case ASTNodeKind::NOP:
+	case ASTNodeKind::SELF:
 		break;
 	case ASTNodeKind::LITERAL: {
 		auto node = reinterpret_cast<const PrimaryExpr*>(root.adr);
@@ -72,6 +75,15 @@ void ast_output(std::ostream &stream, ASTNode root, const u32 level) {
 		ast_output(stream, node->identifier, level + 1);
 
 		break;
+	}
+	case ASTNodeKind::DOT: {
+		auto node = reinterpret_cast<const DotExpr*>(root.adr);
+
+		stream << indent << "identifier:\n";
+		ast_output(stream, node->object, level + 1);
+
+		stream << indent << "property:\n";
+		stream << indent << '\t' << node->property << '\n';
 	}
 	case ASTNodeKind::BLOCK: {
 		auto node = reinterpret_cast<const BlockStmt*>(root.adr);
@@ -194,7 +206,7 @@ void ast_output(std::ostream &stream, ASTNode root, const u32 level) {
 	default:
 		stream << "UNKNOW\n";
 		return;
-}
+	}
 }
 
 } // namespace scr

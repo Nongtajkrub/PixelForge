@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <functional>
 
 using u8  = uint8_t;
 using u16 = uint16_t;
@@ -13,6 +14,11 @@ using i32 = int32_t;
 using i64 = int64_t;
 
 using f32 = float;
+
+template <typename T>
+using Ref = std::reference_wrapper<T>;
+
+#define TODO() assert(true && "TODO!")
 
 #define OPT_ASSIGN_OR_RETURN(TARGET, EXPR)                                    \
 do {                                                                          \

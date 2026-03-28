@@ -19,10 +19,12 @@ std::string_view Diagnostic::resolve_msg() const {
 	case DiagnosticKind::EXPECTED_COMMAND: return "Expected command"; 
 	case DiagnosticKind::EXPECTED_INTEGER: return "Expected integer"; 
 	case DiagnosticKind::EXPECTED_SPRITE_DIRECT:
-			return "Expected sprite directive";
+		return "Expected sprite directive";
 	case DiagnosticKind::EXPECTED_TYPE: return "Expected type";
+	case DiagnosticKind::EXPECTED_PROPERTY: return "Expected property";
 	case DiagnosticKind::UNKNOWN_IDENTIFIER: return "Unknown identifier";
 	case DiagnosticKind::TYPE_ERROR: return "Type error";
+	case DiagnosticKind::TO_MANY_ARGUMENTS: return "To many arguments";
     }
 
 	return "Error message not implemented";
@@ -39,6 +41,7 @@ DiagnosticKind resolve_diag_expect_kind(TokenKind kind) {
 	case TokenKind::COMMA: return DiagnosticKind::EXPECTED_COMMA;
 	case TokenKind::INTEGER: return DiagnosticKind::EXPECTED_INTEGER;
 	case TokenKind::COMMAND: return DiagnosticKind::EXPECTED_COMMAND;
+	case TokenKind::DIRECT_SPRITE: return DiagnosticKind::EXPECTED_SPRITE_DIRECT;
 	default: return DiagnosticKind::UNEXPECTED_TOKEN;
 	}
 }

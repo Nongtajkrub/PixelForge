@@ -3,6 +3,7 @@
 #include "../core/io/log.hpp"
 
 #include <initializer_list>
+#include <string_view>
 #include <utility>
 
 namespace scr {
@@ -71,6 +72,7 @@ const char* token_kind_as_str(TokenKind kind) {
 	case TokenKind::BANG: return "BANG";
 	case TokenKind::GREATER: return "GREATER";
 	case TokenKind::LESS: return "LESS";
+	case TokenKind::DOT: return "DOT";
 
 	// Multi-character tokens
 	case TokenKind::DOUBLE_EQUAL: return "DOUBLE_EQUAL";
@@ -101,7 +103,6 @@ const char* token_kind_as_str(TokenKind kind) {
 	case TokenKind::LET: return "LET";
 	case TokenKind::FUNC: return "FUNC";
 	case TokenKind::ENDFUNC: return "ENDFUNC";
-	case TokenKind::GET: return "GET";
 
 	case TokenKind::VOID_T: return "VOID_T";
 	case TokenKind::INT_T: return "INT_T";
@@ -144,6 +145,30 @@ bool is_arithmetic_operator(TokenKind kind) {
 	}
 }
 
+bool token_is_logical_operator(TokenKind kind) {
+	switch (kind) {
+	case TokenKind::AND:
+	case TokenKind::OR:
+		return true;
+	default:
+		return false;
+	}
+}
+
+bool token_is_comparison_operator(TokenKind kind) {
+	switch (kind) {
+	case TokenKind::DOUBLE_EQUAL:
+	case TokenKind::BANG_EQUAL:
+	case TokenKind::GREATER_EQUAL:
+	case TokenKind::LESS_EQUAL:
+	case TokenKind::GREATER:
+	case TokenKind::LESS:
+		return true;
+	default:
+		return false;
+	}
+}
+
 bool token_is_directive(TokenKind kind) {
 	switch (kind) {
 	case TokenKind::DIRECT_SPRITE:
@@ -162,6 +187,26 @@ bool token_is_type(TokenKind kind) {
 	case TokenKind::BOOL_T:
 	case TokenKind::STRING_T:
 	case TokenKind::SPRITE_T:
+		return true;
+	default:
+		return false;
+	}
+}
+
+bool token_is_property(const Token& token) {
+	if (token.kind != TokenKind::IDENTIFIER || !token.lexeme) {
+		return false;
+	}
+
+	const auto& lexeme = *token.lexeme;
+
+	if (lexeme.size() > 1 || lexeme.size() == 0) {
+		return false;
+	}
+
+	switch (lexeme.front()) {
+	case PROP_X_LEX:
+	case PROP_Y_LEX:
 		return true;
 	default:
 		return false;

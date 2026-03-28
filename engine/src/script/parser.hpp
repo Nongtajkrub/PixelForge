@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../core/arena/bump_arena.hpp"
+#include "location.hpp"
 #include "token.hpp"
 #include "symbol_table.hpp"
 #include "diagnostic.hpp"
@@ -56,7 +57,8 @@ public:
 
 private:
 	// Resolve data type of expression, take source location to emit errors.
-	std::optional<TokenKind> resolve_expr_type(ASTNode expr, Location loc);
+	// Optional ltype, typically passed internally during binary expr parsing.
+	std::optional<TokenKind> resolve_expr_type(ASTNode expr, Location err_loc);
 
 	std::optional<ASTNode> parse_stmt();
 	std::optional<ASTNode> parse_nop();
@@ -73,21 +75,22 @@ private:
 		std::function<bool(TokenKind kind)> end_predicate);
 
 	// Usually parse arguments as `FuncArgument` but can also parse as expression.
-	bool parse_func_args(std::vector<ASTNode>& buf, bool as_expr = false);
+	bool parse_func_args(std::vector<ASTNode>& buf, IdenAttr& func_attr);
+	bool parse_func_call_args(IdenAttr& func_attr, std::vector<ASTNode>& buf);
 
 	// Parse `IDENTIFIER : "type"`, only work for variable declaration and
-	// function arguments.
+	// function arguments. Return the type if success.
 	template<typename T>
 	requires (std::is_same_v<T, VarDeclarationStmt*> 
 		|| std::is_same_v<T, FuncArgument*>)
-	bool parse_type_annotation(T node) {
+	std::optional<TokenKind> parse_type_annotation(T node) {
 		// Ensure correct type annotation syntax.
 		if (!Pattern<
 				TokenStream,
 				TokenKind::IDENTIFIER,
 				TokenKind::COLON>
 					::match_peek(this->tokens, this->err_stream)) {
-			return false;
+			return std::nullopt;
 		}
 
 		const auto id =
@@ -99,14 +102,15 @@ private:
 		if (!token_is_type(this->tokens.peek().kind)) {
 			Diagnostic(DiagnosticKind::EXPECTED_TYPE, this->tokens.peek())
 				.emit(this->err_stream);
-			return false;
+			return std::nullopt;
 		}
 		const auto& type_token = this->tokens.advance();
-		this->symbols.new_identifier(id, IdenAttr(type_token.kind));
+		this->symbols.new_identifier(
+			id, IdenAttr(IdenKind::VAR, type_token.kind));
 		node->identifier = new_identifier_node(id);
 		node->type = new_primary_node(ASTNodeKind::TYPE, type_token); 
 
-		return true;
+		return type_token.kind;
 	}
 
 	inline bool ensure_iden_exist(UniversalIdType id) {
@@ -122,7 +126,7 @@ private:
 		assert(token_is_type(type));
 
 		if (const auto attr = this->symbols.lookup(id); attr) {
-			if ((*attr).type != type) {
+			if ((*attr).get().type != type) {
 				Diagnostic(DiagnosticKind::TYPE_ERROR, this->tokens.advance())
 					.emit(this->err_stream);
 				return false;

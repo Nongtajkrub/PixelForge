@@ -25,10 +25,12 @@ enum class DiagnosticKind : u8 {
 	EXPECTED_INTEGER,
 	EXPECTED_SPRITE_DIRECT,
 	EXPECTED_TYPE,
+	EXPECTED_PROPERTY,
 
 	UNKNOWN_IDENTIFIER,
 
 	TYPE_ERROR,
+	TO_MANY_ARGUMENTS,
 };
 
 DiagnosticKind resolve_diag_expect_kind(TokenKind kind);

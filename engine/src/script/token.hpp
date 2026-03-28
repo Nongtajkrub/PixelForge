@@ -9,6 +9,7 @@
 #include <string>
 #include <optional>
 #include <span>
+#include <string_view>
 
 namespace scr {
 
@@ -31,6 +32,7 @@ enum class TokenKind : u8 {
 	BANG,
 	GREATER,
 	LESS,
+	DOT,
 
 	// Multiples charactor token
 	DOUBLE_EQUAL,
@@ -61,7 +63,6 @@ enum class TokenKind : u8 {
 	LET,
 	FUNC,
 	ENDFUNC,
-	GET,
 
 	VOID_T,
 	INT_T,
@@ -97,6 +98,10 @@ constexpr const char* FLOAT_T_LEX = "float";
 constexpr const char* BOOL_T_LEX = "bool";
 constexpr const char* STRING_T_LEX = "str";
 constexpr const char* SPRITE_T_LEX = "Sprite";
+
+// Builtin property lexemes.
+constexpr const char PROP_X_LEX = 'x';
+constexpr const char PROP_Y_LEX = 'y';
 
 struct Token {
 	TokenKind kind;
@@ -171,7 +176,10 @@ const char* token_kind_as_str(TokenKind kind);
 TokenKind token_kind_as_type(TokenKind kind);
 
 bool token_is_arithmetic_operator(TokenKind kind);
+bool token_is_logical_operator(TokenKind kind);
+bool token_is_comparison_operator(TokenKind kind);
 bool token_is_directive(TokenKind kind);
 bool token_is_type(TokenKind kind);
+bool token_is_property(const Token& token);
 
 }

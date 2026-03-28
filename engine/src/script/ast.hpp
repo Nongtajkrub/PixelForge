@@ -24,6 +24,7 @@ enum class ASTNodeKind : u8 {
 
 	BINARY,
 	CALL,
+	DOT,
 
 	DIRECTIVE,
 	COMMAND,
@@ -32,6 +33,7 @@ enum class ASTNodeKind : u8 {
 	IDENTIFIER,
 	TYPE,
 	KEYWORD,
+	SELF,
 };
 
 // Store info about where the node is stored in memory and how to interpret it.
@@ -49,7 +51,7 @@ struct ASTNode {
 	const char* kind_as_str() const;
 };
 
-struct NopNode {
+struct AtomicNode {
 	ASTNodeKind kind;
 };
 
@@ -70,6 +72,13 @@ struct IdentifierExpr {
 	ASTNodeKind kind;
 
 	UniversalIdType id;
+};
+
+struct DotExpr {
+	ASTNodeKind kind;
+
+	ASTNode object;
+	char property;
 };
 
 struct BinaryExpr {

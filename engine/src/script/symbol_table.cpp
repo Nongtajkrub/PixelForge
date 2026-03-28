@@ -28,10 +28,10 @@ UniversalIdType SymbolTable::intern_iden(const std::string& iden) {
 	return it->second;
 }
 
-std::optional<IdenAttr> SymbolTable::lookup(UniversalIdType id) {
-	for (const auto& scope : std::views::reverse(this->table)) {
+std::optional<Ref<IdenAttr>> SymbolTable::lookup(UniversalIdType id) {
+	for (auto& scope : std::views::reverse(this->table)) {
 		if (auto it = scope.find(id); it != scope.end()) {
-			return it->second;
+			return std::ref(it->second);
 		}
 	}
 	return std::nullopt;
