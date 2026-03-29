@@ -56,6 +56,10 @@ std::optional<TokenKind> Parser::resolve_expr_type(
 			.emit(this->err_stream);
 		return std::nullopt;
 	}
+	case ASTNodeKind::CALL: 
+		return 
+			resolve_expr_type(
+				reinterpret_cast<const CallExpr*>(expr.adr)->identifier, err_loc);
 	case ASTNodeKind::BINARY: {
 		const auto node = reinterpret_cast<const BinaryExpr*>(expr.adr);
 
