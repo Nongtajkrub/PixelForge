@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../io/log.hpp"
+#include "log.hpp"
 
 #include <cassert>
 #include <cstddef>

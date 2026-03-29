@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../core/arena/bump_arena.hpp"
+#include "../core/bump_arena.hpp"
 #include "location.hpp"
 #include "token.hpp"
 #include "symbol_table.hpp"
@@ -76,7 +76,9 @@ private:
 
 	// Usually parse arguments as `FuncArgument` but can also parse as expression.
 	bool parse_func_args(std::vector<ASTNode>& buf, IdenAttr& func_attr);
-	bool parse_func_call_args(IdenAttr& func_attr, std::vector<ASTNode>& buf);
+	bool parse_func_call_args(
+		std::vector<ASTNode>& buf,
+		std::vector<TokenKind> arg_types, TokenKind terminator);
 
 	// Parse `IDENTIFIER : "type"`, only work for variable declaration and
 	// function arguments. Return the type if success.

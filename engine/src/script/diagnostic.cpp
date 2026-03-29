@@ -22,6 +22,7 @@ std::string_view Diagnostic::resolve_msg() const {
 		return "Expected sprite directive";
 	case DiagnosticKind::EXPECTED_TYPE: return "Expected type";
 	case DiagnosticKind::EXPECTED_PROPERTY: return "Expected property";
+	case DiagnosticKind::EXPECTED_FUNCTION: return "Expected function";
 	case DiagnosticKind::UNKNOWN_IDENTIFIER: return "Unknown identifier";
 	case DiagnosticKind::TYPE_ERROR: return "Type error";
 	case DiagnosticKind::TO_MANY_ARGUMENTS: return "To many arguments";

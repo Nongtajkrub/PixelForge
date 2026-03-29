@@ -6,8 +6,8 @@
 #include "script/ast.hpp"
 #include "script/parser.hpp"
 #include "script/preprocessor.hpp"
-#include "core/arena/bump_arena.hpp"
-#include "core/io/file.hpp"
+#include "core/bump_arena.hpp"
+#include "core/file_io.hpp"
 
 using namespace core;
 

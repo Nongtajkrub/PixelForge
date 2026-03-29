@@ -1,12 +1,11 @@
 #pragma once
 
-#include "../core/stack/iterable.hpp"
-#include "../core/id/incremental.hpp"
+#include "../core/iterable_stack.hpp"
+#include "../core/incremental_id.hpp"
 #include "token.hpp"
 
 #include <cassert>
 #include <cstddef>
-#include <functional>
 #include <optional>
 #include <unordered_map>
 
@@ -26,14 +25,14 @@ struct IdenAttr {
 	TokenKind type;
 
 	// Argument type list for wehn kind is FUNC.
-	std::optional<std::vector<TokenKind>> arg_type_list = std::nullopt;
+	std::optional<std::vector<TokenKind>> arg_types = std::nullopt;
 
 	IdenAttr() = default;
 	explicit IdenAttr(IdenKind kind, TokenKind type) :
 		kind(kind), type(type)
 	{
 		if (kind == IdenKind::FUNC) {
-			arg_type_list = std::vector<TokenKind>{};
+			arg_types = std::vector<TokenKind>{};
 		}
 	
 		assert(token_is_type(type));

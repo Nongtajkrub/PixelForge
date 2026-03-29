@@ -14,11 +14,11 @@ target_sources(engine
 	src/main.cpp
 	src/global.hpp
 
-	src/core/io/file.hpp
-	src/core/io/file.cpp
-	src/core/io/byte.hpp
-	src/core/io/byte.cpp
-	src/core/arena/bump_arena.hpp
+	src/core/file_io.hpp
+	src/core/file_io.cpp
+	src/core/byte_io.hpp
+	src/core/byte_io.cpp
+	src/core/bump_arena.hpp
 
 	src/script/token.hpp
 	src/script/token.cpp
@@ -27,6 +27,8 @@ target_sources(engine
 	src/script/source_stream.hpp
 	src/script/symbol_table.cpp
 	src/script/symbol_table.hpp
+	src/script/command_props.cpp
+	src/script/command_props.hpp
 	src/script/lexer.hpp
 	src/script/lexer.cpp
 	src/script/preprocessor.hpp

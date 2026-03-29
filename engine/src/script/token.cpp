@@ -1,6 +1,6 @@
 #include "token.hpp"
 #include "diagnostic.hpp"
-#include "../core/io/log.hpp"
+#include "../core/log.hpp"
 
 #include <initializer_list>
 #include <string_view>

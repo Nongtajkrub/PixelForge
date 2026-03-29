@@ -1,4 +1,4 @@
-#include "../core/io/log.hpp"
+#include "../core/log.hpp"
 #include "diagnostic.hpp"
 #include "location.hpp"
 #include "symbol_table.hpp"
@@ -6,6 +6,7 @@
 #include "parser.hpp"
 #include "ast.hpp"
 #include "pattern.hpp"
+#include "command_props.hpp"
 
 #include <cassert>
 #include <cstddef>
@@ -295,6 +296,7 @@ std::optional<ASTNode> Parser::parse_if_stmt() {
 std::optional<ASTNode> Parser::parse_cmd_stmt() {
 	auto node = new_node<CommandStmt>(ASTNodeKind::COMMAND);
 
+	const std::string& cmd = *this->tokens.peek().lexeme;
 	node->command =
 		new_primary_node(ASTNodeKind::KEYWORD, this->tokens.advance());
 
@@ -328,13 +330,11 @@ std::optional<ASTNode> Parser::parse_cmd_stmt() {
 		return ASTNode(&node->kind);
 	}
 
-	// TODO: Handle command argument parsing.
-	/*
-	if (!parse_func_args(node->operands, TokenKind::SEMICOLON, true)) {
+	if (!parse_func_call_args(
+			node->operands,
+			get_command_prop(cmd).arg_types, TokenKind::SEMICOLON)) {
 		return std::nullopt;
 	}
-	*/
-	TODO();
 
 	return ASTNode(&node->kind);
 }
@@ -413,6 +413,7 @@ std::optional<ASTNode> Parser::pratt_nud() {
 
 std::optional<ASTNode> Parser::pratt_led(Token op, ASTNode left, u8 min_bp) {
 	switch (op.kind) {
+	// Parse binary expression.
 	case TokenKind::DOUBLE_EQUAL:
 	case TokenKind::BANG_EQUAL:
 	case TokenKind::GREATER:
@@ -431,6 +432,7 @@ std::optional<ASTNode> Parser::pratt_led(Token op, ASTNode left, u8 min_bp) {
 		OPT_ASSIGN_OR_RETURN(node->right, pratt_parser(min_bp));
 		return ASTNode(&node->kind);
 	}
+	// Parse call expression.
 	case TokenKind::LEFT_PAREN: {
 		if (*left.adr != ASTNodeKind::IDENTIFIER) {
 			Diagnostic(DiagnosticKind::EXPECTED_IDENTIFIER, op)
@@ -444,7 +446,18 @@ std::optional<ASTNode> Parser::pratt_led(Token op, ASTNode left, u8 min_bp) {
 		if (auto func_attr =
 				this->symbols.lookup(
 					reinterpret_cast<const IdentifierExpr*>(left.adr)->id)) {
-			if (!parse_func_call_args(*func_attr, node->args)) {
+			if ((*func_attr).get().kind != IdenKind::FUNC) {
+				Diagnostic(DiagnosticKind::EXPECTED_FUNCTION, op)
+					.emit(this->err_stream);
+				return std::nullopt;
+			}
+
+			// Added for readability.
+			const std::optional<std::vector<TokenKind>>& args_types =
+				(*func_attr).get().arg_types;
+
+			if (!parse_func_call_args(
+					node->args, *args_types, TokenKind::RIGHT_PAREN)) {
 				return std::nullopt;
 			}
 		} else {
@@ -453,6 +466,7 @@ std::optional<ASTNode> Parser::pratt_led(Token op, ASTNode left, u8 min_bp) {
 
 		return ASTNode(&node->kind);
 	}
+	// Parse assignment expression.
 	case TokenKind::EQUAL: {
 		if (*left.adr != ASTNodeKind::IDENTIFIER) {
 			Diagnostic(DiagnosticKind::EXPECTED_IDENTIFIER, op)
@@ -485,6 +499,7 @@ std::optional<ASTNode> Parser::pratt_led(Token op, ASTNode left, u8 min_bp) {
 
 		return ASTNode(&node->kind);
 	}
+	// Parse dot notation expression.
 	case TokenKind::DOT: {
 		if (*left.adr != ASTNodeKind::IDENTIFIER 
 				&& *left.adr != ASTNodeKind::SELF) {
@@ -555,7 +570,7 @@ std::optional<ASTNode> Parser::parse_block(
 }
 
 bool Parser::parse_func_args(std::vector<ASTNode>& buf, IdenAttr& func_attr) {
-	assert(func_attr.arg_type_list && func_attr.kind == IdenKind::FUNC);
+	assert(func_attr.arg_types && func_attr.kind == IdenKind::FUNC);
 
 	if (!this->tokens.expect(TokenKind::LEFT_PAREN)) {
 		return false;
@@ -571,7 +586,7 @@ bool Parser::parse_func_args(std::vector<ASTNode>& buf, IdenAttr& func_attr) {
 
 		if (const auto arg_type = parse_type_annotation<FuncArgument*>(node)) {
 			buf.push_back(ASTNode(&node->kind));
-			(*func_attr.arg_type_list).push_back(*arg_type);
+			(*func_attr.arg_types).push_back(*arg_type);
 		} else {
 			return false;
 		}
@@ -594,17 +609,17 @@ bool Parser::parse_func_args(std::vector<ASTNode>& buf, IdenAttr& func_attr) {
 }
 
 bool Parser::parse_func_call_args(
-	IdenAttr& func_attr , std::vector<ASTNode>& buf) {
-	assert(func_attr.arg_type_list && func_attr.kind == IdenKind::FUNC);
-	auto arg_it = (*func_attr.arg_type_list).begin();
+	std::vector<ASTNode>& buf,
+	std::vector<TokenKind> arg_types, TokenKind terminator) {
+	auto arg_it = arg_types.begin();
 
 	while (!this->tokens.is_eof()) {
-		if (this->tokens.match_kind(TokenKind::RIGHT_PAREN)) {
+		if (this->tokens.match_kind(terminator)) {
 			return true;
 		}
 
 		// More argument pass in than the definition.
-		if (arg_it == (*func_attr.arg_type_list).end()) {
+		if (arg_it == arg_types.end()) {
 			Diagnostic(DiagnosticKind::TO_MANY_ARGUMENTS, this->tokens.peek())
 				.emit(this->err_stream);
 			return false;
@@ -631,7 +646,7 @@ bool Parser::parse_func_call_args(
 		// RIGHT_PAREN will be handle in the next iteration of the loop.
 		if (auto kind = this->tokens.peek().kind; kind == TokenKind::COMMA) { 
 			this->tokens.advance();
-		} else if (kind != TokenKind::RIGHT_PAREN) {
+		} else if (kind != terminator) {
 			Diagnostic(DiagnosticKind::EXPECTED_COMMA, this->tokens.peek())
 				.emit(this->err_stream);
 			return false;
@@ -641,4 +656,4 @@ bool Parser::parse_func_call_args(
 	return false;
 }
 
-;} // namespace scr
+;} // namespace scr;

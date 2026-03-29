@@ -2,7 +2,7 @@
 
 #include "../global.hpp"
 #include "token.hpp"
-#include "../core/id/incremental.hpp"
+#include "../core/incremental_id.hpp"
 
 #include <optional>
 #include <ostream>
