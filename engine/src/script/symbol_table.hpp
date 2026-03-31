@@ -38,6 +38,23 @@ struct IdenAttr {
 		assert(token_is_type(type));
 	}
 };
+
+enum class ScopeKind {
+	GLOBAL,
+	IF,
+	FUNC,
+	LOOP,
+};
+
+struct Scope {
+	ScopeKind kind;
+	std::unordered_map<UniversalIdType, IdenAttr> table;
+
+	Scope() = default;
+	Scope(ScopeKind kind) : 
+		kind(kind), table()
+	{ }
+};
  
 class SymbolTable {
 private:
@@ -45,7 +62,7 @@ private:
 	std::unordered_map<std::string, UniversalIdType> iden_interner; 
 
 	// Identifier table store in a stack to manage scope.
-	IterableStack<std::unordered_map<UniversalIdType, IdenAttr>> table;
+	IterableStack<Scope> scopes;
 
 public:
 	SymbolTable();
@@ -56,28 +73,34 @@ public:
 	// Check whether a symbol exist.
 	bool contains(UniversalIdType id);
 
+	bool in_scope(ScopeKind kind);
+
 	// Look up a symbol and return the reference to its attr.
 	std::optional<Ref<IdenAttr>> lookup(UniversalIdType id);
 
-	inline void enter_scope() {
-		this->table.emplace_back();
+	inline void enter_scope(ScopeKind kind) {
+		this->scopes.emplace_back(kind);
 	}
 
 	inline void leave_scope() {
 		// Ensure do not pop global scope.
-		assert(this->table.size() > 1);
-		this->table.pop();
+		assert(this->scopes.size() > 1);
+		this->scopes.pop();
+	}
+
+	inline ScopeKind this_scope() {
+		return this->scopes.top().kind;
 	}
 
 	// Add a new or replace symbol.
 	inline IdenAttr& new_identifier(UniversalIdType id, IdenAttr attr) {
-		auto [it, _] = this->table.top().emplace(id, attr);
+		auto [it, _] = this->scopes.top().table.emplace(id, attr);
 		return it->second;
 	}
 
 	// Add a new or replace global symbol.
 	inline void new_identifier_global(UniversalIdType id, IdenAttr attr) {
-		this->table.bottom().emplace(id, attr);
+		this->scopes.bottom().table.emplace(id, attr);
 	}
 };
 

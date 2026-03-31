@@ -19,7 +19,7 @@ public:
 
 	template <typename ...Args>
 	inline void emplace_back(Args&& ...args) {
-		this->stack.emplace_back(std::forward(args)...);
+		this->stack.emplace_back(std::forward<Args>(args)...);
 	}
 
 	inline T pop() {

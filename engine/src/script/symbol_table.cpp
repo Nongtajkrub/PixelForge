@@ -6,12 +6,21 @@ namespace scr {
 
 SymbolTable::SymbolTable() {
 	// Global scope
-	enter_scope();
+	enter_scope(ScopeKind::GLOBAL);
 }
 
 bool SymbolTable::contains(UniversalIdType id) {
-	for (const auto& scope : std::views::reverse(this->table)) {
-		if (scope.contains(id)) {
+	for (const auto& scope : std::views::reverse(this->scopes)) {
+		if (scope.table.contains(id)) {
+			return true;
+		}
+	}
+	return false;
+}
+
+bool SymbolTable::in_scope(ScopeKind kind) {
+	for (const auto& scope : std::views::reverse(this->scopes)) {
+		if (scope.kind == kind) {
 			return true;
 		}
 	}
@@ -29,8 +38,8 @@ UniversalIdType SymbolTable::intern_iden(const std::string& iden) {
 }
 
 std::optional<Ref<IdenAttr>> SymbolTable::lookup(UniversalIdType id) {
-	for (auto& scope : std::views::reverse(this->table)) {
-		if (auto it = scope.find(id); it != scope.end()) {
+	for (auto& scope : std::views::reverse(this->scopes)) {
+		if (auto it = scope.table.find(id); it != scope.table.end()) {
 			return std::ref(it->second);
 		}
 	}

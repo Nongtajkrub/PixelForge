@@ -12,15 +12,21 @@ const char* ASTNode::kind_as_str() const {
         case ASTNodeKind::FUNC_ARGUMENTS: return "FUNC_ARGUMENTS";
         case ASTNodeKind::ASSIGN: return "ASSIGN";
         case ASTNodeKind::IF: return "IF";
+        case ASTNodeKind::FOR_LOOP: return "FOR_LOOP";
+        case ASTNodeKind::LOOP: return "LOOP";
         case ASTNodeKind::BINARY: return "BINARY";
 		case ASTNodeKind::CALL: return "CALL";
 		case ASTNodeKind::DOT: return "DOT";
+		case ASTNodeKind::RANGE: return "RANGE";
         case ASTNodeKind::COMMAND: return "COMMAND";
         case ASTNodeKind::LITERAL: return "LITERAL";
         case ASTNodeKind::IDENTIFIER: return "IDENTIFIER";
         case ASTNodeKind::TYPE: return "TYPE";
 		case ASTNodeKind::KEYWORD: return "KEYWORD";
 		case ASTNodeKind::SELF: return "SELF";
+		case ASTNodeKind::BREAK: return "BREAK";
+		case ASTNodeKind::CONTINUE: return "CONTINUE";
+		case ASTNodeKind::RETURN: return "RETURN";
     }
 
     return "UNKNOWN_AST_NODE";
@@ -34,6 +40,8 @@ void ast_output(std::ostream &stream, ASTNode root, const u32 level) {
 	switch (*root.adr) {
 	case ASTNodeKind::NOP:
 	case ASTNodeKind::SELF:
+	case ASTNodeKind::BREAK:
+	case ASTNodeKind::CONTINUE:
 		break;
 	case ASTNodeKind::LITERAL: {
 		auto node = reinterpret_cast<const PrimaryExpr*>(root.adr);
@@ -73,6 +81,16 @@ void ast_output(std::ostream &stream, ASTNode root, const u32 level) {
 
 		stream << indent << "identifier:\n";
 		ast_output(stream, node->identifier, level + 1);
+
+		break;
+	}
+	case ASTNodeKind::RETURN: {
+		auto node = reinterpret_cast<const ReturnStmt*>(root.adr);
+
+		if (node->expr) {
+			stream << "expr:\n";
+			ast_output(stream, *node->expr, level + 1);
+		}
 
 		break;
 	}
@@ -157,6 +175,38 @@ void ast_output(std::ostream &stream, ASTNode root, const u32 level) {
 			stream << indent << "else:\n";
 			ast_output(stream, *(node->else_branch), level + 1);
 		}
+
+		break;
+	}
+	case ASTNodeKind::RANGE: {
+		auto node = reinterpret_cast<const RangeExpr*>(root.adr);
+
+		stream << indent << "begin\n";
+		ast_output(stream, node->begin, level + 1);
+
+		stream << indent << "end\n";
+		ast_output(stream, node->end, level + 1);
+
+		if (node->step) {
+			stream << indent << "step\n";
+			ast_output(stream, *node->step, level + 1);
+		}
+
+		break;
+	}
+	case ASTNodeKind::FOR_LOOP: {
+		auto node = reinterpret_cast<const ForLoopStmt*>(root.adr);
+
+		if (node->it) {
+			stream << indent << "iterator:\n";
+			ast_output(stream, *node->it, level + 1);
+		}
+
+		stream << indent << "range:\n";
+		ast_output(stream, node->range, level + 1);
+
+		stream << indent << "code block:\n";
+		ast_output(stream, node->block, level + 1);
 
 		break;
 	}

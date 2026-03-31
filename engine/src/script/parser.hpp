@@ -61,16 +61,20 @@ private:
 	std::optional<TokenKind> resolve_expr_type(ASTNode expr, Location err_loc);
 
 	std::optional<ASTNode> parse_stmt();
-	std::optional<ASTNode> parse_nop();
+	std::optional<ASTNode> parse_atomic(ASTNodeKind kind);
+	std::optional<ASTNode> parse_jump_stmt();
+	std::optional<ASTNode> parse_return_stmt();
 	std::optional<ASTNode> parse_directive();
 	std::optional<ASTNode> parse_var_declaration_stmt();
 	std::optional<ASTNode> parse_func_declaration_stmt();
 	std::optional<ASTNode> parse_if_stmt();
+	std::optional<ASTNode> parse_for_stmt();
 	std::optional<ASTNode> parse_cmd_stmt();
 	std::optional<ASTNode> parse_expr(TokenKind terminator);
 	std::optional<ASTNode> pratt_nud();
 	std::optional<ASTNode> pratt_led(Token op, ASTNode left, u8 min_bp);
 	std::optional<ASTNode> pratt_parser(u8 min_bp = 0);
+
 	std::optional<ASTNode> parse_block(
 		std::function<bool(TokenKind kind)> end_predicate);
 
@@ -79,6 +83,14 @@ private:
 	bool parse_func_call_args(
 		std::vector<ASTNode>& buf,
 		std::vector<TokenKind> arg_types, TokenKind terminator);
+
+	inline void emit(DiagnosticKind kind, const Token& token) {
+		Diagnostic(kind, token).emit(this->err_stream);
+	}
+
+	inline void emit(DiagnosticKind kind, Location loc) {
+		Diagnostic(kind, loc).emit(this->err_stream);
+	}
 
 	// Parse `IDENTIFIER : "type"`, only work for variable declaration and
 	// function arguments. Return the type if success.
@@ -102,8 +114,7 @@ private:
 		
 		// Ensure parsed type actually exist.
 		if (!token_is_type(this->tokens.peek().kind)) {
-			Diagnostic(DiagnosticKind::EXPECTED_TYPE, this->tokens.peek())
-				.emit(this->err_stream);
+			emit(DiagnosticKind::EXPECTED_TYPE, this->tokens.peek());
 			return std::nullopt;
 		}
 		const auto& type_token = this->tokens.advance();
@@ -117,8 +128,7 @@ private:
 
 	inline bool ensure_iden_exist(UniversalIdType id) {
 		if (!this->symbols.contains(id)) {
-			Diagnostic(DiagnosticKind::UNKNOWN_IDENTIFIER, this->tokens.peek()) 
-				.emit(this->err_stream);
+			emit(DiagnosticKind::UNKNOWN_IDENTIFIER, this->tokens.peek()); 
 			return false;
 		}
 		return true;
@@ -129,13 +139,11 @@ private:
 
 		if (const auto attr = this->symbols.lookup(id); attr) {
 			if ((*attr).get().type != type) {
-				Diagnostic(DiagnosticKind::TYPE_ERROR, this->tokens.advance())
-					.emit(this->err_stream);
+				emit(DiagnosticKind::TYPE_ERROR, this->tokens.advance());
 				return false;
 			}
 		} else {
-			Diagnostic(DiagnosticKind::UNKNOWN_IDENTIFIER, this->tokens.advance())
-				.emit(this->err_stream);
+			emit(DiagnosticKind::UNKNOWN_IDENTIFIER, this->tokens.advance());
 			return false;
 		}
 		return true;
@@ -146,7 +154,7 @@ private:
 		assert(token_is_type(t1) && token_is_type(t2));
 
 		if (t1 != t2) {
-			Diagnostic(DiagnosticKind::TYPE_ERROR, loc).emit(this->err_stream);
+			emit(resolve_diag_expect_kind(t2), loc);
 			return false;
 		}
 		return true;

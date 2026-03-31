@@ -10,18 +10,19 @@ static const std::unordered_map<std::string, TokenKind> keywords = {
 	{"and", TokenKind::AND},
 	{"or", TokenKind::OR},
 	{"if", TokenKind::IF},
-	{"endif", TokenKind::ENDIF},
 	{"else", TokenKind::ELSE},
 	{"true", TokenKind::TRUE},
 	{"self", TokenKind::SELF},
 	{"false", TokenKind::FALSE},
 	{"while", TokenKind::WHILE},
 	{"for", TokenKind::FOR},
+	{"continue", TokenKind::CONTINUE},
+	{"break", TokenKind::BREAK},
 	{"return", TokenKind::RETURN},
 	{"pass", TokenKind::PASS},
 	{"let", TokenKind::LET},
 	{"func", TokenKind::FUNC},
-	{"endfunc", TokenKind::ENDFUNC},
+	{"end", TokenKind::END},
 	{"@sprite", TokenKind::DIRECT_SPRITE},
 	{"@use", TokenKind::DIRECT_USE},
 	{"@update", TokenKind::DIRECT_UPDATE},
@@ -83,11 +84,16 @@ void Lexer::lex() {
 		case ';':
 			add_token(TokenKind::SEMICOLON);
 			break;
-		case ':':
-			add_token(TokenKind::COLON);
+		case '_':
+			add_token(TokenKind::UNDERSCORE);
 			break;
 		case '.':
 			add_token(TokenKind::DOT);
+			break;
+		case ':':
+			add_token(
+				(this->source.match(':')) ?
+					TokenKind::RANGE_OP : TokenKind::COLON);
 			break;
 		case '-':
 			add_token(
@@ -175,7 +181,7 @@ void Lexer::lex() {
 						return !std::isalpha(c) 
 							&& c != '_' && !std::isdigit(c); });
 			const std::string lexeme =
-					this->source.data().substr(sub_info.begin, sub_info.size);
+			this->source.data().substr(sub_info.begin, sub_info.size);
 			this->location.col += sub_info.size;
 
 			// If the keyword is a command then keep it's lexeme as well.

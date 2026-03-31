@@ -33,6 +33,7 @@ enum class TokenKind : u8 {
 	GREATER,
 	LESS,
 	DOT,
+	UNDERSCORE,
 
 	// Multiples charactor token
 	DOUBLE_EQUAL,
@@ -40,6 +41,7 @@ enum class TokenKind : u8 {
 	GREATER_EQUAL,
 	LESS_EQUAL,
 	ARROW,
+	RANGE_OP,
 
 	// Literals
 	IDENTIFIER,
@@ -51,18 +53,19 @@ enum class TokenKind : u8 {
 	AND,
 	OR,
 	IF,
-	ENDIF,
 	ELSE,
 	TRUE,
 	FALSE,
 	SELF,
 	WHILE,
 	FOR,
+	CONTINUE,
+	BREAK,
 	RETURN,
 	PASS,
 	LET,
 	FUNC,
-	ENDFUNC,
+	END,
 
 	VOID_T,
 	INT_T,

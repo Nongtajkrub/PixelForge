@@ -21,10 +21,13 @@ enum class ASTNodeKind : u8 {
 	FUNC_ARGUMENTS,
 	ASSIGN,
 	IF,
+	FOR_LOOP,
+	LOOP,
 
 	BINARY,
 	CALL,
 	DOT,
+	RANGE,
 
 	DIRECTIVE,
 	COMMAND,
@@ -34,6 +37,9 @@ enum class ASTNodeKind : u8 {
 	TYPE,
 	KEYWORD,
 	SELF,
+	BREAK,
+	CONTINUE,
+	RETURN,
 };
 
 // Store info about where the node is stored in memory and how to interpret it.
@@ -94,6 +100,29 @@ struct CallExpr {
 
 	ASTNode identifier;
 	std::vector<ASTNode> args;
+};
+
+struct RangeExpr {
+	ASTNodeKind kind;
+
+	ASTNode begin;
+	ASTNode end;
+	std::optional<ASTNode> step;
+};
+
+struct ReturnStmt {
+	ASTNodeKind kind;
+
+	std::optional<ASTNode> expr;
+};
+
+struct ForLoopStmt {
+	ASTNodeKind kind;
+
+	std::optional<ASTNode> it;
+	ASTNode range;
+
+	ASTNode block; 
 };
 
 struct BlockStmt {

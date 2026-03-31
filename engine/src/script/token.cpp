@@ -73,6 +73,7 @@ const char* token_kind_as_str(TokenKind kind) {
 	case TokenKind::GREATER: return "GREATER";
 	case TokenKind::LESS: return "LESS";
 	case TokenKind::DOT: return "DOT";
+	case TokenKind::UNDERSCORE: return "UNDERSCORE";
 
 	// Multi-character tokens
 	case TokenKind::DOUBLE_EQUAL: return "DOUBLE_EQUAL";
@@ -80,6 +81,7 @@ const char* token_kind_as_str(TokenKind kind) {
 	case TokenKind::GREATER_EQUAL: return "GREATER_EQUAL";
 	case TokenKind::LESS_EQUAL: return "LESS_EQUAL";
 	case TokenKind::ARROW: return "ARROW";
+	case TokenKind::RANGE_OP: return "RANGE_OP";
 
 	// Literals
 	case TokenKind::IDENTIFIER: return "IDENTIFIER";
@@ -91,7 +93,6 @@ const char* token_kind_as_str(TokenKind kind) {
 	case TokenKind::AND: return "AND";
 	case TokenKind::OR: return "OR";
 	case TokenKind::IF: return "IF";
-	case TokenKind::ENDIF: return "ENDIF";
 	case TokenKind::ELSE: return "ELSE";
 	case TokenKind::TRUE: return "TRUE";
 	case TokenKind::FALSE: return "FALSE";
@@ -99,10 +100,12 @@ const char* token_kind_as_str(TokenKind kind) {
 	case TokenKind::WHILE: return "WHILE";
 	case TokenKind::FOR: return "FOR";
 	case TokenKind::RETURN: return "RETURN";
+	case TokenKind::CONTINUE: return "CONTINUE";
+	case TokenKind::BREAK: return "BREAK";
 	case TokenKind::PASS: return "PASS";
 	case TokenKind::LET: return "LET";
 	case TokenKind::FUNC: return "FUNC";
-	case TokenKind::ENDFUNC: return "ENDFUNC";
+	case TokenKind::END: return "END";
 
 	case TokenKind::VOID_T: return "VOID_T";
 	case TokenKind::INT_T: return "INT_T";
