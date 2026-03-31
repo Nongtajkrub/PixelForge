@@ -7,6 +7,21 @@ namespace scr {
 SymbolTable::SymbolTable() {
 	// Global scope
 	enter_scope(ScopeKind::GLOBAL);
+
+	// Setup builtin identifiers.
+	new_identifier(
+		intern_iden("bi_key_up"), IdenAttr(IdenKind::VAR ,TokenKind::BOOL_T));
+	new_identifier(
+		intern_iden("bi_key_down"), IdenAttr(IdenKind::VAR ,TokenKind::BOOL_T));
+	new_identifier(
+		intern_iden("bi_key_right"), IdenAttr(IdenKind::VAR ,TokenKind::BOOL_T));
+	new_identifier(
+		intern_iden("bi_key_left"), IdenAttr(IdenKind::VAR ,TokenKind::BOOL_T));
+
+	new_identifier(
+		intern_iden("bi_random_x"), IdenAttr(IdenKind::FUNC ,TokenKind::INT_T));
+	new_identifier(
+		intern_iden("bi_random_y"), IdenAttr(IdenKind::FUNC ,TokenKind::INT_T));
 }
 
 bool SymbolTable::contains(UniversalIdType id) {

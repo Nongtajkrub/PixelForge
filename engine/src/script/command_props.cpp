@@ -16,7 +16,7 @@ static const std::unordered_map<std::string, CommandProps> properties = {
 	{CMD_DESPAWN_LEX, {}},
 	{CMD_SHOW_LEX, {}},
 	{CMD_UPDATE_LEX, TokenKind::VOID_T},
-	{CMD_COLLIDE_LEX, TokenKind::VOID_T},
+	{CMD_COLLIDE_LEX, {TokenKind::SPRITE_T, TokenKind::VOID_T}},
 };
 
 const CommandProps& get_command_prop(const std::string& cmd) {
