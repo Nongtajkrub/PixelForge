@@ -40,6 +40,8 @@ enum class ASTNodeKind : u8 {
 	BREAK,
 	CONTINUE,
 	RETURN,
+	TRUE,
+	FALSE,
 };
 
 // Store info about where the node is stored in memory and how to interpret it.

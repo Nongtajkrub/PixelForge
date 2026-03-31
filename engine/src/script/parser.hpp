@@ -8,6 +8,7 @@
 #include "ast.hpp"
 #include "pattern.hpp"
 
+#include <atomic>
 #include <cassert>
 #include <cstddef>
 #include <functional>
@@ -56,33 +57,36 @@ public:
 	}
 
 private:
-	// Resolve data type of expression, take source location to emit errors.
-	// Optional ltype, typically passed internally during binary expr parsing.
-	std::optional<TokenKind> resolve_expr_type(ASTNode expr, Location err_loc);
+	std::optional<ASTNode> parse_block(
+		std::function<bool(TokenKind kind)> end_predicate);
 
 	std::optional<ASTNode> parse_stmt();
-	std::optional<ASTNode> parse_atomic(ASTNodeKind kind);
-	std::optional<ASTNode> parse_jump_stmt();
-	std::optional<ASTNode> parse_return_stmt();
-	std::optional<ASTNode> parse_directive();
+
 	std::optional<ASTNode> parse_var_declaration_stmt();
 	std::optional<ASTNode> parse_func_declaration_stmt();
 	std::optional<ASTNode> parse_if_stmt();
 	std::optional<ASTNode> parse_for_stmt();
+	std::optional<ASTNode> parse_return_stmt();
+	std::optional<ASTNode> parse_jump_stmt();
 	std::optional<ASTNode> parse_cmd_stmt();
+	std::optional<ASTNode> parse_directive();
+
 	std::optional<ASTNode> parse_expr(TokenKind terminator);
 	std::optional<ASTNode> pratt_nud();
 	std::optional<ASTNode> pratt_led(Token op, ASTNode left, u8 min_bp);
 	std::optional<ASTNode> pratt_parser(u8 min_bp = 0);
 
-	std::optional<ASTNode> parse_block(
-		std::function<bool(TokenKind kind)> end_predicate);
+	std::optional<ASTNode> parse_atomic(ASTNodeKind kind);
 
 	// Usually parse arguments as `FuncArgument` but can also parse as expression.
 	bool parse_func_args(std::vector<ASTNode>& buf, IdenAttr& func_attr);
 	bool parse_func_call_args(
 		std::vector<ASTNode>& buf,
 		std::vector<TokenKind> arg_types, TokenKind terminator);
+
+	// Resolve data type of expression, take source location to emit errors.
+	// Optional ltype, typically passed internally during binary expr parsing.
+	std::optional<TokenKind> resolve_expr_type(ASTNode expr, Location err_loc);
 
 	inline void emit(DiagnosticKind kind, const Token& token) {
 		Diagnostic(kind, token).emit(this->err_stream);
@@ -160,6 +164,13 @@ private:
 		return true;
 	}
 
+	template <typename  T>
+	inline T* new_node(ASTNodeKind kind) {
+		auto node = this->arena.alloc<T>();
+		node->kind = kind;
+		return node;
+	}
+
 	inline ASTNode new_primary_node(ASTNodeKind kind, const Token& token) {
 		auto node = this->arena.alloc<PrimaryExpr>();
 		node->kind = kind;
@@ -179,13 +190,6 @@ private:
 		node->kind = ASTNodeKind::IDENTIFIER;
 		node->id = id;
 		return ASTNode(&node->kind);
-	}
-
-	template <typename  T>
-	inline T* new_node(ASTNodeKind kind) {
-		auto node = this->arena.alloc<T>();
-		node->kind = kind;
-		return node;
 	}
 };
 

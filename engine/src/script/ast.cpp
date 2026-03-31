@@ -4,29 +4,31 @@ namespace scr {
 
 const char* ASTNode::kind_as_str() const {
     switch (*this->adr) {
-		case ASTNodeKind::NOP: return "NOP";
-        case ASTNodeKind::BLOCK: return "BLOCK";
-        case ASTNodeKind::VAR_DECLARATION: return "VAR_DECLARATION";
-		case ASTNodeKind::DIRECTIVE: return "DIRECTIVE";
-        case ASTNodeKind::FUNC_DECLARATION: return "FUNC_DECLARATION";
-        case ASTNodeKind::FUNC_ARGUMENTS: return "FUNC_ARGUMENTS";
-        case ASTNodeKind::ASSIGN: return "ASSIGN";
-        case ASTNodeKind::IF: return "IF";
-        case ASTNodeKind::FOR_LOOP: return "FOR_LOOP";
-        case ASTNodeKind::LOOP: return "LOOP";
-        case ASTNodeKind::BINARY: return "BINARY";
-		case ASTNodeKind::CALL: return "CALL";
-		case ASTNodeKind::DOT: return "DOT";
-		case ASTNodeKind::RANGE: return "RANGE";
-        case ASTNodeKind::COMMAND: return "COMMAND";
-        case ASTNodeKind::LITERAL: return "LITERAL";
-        case ASTNodeKind::IDENTIFIER: return "IDENTIFIER";
-        case ASTNodeKind::TYPE: return "TYPE";
-		case ASTNodeKind::KEYWORD: return "KEYWORD";
-		case ASTNodeKind::SELF: return "SELF";
-		case ASTNodeKind::BREAK: return "BREAK";
-		case ASTNodeKind::CONTINUE: return "CONTINUE";
-		case ASTNodeKind::RETURN: return "RETURN";
+	case ASTNodeKind::NOP: return "NOP";
+	case ASTNodeKind::BLOCK: return "BLOCK";
+	case ASTNodeKind::VAR_DECLARATION: return "VAR_DECLARATION";
+	case ASTNodeKind::DIRECTIVE: return "DIRECTIVE";
+	case ASTNodeKind::FUNC_DECLARATION: return "FUNC_DECLARATION";
+	case ASTNodeKind::FUNC_ARGUMENTS: return "FUNC_ARGUMENTS";
+	case ASTNodeKind::ASSIGN: return "ASSIGN";
+	case ASTNodeKind::IF: return "IF";
+	case ASTNodeKind::FOR_LOOP: return "FOR_LOOP";
+	case ASTNodeKind::LOOP: return "LOOP";
+	case ASTNodeKind::BINARY: return "BINARY";
+	case ASTNodeKind::CALL: return "CALL";
+	case ASTNodeKind::DOT: return "DOT";
+	case ASTNodeKind::RANGE: return "RANGE";
+	case ASTNodeKind::COMMAND: return "COMMAND";
+	case ASTNodeKind::LITERAL: return "LITERAL";
+	case ASTNodeKind::IDENTIFIER: return "IDENTIFIER";
+	case ASTNodeKind::TYPE: return "TYPE";
+	case ASTNodeKind::KEYWORD: return "KEYWORD";
+	case ASTNodeKind::SELF: return "SELF";
+	case ASTNodeKind::BREAK: return "BREAK";
+	case ASTNodeKind::CONTINUE: return "CONTINUE";
+	case ASTNodeKind::RETURN: return "RETURN";
+	case ASTNodeKind::TRUE: return "TRUE";
+	case ASTNodeKind::FALSE: return "FALSEW";
     }
 
     return "UNKNOWN_AST_NODE";
@@ -42,6 +44,8 @@ void ast_output(std::ostream &stream, ASTNode root, const u32 level) {
 	case ASTNodeKind::SELF:
 	case ASTNodeKind::BREAK:
 	case ASTNodeKind::CONTINUE:
+	case ASTNodeKind::TRUE:
+	case ASTNodeKind::FALSE:
 		break;
 	case ASTNodeKind::LITERAL: {
 		auto node = reinterpret_cast<const PrimaryExpr*>(root.adr);

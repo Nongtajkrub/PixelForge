@@ -34,67 +34,27 @@ bool Parser::parse() {
 	return true;
 }
 
-std::optional<TokenKind> Parser::resolve_expr_type(
-	ASTNode expr, Location err_loc) {
-	switch (*expr.adr) {
-	case ASTNodeKind::LITERAL: {
-		const auto type =
-			token_kind_as_type(
-				reinterpret_cast<const PrimaryExpr*>(expr.adr)->token.kind);
-
-		return type;
-	}
-	case ASTNodeKind::IDENTIFIER: {
-		const auto id = reinterpret_cast<const IdentifierExpr*>(expr.adr)->id;
-
-		if (const auto attr = this->symbols.lookup(id)) {
-			return (*attr).get().type;
+std::optional<ASTNode> Parser::parse_block(
+	std::function<bool(TokenKind kind)> end_predicate) {
+	auto node = new_node<BlockStmt>(ASTNodeKind::BLOCK);
+	
+	while (true && this->tokens.ensure_not_eof()) {
+		if (end_predicate(this->tokens.peek().kind)) {
+			return ASTNode(&node->kind);
 		}
 
-		// Identifier dont exist.
-		emit(DiagnosticKind::UNKNOWN_IDENTIFIER, err_loc);
-		return std::nullopt;
-	}
-	case ASTNodeKind::CALL: 
-		return 
-			resolve_expr_type(
-				reinterpret_cast<const CallExpr*>(expr.adr)->identifier, err_loc);
-	case ASTNodeKind::BINARY: {
-		const auto node = reinterpret_cast<const BinaryExpr*>(expr.adr);
-
-		const auto ltype = resolve_expr_type(node->left, err_loc);
-		if (!ltype) {
+		if (auto stmt = parse_stmt(); !stmt) {
 			return std::nullopt;
+		} else {
+			node->block.push_back(*stmt);
 		}
-
-		const auto rtype = resolve_expr_type(node->right, err_loc);
-		if (!rtype) {
-			return std::nullopt;
-		}
-
-		if (rtype != ltype) {
-			goto type_err;
-		}
-
-		if (token_is_comparison_operator(node->op.kind)) {
-			return TokenKind::BOOL_T;
-		}
-
-		return rtype;
-	} 
-	default:
-		goto type_err;
 	}
 
-type_err:
-	emit(DiagnosticKind::TYPE_ERROR, err_loc);
 	return std::nullopt;
 }
 
 std::optional<ASTNode> Parser::parse_stmt() {
 	switch (this->tokens.peek().kind) {
-	case TokenKind::PASS:
-		return parse_atomic(ASTNodeKind::NOP);
 	case TokenKind::LET:
 		return parse_var_declaration_stmt();
 	case TokenKind::FUNC:
@@ -103,96 +63,26 @@ std::optional<ASTNode> Parser::parse_stmt() {
 		return parse_if_stmt();
 	case TokenKind::FOR:
 		return parse_for_stmt();
+	case TokenKind::RETURN:
+		return parse_return_stmt();
 	case TokenKind::CONTINUE:
 	case TokenKind::BREAK:
 		return parse_jump_stmt();
-	case TokenKind::RETURN:
-		return parse_return_stmt();
-	case TokenKind::IDENTIFIER:
-		return parse_expr(TokenKind::SEMICOLON);
 	case TokenKind::COMMAND:
 		return parse_cmd_stmt();
+	case TokenKind::DIRECT_SPRITE:
+	case TokenKind::DIRECT_USE:
+	case TokenKind::DIRECT_UPDATE:
+	case TokenKind::DIRECT_COLLIDE:
+		return parse_directive();
+	case TokenKind::IDENTIFIER:
+		return parse_expr(TokenKind::SEMICOLON);
+	case TokenKind::PASS:
+		return parse_atomic(ASTNodeKind::NOP);
 	default:
-		const auto& token = this->tokens.peek();
-
-		if (token_is_directive(token.kind)) {
-			return parse_directive();
-		}
-
 		emit(DiagnosticKind::UNEXPECTED_TOKEN, this->tokens.advance());
 		return std::nullopt;
 	}
-}
-
-std::optional<ASTNode> Parser::parse_atomic(ASTNodeKind kind) {
-	auto node = new_node<AtomicNode>(kind);
-	this->tokens.advance();
-	if (!this->tokens.expect(TokenKind::SEMICOLON)) {
-		return std::nullopt;
-	}
-	return ASTNode(&node->kind);
-}
-
-std::optional<ASTNode> Parser::parse_jump_stmt() {
-	if (!this->symbols.in_scope(ScopeKind::LOOP)) {
-		emit(DiagnosticKind::JUMP_NOT_ALLOW, this->tokens.peek());
-		return std::nullopt;
-	}
-
-	switch (this->tokens.peek().kind) {
-	case TokenKind::BREAK:
-		return parse_atomic(ASTNodeKind::BREAK);
-	case TokenKind::CONTINUE:
-		return parse_atomic(ASTNodeKind::CONTINUE);
-	default:
-		std::unreachable();
-	}
-}
-
-std::optional<ASTNode> Parser::parse_return_stmt() {
-	auto node = new_node<ReturnStmt>(ASTNodeKind::RETURN);
-
-	if (!this->symbols.in_scope(ScopeKind::FUNC)) {
-		emit(DiagnosticKind::RETURN_NOT_ALLOW, this->tokens.peek());
-		return std::nullopt;
-	}
-
-	// Ignore the return keyword.
-	this->tokens.advance();
-
-	switch (this->tokens.peek().kind) {
-	case TokenKind::SEMICOLON:
-		this->tokens.advance(); // Ignore the semicolon.
-		node->expr = std::nullopt;
-		return ASTNode(&node->kind);
-	default:
-		OPT_ASSIGN_OR_RETURN(node->expr, parse_expr(TokenKind::SEMICOLON));
-		return ASTNode(&node->kind);
-	}
-}
-
-std::optional<ASTNode> Parser::parse_directive() {
-	auto node = new_node<DirectiveStmt>(ASTNodeKind::DIRECTIVE);
-
-	node->directive =  
-		new_primary_node(ASTNodeKind::KEYWORD, this->tokens.advance());
-
-	// Ensure correct pattern.
-	if (!Pattern<
-			TokenStream,
-			TokenKind::IDENTIFIER,
-			TokenKind::SEMICOLON>::match_peek(this->tokens, this->err_stream)) {
-		return std::nullopt;
-	}
-
-	const auto id = this->symbols.intern_iden(*(this->tokens.advance().lexeme));
-	node->identifier = new_identifier_node(id);
-	this->symbols.new_identifier_global(
-		id, IdenAttr(IdenKind::VAR, TokenKind::SPRITE_T)); 
-
-	this->tokens.advance(); // Skip semicolon.
-
-	return ASTNode(&node->kind);
 }
 
 std::optional<ASTNode> Parser::parse_var_declaration_stmt() {
@@ -394,6 +284,44 @@ std::optional<ASTNode> Parser::parse_for_stmt() {
 	return ASTNode(&node->kind);
 }
 
+std::optional<ASTNode> Parser::parse_return_stmt() {
+	auto node = new_node<ReturnStmt>(ASTNodeKind::RETURN);
+
+	if (!this->symbols.in_scope(ScopeKind::FUNC)) {
+		emit(DiagnosticKind::RETURN_NOT_ALLOW, this->tokens.peek());
+		return std::nullopt;
+	}
+
+	// Ignore the return keyword.
+	this->tokens.advance();
+
+	switch (this->tokens.peek().kind) {
+	case TokenKind::SEMICOLON:
+		this->tokens.advance(); // Ignore the semicolon.
+		node->expr = std::nullopt;
+		return ASTNode(&node->kind);
+	default:
+		OPT_ASSIGN_OR_RETURN(node->expr, parse_expr(TokenKind::SEMICOLON));
+		return ASTNode(&node->kind);
+	}
+}
+
+std::optional<ASTNode> Parser::parse_jump_stmt() {
+	if (!this->symbols.in_scope(ScopeKind::LOOP)) {
+		emit(DiagnosticKind::JUMP_NOT_ALLOW, this->tokens.peek());
+		return std::nullopt;
+	}
+
+	switch (this->tokens.peek().kind) {
+	case TokenKind::BREAK:
+		return parse_atomic(ASTNodeKind::BREAK);
+	case TokenKind::CONTINUE:
+		return parse_atomic(ASTNodeKind::CONTINUE);
+	default:
+		std::unreachable();
+	}
+}
+
 std::optional<ASTNode> Parser::parse_cmd_stmt() {
 	auto node = new_node<CommandStmt>(ASTNodeKind::COMMAND);
 
@@ -435,6 +363,30 @@ std::optional<ASTNode> Parser::parse_cmd_stmt() {
 			get_command_prop(cmd).arg_types, TokenKind::SEMICOLON)) {
 		return std::nullopt;
 	}
+
+	return ASTNode(&node->kind);
+}
+
+std::optional<ASTNode> Parser::parse_directive() {
+	auto node = new_node<DirectiveStmt>(ASTNodeKind::DIRECTIVE);
+
+	node->directive =  
+		new_primary_node(ASTNodeKind::KEYWORD, this->tokens.advance());
+
+	// Ensure correct pattern.
+	if (!Pattern<
+			TokenStream,
+			TokenKind::IDENTIFIER,
+			TokenKind::SEMICOLON>::match_peek(this->tokens, this->err_stream)) {
+		return std::nullopt;
+	}
+
+	const auto id = this->symbols.intern_iden(*(this->tokens.advance().lexeme));
+	node->identifier = new_identifier_node(id);
+	this->symbols.new_identifier_global(
+		id, IdenAttr(IdenKind::VAR, TokenKind::SPRITE_T)); 
+
+	this->tokens.advance(); // Skip semicolon.
 
 	return ASTNode(&node->kind);
 }
@@ -490,6 +442,12 @@ std::optional<ASTNode> Parser::pratt_nud() {
 	case TokenKind::FLOAT:
 	case TokenKind::STRING:
 		return new_primary_node(ASTNodeKind::LITERAL, this->tokens.advance());
+	case TokenKind::TRUE: 
+		this->tokens.advance(); // Ignore true keyword.
+		return ASTNode(&(new_node<AtomicNode>(ASTNodeKind::TRUE)->kind));
+	case TokenKind::FALSE:
+		this->tokens.advance(); // Ignore false keyword.
+		return ASTNode(&(new_node<AtomicNode>(ASTNodeKind::FALSE)->kind));
 	case TokenKind::SELF:
 		this->tokens.advance();
 		return ASTNode(&(new_node<AtomicNode>(ASTNodeKind::SELF)->kind));
@@ -677,23 +635,13 @@ std::optional<ASTNode> Parser::pratt_parser(u8 min_bp) {
 	return left;
 }
 
-std::optional<ASTNode> Parser::parse_block(
-	std::function<bool(TokenKind kind)> end_predicate) {
-	auto node = new_node<BlockStmt>(ASTNodeKind::BLOCK);
-	
-	while (true && this->tokens.ensure_not_eof()) {
-		if (end_predicate(this->tokens.peek().kind)) {
-			return ASTNode(&node->kind);
-		}
-
-		if (auto stmt = parse_stmt(); !stmt) {
-			return std::nullopt;
-		} else {
-			node->block.push_back(*stmt);
-		}
+std::optional<ASTNode> Parser::parse_atomic(ASTNodeKind kind) {
+	auto node = new_node<AtomicNode>(kind);
+	this->tokens.advance();
+	if (!this->tokens.expect(TokenKind::SEMICOLON)) {
+		return std::nullopt;
 	}
-
-	return std::nullopt;
+	return ASTNode(&node->kind);
 }
 
 bool Parser::parse_func_args(std::vector<ASTNode>& buf, IdenAttr& func_attr) {
@@ -779,5 +727,66 @@ bool Parser::parse_func_call_args(
 
 	return false;
 }
+
+std::optional<TokenKind> Parser::resolve_expr_type(
+	ASTNode expr, Location err_loc) {
+	switch (*expr.adr) {
+	case ASTNodeKind::FALSE:
+	case ASTNodeKind::TRUE:
+		return TokenKind::BOOL_T;
+	case ASTNodeKind::LITERAL: {
+		const auto type =
+			token_kind_as_type(
+				reinterpret_cast<const PrimaryExpr*>(expr.adr)->token.kind);
+
+		return type;
+	}
+	case ASTNodeKind::IDENTIFIER: {
+		const auto id = reinterpret_cast<const IdentifierExpr*>(expr.adr)->id;
+
+		if (const auto attr = this->symbols.lookup(id)) {
+			return (*attr).get().type;
+		}
+
+		// Identifier dont exist.
+		emit(DiagnosticKind::UNKNOWN_IDENTIFIER, err_loc);
+		return std::nullopt;
+	}
+	case ASTNodeKind::CALL: 
+		return 
+			resolve_expr_type(
+				reinterpret_cast<const CallExpr*>(expr.adr)->identifier, err_loc);
+	case ASTNodeKind::BINARY: {
+		const auto node = reinterpret_cast<const BinaryExpr*>(expr.adr);
+
+		const auto ltype = resolve_expr_type(node->left, err_loc);
+		if (!ltype) {
+			return std::nullopt;
+		}
+
+		const auto rtype = resolve_expr_type(node->right, err_loc);
+		if (!rtype) {
+			return std::nullopt;
+		}
+
+		if (rtype != ltype) {
+			goto type_err;
+		}
+
+		if (token_is_comparison_operator(node->op.kind)) {
+			return TokenKind::BOOL_T;
+		}
+
+		return rtype;
+	} 
+	default:
+		goto type_err;
+	}
+
+type_err:
+	emit(DiagnosticKind::TYPE_ERROR, err_loc);
+	return std::nullopt;
+}
+
 
 } // namespace scr;
