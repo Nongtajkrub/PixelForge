@@ -125,13 +125,24 @@ const char* token_kind_as_str(TokenKind kind) {
     return "UNKNOWN_TOKEN";
 }
 
-TokenKind token_kind_as_type(TokenKind kind) {
+TokenKind token_kind_to_type(TokenKind kind) {
 	switch (kind) {
 	case TokenKind::STRING: return TokenKind::STRING_T;
 	case TokenKind::INTEGER: return TokenKind::INT_T;
 	case TokenKind::FLOAT: return TokenKind::FLOAT_T;
 	default: 
 		LOG_ERR("This TokenKind can not be interpret as a type");
+		std::unreachable();
+	}
+}
+
+TokenKind property_to_type(char prop) {
+	switch (prop) {
+	case PROP_Y_LEX:
+	case PROP_X_LEX:
+		return TokenKind::INT_T;
+	default:
+		LOG_ERR("Property does not exist.");
 		std::unreachable();
 	}
 }

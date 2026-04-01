@@ -1,3 +1,4 @@
+#include "diagnostic.hpp"
 #include "token.hpp"
 #include "lexer.hpp"
 
@@ -45,7 +46,7 @@ static const std::unordered_map<std::string, TokenKind> keywords = {
 	{CMD_COLLIDE_LEX, TokenKind::COMMAND},
 };
 
-void Lexer::lex() {
+bool Lexer::lex() {
 	while (!this->source.is_eof()) {
 		char c = this->source.advance();
 		this->location.col++;
@@ -125,6 +126,12 @@ void Lexer::lex() {
 			this->source.advance();
 
 			const auto sub_info = this->source.advance_until('"');
+
+			if (this->source.is_eof()) {
+				emit(DiagnosticKind::UNTERMINATED_STRING);
+				return false;
+			}
+
 			add_token(
 				TokenKind::STRING,
 				this->source.data().substr(sub_info.begin, sub_info.size));
@@ -201,6 +208,8 @@ void Lexer::lex() {
 		}
 		}
 	}
+
+	return true;
 }
 
 } // namespace scr

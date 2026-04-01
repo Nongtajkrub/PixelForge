@@ -7,6 +7,7 @@ namespace scr {
 
 std::string_view Diagnostic::resolve_msg() const {
     switch (this->kind) {
+	case DiagnosticKind::FAIL_OPEN_SOURCE: return "Fail to open source file";
 	case DiagnosticKind::UNEXPECTED_EOF: return "Unexpected EOF";
 	case DiagnosticKind::UNEXPECTED_TOKEN: return "Unexpected token";
 	case DiagnosticKind::EXPECTED_SEMICOLON: return "expected semicolon";
@@ -30,6 +31,7 @@ std::string_view Diagnostic::resolve_msg() const {
 	case DiagnosticKind::EXPECTED_RANGE_OP: return "Expected range operator";
 	case DiagnosticKind::EXPECTED_RANGE_EXPR: return "Expected range expression";
 	case DiagnosticKind::UNKNOWN_IDENTIFIER: return "Unknown identifier";
+	case DiagnosticKind::UNTERMINATED_STRING: return "Unterminated string";
 	case DiagnosticKind::TYPE_ERROR: return "Type error";
 	case DiagnosticKind::TO_MANY_ARGUMENTS: return "To many arguments";
 	case DiagnosticKind::JUMP_NOT_ALLOW: return "Jump statments not allow";
@@ -64,13 +66,17 @@ DiagnosticKind resolve_diag_expect_kind(TokenKind kind) {
 }
 
 void Diagnostic::emit(std::ostream& stream) const {
-	stream 
-		<< resolve_msg() 
-		<< " at " 
-		<< this->location.row
-		<< ":"
-		<< this->location.col
-		<< '\n';
+	stream << resolve_msg(); 
+
+	if (this->location) {
+		stream 
+			<< " at " 
+			<< (*this->location).row
+			<< ":"
+			<< (*this->location).col;
+	}
+
+	stream << '\n'; 
 }
 
 } // namespace scr

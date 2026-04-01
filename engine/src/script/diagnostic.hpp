@@ -5,12 +5,15 @@
 #include "token.hpp"
 
 #include <cstddef>
+#include <optional>
 #include <ostream>
 #include <string_view>
 
 namespace scr {
 
 enum class DiagnosticKind : u8 {
+	FAIL_OPEN_SOURCE,
+
 	UNEXPECTED_EOF,
 	UNEXPECTED_TOKEN,
 
@@ -36,6 +39,7 @@ enum class DiagnosticKind : u8 {
 
 	UNKNOWN_IDENTIFIER,
 
+	UNTERMINATED_STRING,
 	TYPE_ERROR,
 	TO_MANY_ARGUMENTS,
 	JUMP_NOT_ALLOW,
@@ -47,16 +51,19 @@ DiagnosticKind resolve_diag_expect_kind(TokenKind kind);
 
 struct Diagnostic {
 	DiagnosticKind kind;
-	Location location;
+	std::optional<Location> location;
 
 	explicit Diagnostic(DiagnosticKind kind, const Token& from) :
 		kind(kind),
 		location(from.location)
 	{ } 
-
 	explicit Diagnostic(DiagnosticKind kind, Location location) :
 		kind(kind),
 		location(location)
+	{ } 
+	explicit Diagnostic(DiagnosticKind kind) :
+		kind(kind),
+		location(std::nullopt)
 	{ } 
 
 	std::string_view resolve_msg() const;

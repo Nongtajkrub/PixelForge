@@ -176,7 +176,8 @@ const char* token_kind_as_str(TokenKind kind);
 
 // Convert TokenKind to types kind (NUMBER -> INT_T, STRING -> STRING_T).
 // Will panic if match is not possible.
-TokenKind token_kind_as_type(TokenKind kind);
+TokenKind token_kind_to_type(TokenKind kind);
+TokenKind property_to_type(char prop);
 
 bool token_is_arithmetic_operator(TokenKind kind);
 bool token_is_logical_operator(TokenKind kind);

@@ -8,7 +8,6 @@
 #include "ast.hpp"
 #include "pattern.hpp"
 
-#include <atomic>
 #include <cassert>
 #include <cstddef>
 #include <functional>

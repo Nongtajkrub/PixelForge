@@ -735,12 +735,18 @@ std::optional<TokenKind> Parser::resolve_expr_type(
 	case ASTNodeKind::TRUE:
 		return TokenKind::BOOL_T;
 	case ASTNodeKind::LITERAL: {
-		const auto type =
-			token_kind_as_type(
+		return 
+			token_kind_to_type(
 				reinterpret_cast<const PrimaryExpr*>(expr.adr)->token.kind);
-
-		return type;
 	}
+	case ASTNodeKind::DOT:
+		return 
+			property_to_type(
+				reinterpret_cast<const DotExpr*>(expr.adr)->property);
+	case ASTNodeKind::CALL: 
+		return 
+			resolve_expr_type(
+				reinterpret_cast<const CallExpr*>(expr.adr)->identifier, err_loc);
 	case ASTNodeKind::IDENTIFIER: {
 		const auto id = reinterpret_cast<const IdentifierExpr*>(expr.adr)->id;
 
@@ -752,10 +758,6 @@ std::optional<TokenKind> Parser::resolve_expr_type(
 		emit(DiagnosticKind::UNKNOWN_IDENTIFIER, err_loc);
 		return std::nullopt;
 	}
-	case ASTNodeKind::CALL: 
-		return 
-			resolve_expr_type(
-				reinterpret_cast<const CallExpr*>(expr.adr)->identifier, err_loc);
 	case ASTNodeKind::BINARY: {
 		const auto node = reinterpret_cast<const BinaryExpr*>(expr.adr);
 
@@ -787,6 +789,5 @@ type_err:
 	emit(DiagnosticKind::TYPE_ERROR, err_loc);
 	return std::nullopt;
 }
-
 
 } // namespace scr;
