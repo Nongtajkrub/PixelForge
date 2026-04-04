@@ -1,4 +1,5 @@
 #include "compiler.hpp"
+#include "code_generator.hpp"
 #include "diagnostic.hpp"
 #include "lexer.hpp"
 #include "parser.hpp"
@@ -40,8 +41,15 @@ bool Compiler::compile() {
 	}
 
 	for (auto ast : parser.get_ast()) {
-		scr::ast_output(std::cout, ast);
+		ast_output(std::cout, ast);
 	}
+	
+	auto code_generator = CodeGenerator(parser.get_ast());
+	if (!code_generator.generate()) {
+		return false;
+	}
+
+	code_generator.output_inst(std::cout);
 
 	return true;
 }

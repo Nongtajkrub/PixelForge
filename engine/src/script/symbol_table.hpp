@@ -1,17 +1,20 @@
 #pragma once
 
-#include "../core/iterable_stack.hpp"
+#include "../core/cursor_stack.hpp"
 #include "../core/incremental_id.hpp"
+#include "../core/interner.hpp"
 #include "token.hpp"
 
 #include <cassert>
 #include <cstddef>
 #include <optional>
 #include <unordered_map>
+#include <stack>
 
 namespace scr {
 
 using namespace core;
+using IdentifierId = u32;
 
 enum class IdenKind : u8 {
 	VAR,
@@ -23,6 +26,7 @@ struct IdenAttr {
 	
 	// Identifier data types.
 	TokenKind type;
+	bool in_scope = true;
 
 	// Argument type list for wehn kind is FUNC.
 	std::optional<std::vector<TokenKind>> arg_types = std::nullopt;
@@ -48,7 +52,9 @@ enum class ScopeKind {
 
 struct Scope {
 	ScopeKind kind;
-	std::unordered_map<UniversalIdType, IdenAttr> table;
+
+	// IdenAttr store in a stack to support identifier shadowing.
+	std::unordered_map<IdentifierId, std::stack<IdenAttr>> table;
 
 	Scope() = default;
 	Scope(ScopeKind kind) : 
@@ -58,34 +64,52 @@ struct Scope {
  
 class SymbolTable {
 private:
-	// Assigns a unique ID to each string; identical strings share the same ID.
-	std::unordered_map<std::string, UniversalIdType> iden_interner; 
+	// Identifier table stored in a cursor stack to manage scopes while
+	// preserving identifier attributes, ensuring references remain valid.	
+	CursorStack<Scope> scopes;
 
-	// Identifier table store in a stack to manage scope.
-	IterableStack<Scope> scopes;
+	// Assigns a unique slot to each identifier, identical share same slot.
+	IdInterner<std::string, IdentifierId> iden_interner; 
+	IncrementalIdGen<IdentifierId> iden_id_generator = 
+		IncrementalIdGen<IdentifierId>(0);
 
 public:
 	SymbolTable();
 
-	// Intern an identifier to ID.
-	UniversalIdType intern_iden(const std::string& iden);
-
 	// Check whether a symbol exist.
-	bool contains(UniversalIdType id);
+	bool contains(IdentifierId id);
 
 	bool in_scope(ScopeKind kind);
 
 	// Look up a symbol and return the reference to its attr.
-	std::optional<Ref<IdenAttr>> lookup(UniversalIdType id);
+	std::optional<Ref<IdenAttr>> lookup(IdentifierId id);
+
+	// Intern an identifier to ID.
+	inline IdentifierId intern_iden(const std::string& iden) {
+		auto [id, _] = this->iden_interner.intern(iden);
+		return id;
+	}
 
 	inline void enter_scope(ScopeKind kind) {
-		this->scopes.emplace_back(kind);
+		auto [scope, inserted] = this->scopes.try_emplace_back(kind);
+
+		// If no new scope was inserted (cursor reused an existing slot),
+		// update the scope kind manually.		
+		if (!inserted) {
+			scope.kind = kind;
+		}
 	}
 
 	inline void leave_scope() {
 		// Ensure do not pop global scope.
 		assert(this->scopes.size() > 1);
-		this->scopes.pop();
+
+		// Move all identifier in the current scope out of scope.
+		for (auto& [_, attr_stack] : this->scopes.top().table) {
+			attr_stack.top().in_scope = false;
+		}
+		
+		this->scopes.rewind();
 	}
 
 	inline ScopeKind this_scope() {
@@ -93,14 +117,17 @@ public:
 	}
 
 	// Add a new or replace symbol.
-	inline IdenAttr& new_identifier(UniversalIdType id, IdenAttr attr) {
-		auto [it, _] = this->scopes.top().table.emplace(id, attr);
-		return it->second;
+	inline IdenAttr& new_identifier(IdentifierId id, IdenAttr attr) {
+		auto [it, _] = this->scopes.top().table.try_emplace(id);
+		it->second.push(attr);
+		return it->second.top();
 	}
 
 	// Add a new or replace global symbol.
-	inline void new_identifier_global(UniversalIdType id, IdenAttr attr) {
-		this->scopes.bottom().table.emplace(id, attr);
+	inline IdenAttr& new_identifier_global(IdentifierId id, IdenAttr attr) {
+		auto [it, _] = this->scopes.bottom().table.try_emplace(id);
+		it->second.push(attr);
+		return it->second.top();
 	}
 };
 

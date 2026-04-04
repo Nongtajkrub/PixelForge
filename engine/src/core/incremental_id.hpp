@@ -2,17 +2,28 @@
 
 #include "../global.hpp"
 
+#include <concepts>
+
 namespace core {
 
-using UniversalIdType = u32;
+template <typename T>
+concept IdType =
+	std::same_as<T, u64> 
+		|| std::same_as<T, u32> || std::same_as<T, u16> || std::same_as<T, u8>;
 
+template <typename T>
+requires IdType<T>
 class IncrementalIdGen {
 private:
-	static inline UniversalIdType prev = 0;
+	T prev = 0;
 
 public:
-	static inline UniversalIdType generate() {
-		return IncrementalIdGen::prev++;
+	IncrementalIdGen(T start) :
+		prev(start)
+	{ }
+
+	T generate() {
+		return this->prev++;
 	}
 };
 

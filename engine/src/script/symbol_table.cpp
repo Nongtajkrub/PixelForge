@@ -4,7 +4,11 @@
 
 namespace scr {
 
-SymbolTable::SymbolTable() {
+SymbolTable::SymbolTable() :
+	iden_interner([this]() -> IdentifierId {
+		return this->iden_id_generator.generate(); 
+	})
+{
 	// Global scope
 	enter_scope(ScopeKind::GLOBAL);
 
@@ -24,9 +28,10 @@ SymbolTable::SymbolTable() {
 		intern_iden("bi_random_y"), IdenAttr(IdenKind::FUNC ,TokenKind::INT_T));
 }
 
-bool SymbolTable::contains(UniversalIdType id) {
+bool SymbolTable::contains(IdentifierId id) {
 	for (const auto& scope : std::views::reverse(this->scopes)) {
-		if (scope.table.contains(id)) {
+		if (const auto it = scope.table.find(id); 
+				it != scope.table.end() && it->second.top().in_scope) {
 			return true;
 		}
 	}
@@ -42,20 +47,11 @@ bool SymbolTable::in_scope(ScopeKind kind) {
 	return false;
 }
 
-UniversalIdType SymbolTable::intern_iden(const std::string& iden) {
-	auto [it, inserted] = iden_interner.try_emplace(iden, UniversalIdType{});
-
-	if (inserted) {
-		it->second = IncrementalIdGen::generate();
-	}
-
-	return it->second;
-}
-
-std::optional<Ref<IdenAttr>> SymbolTable::lookup(UniversalIdType id) {
+std::optional<Ref<IdenAttr>> SymbolTable::lookup(IdentifierId id) {
 	for (auto& scope : std::views::reverse(this->scopes)) {
-		if (auto it = scope.table.find(id); it != scope.table.end()) {
-			return std::ref(it->second);
+		if (auto it = scope.table.find(id);
+				it != scope.table.end() && it->second.top().in_scope) {
+			return std::ref(it->second.top());
 		}
 	}
 	return std::nullopt;

@@ -47,7 +47,7 @@ public:
 
 	bool parse();
 
-	inline const std::span<ASTNode> get_ast() {
+	inline const std::vector<ASTNode>& get_ast() {
 		return this->ast;
 	}
 
@@ -115,21 +115,24 @@ private:
 
 		this->tokens.advance(); // Skip colon (':').
 		
-		// Ensure parsed type actually exist.
-		if (!token_is_type(this->tokens.peek().kind)) {
-			emit(DiagnosticKind::EXPECTED_TYPE, this->tokens.peek());
+		// Ensure parsed type is a value type.
+		if (!token_is_value_type(this->tokens.peek().kind)) {
+			emit(DiagnosticKind::EXPECTED_VALUE_TYPE, this->tokens.peek());
 			return std::nullopt;
 		}
 		const auto& type_token = this->tokens.advance();
-		this->symbols.new_identifier(
-			id, IdenAttr(IdenKind::VAR, type_token.kind));
-		node->identifier = new_identifier_node(id);
 		node->type = new_primary_node(ASTNodeKind::TYPE, type_token); 
+
+		node->identifier =
+			new_identifier_node(
+				id,
+				&this->symbols.new_identifier(
+					id, IdenAttr(IdenKind::VAR, type_token.kind)));
 
 		return type_token.kind;
 	}
 
-	inline bool ensure_iden_exist(UniversalIdType id) {
+	inline bool ensure_iden_exist(IdentifierId id) {
 		if (!this->symbols.contains(id)) {
 			emit(DiagnosticKind::UNKNOWN_IDENTIFIER, this->tokens.peek()); 
 			return false;
@@ -137,7 +140,7 @@ private:
 		return true;
 	}
 
-	inline bool ensure_iden_type(UniversalIdType id, TokenKind type) {
+	inline bool ensure_iden_type(IdentifierId id, TokenKind type) {
 		assert(token_is_type(type));
 
 		if (const auto attr = this->symbols.lookup(id); attr) {
@@ -177,17 +180,20 @@ private:
 		return ASTNode(&node->kind);
 	}
 
-	inline ASTNode new_identifier_node(const std::string& symbol) {
+	inline ASTNode new_identifier_node(
+		const std::string& symbol, IdenAttr* attr) {
 		auto node = this->arena.alloc<IdentifierExpr>();
 		node->kind = ASTNodeKind::IDENTIFIER;
 		node->id = this->symbols.intern_iden(symbol);
+		node->attr = attr;
 		return ASTNode(&node->kind);
 	}
 
-	inline ASTNode new_identifier_node(UniversalIdType id) {
+	inline ASTNode new_identifier_node(IdentifierId id, IdenAttr* attr) {
 		auto node = this->arena.alloc<IdentifierExpr>();
 		node->kind = ASTNodeKind::IDENTIFIER;
 		node->id = id;
+		node->attr = attr;
 		return ASTNode(&node->kind);
 	}
 };

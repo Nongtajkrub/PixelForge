@@ -26,6 +26,7 @@ std::string_view Diagnostic::resolve_msg() const {
 	case DiagnosticKind::EXPECTED_SPRITE_DIRECT:
 		return "Expected sprite directive";
 	case DiagnosticKind::EXPECTED_TYPE: return "Expected type";
+	case DiagnosticKind::EXPECTED_VALUE_TYPE: return "Expected value type";
 	case DiagnosticKind::EXPECTED_PROPERTY: return "Expected property";
 	case DiagnosticKind::EXPECTED_FUNCTION: return "Expected function";
 	case DiagnosticKind::EXPECTED_RANGE_OP: return "Expected range operator";

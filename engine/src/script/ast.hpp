@@ -1,16 +1,14 @@
 #pragma once
 
 #include "../global.hpp"
+#include "symbol_table.hpp"
 #include "token.hpp"
-#include "../core/incremental_id.hpp"
 
 #include <optional>
 #include <ostream>
 #include <vector>
 
 namespace scr {
-
-using namespace core;
 
 enum class ASTNodeKind : u8 {
 	NOP,
@@ -79,7 +77,9 @@ struct PrimaryExpr {
 struct IdentifierExpr {
 	ASTNodeKind kind;
 
-	UniversalIdType id;
+	// Store as ID so lookups are faster.
+	IdentifierId id;
+	IdenAttr* attr;
 };
 
 struct DotExpr {

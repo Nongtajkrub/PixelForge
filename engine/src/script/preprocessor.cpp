@@ -6,9 +6,9 @@ namespace scr {
 
 bool Preprocessor::process() {
 	// A script have to start with a sprite directive.
-	if (!process_sprite_direct()) {
-		return false;
-	}
+	//if (!process_sprite_direct()) {
+	//	return false;
+	//}
 
 	while (!this->tokens.is_eof() && process_direct()) { }
 

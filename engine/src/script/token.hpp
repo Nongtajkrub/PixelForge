@@ -174,16 +174,19 @@ public:
 // Convert TokenKind to string (IDENTIFIER -> "IDENTIFIER").
 const char* token_kind_as_str(TokenKind kind);
 
-// Convert TokenKind to types kind (NUMBER -> INT_T, STRING -> STRING_T).
+// Convert TokenKind to types kind (INTEGER -> INT_T, STRING -> STRING_T).
 // Will panic if match is not possible.
-TokenKind token_kind_to_type(TokenKind kind);
+TokenKind token_to_type(TokenKind kind);
 TokenKind property_to_type(char prop);
+bool token_to_boolean(TokenKind kind);
 
 bool token_is_arithmetic_operator(TokenKind kind);
 bool token_is_logical_operator(TokenKind kind);
 bool token_is_comparison_operator(TokenKind kind);
 bool token_is_directive(TokenKind kind);
+bool token_is_value_type(TokenKind kind);
 bool token_is_type(TokenKind kind);
+bool token_is_boolean(TokenKind kind);
 bool token_is_property(const Token& token);
 
 }

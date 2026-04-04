@@ -1,7 +1,9 @@
 #include "token.hpp"
+#include "const_pool.hpp"
 #include "diagnostic.hpp"
 #include "../core/log.hpp"
 
+#include <cassert>
 #include <initializer_list>
 #include <string_view>
 #include <utility>
@@ -86,7 +88,7 @@ const char* token_kind_as_str(TokenKind kind) {
 	// Literals
 	case TokenKind::IDENTIFIER: return "IDENTIFIER";
 	case TokenKind::STRING: return "STRING";
-	case TokenKind::INTEGER: return "NUMBER";
+	case TokenKind::INTEGER: return "INTEGER";
 	case TokenKind::FLOAT: return "FLOAT";
 
 	// Keywords
@@ -125,7 +127,7 @@ const char* token_kind_as_str(TokenKind kind) {
     return "UNKNOWN_TOKEN";
 }
 
-TokenKind token_kind_to_type(TokenKind kind) {
+TokenKind token_to_type(TokenKind kind) {
 	switch (kind) {
 	case TokenKind::STRING: return TokenKind::STRING_T;
 	case TokenKind::INTEGER: return TokenKind::INT_T;
@@ -143,6 +145,18 @@ TokenKind property_to_type(char prop) {
 		return TokenKind::INT_T;
 	default:
 		LOG_ERR("Property does not exist.");
+		std::unreachable();
+	}
+}
+
+bool token_to_boolean(TokenKind kind) {
+	assert(token_is_boolean(kind));
+
+	switch (kind) {
+	case TokenKind::TRUE: return true;
+	case TokenKind::FALSE: return false;
+	default: 
+		LOG_ERR("This token can't be convert to boolean");
 		std::unreachable();
 	}
 }
@@ -193,14 +207,37 @@ bool token_is_directive(TokenKind kind) {
 	}
 }
 
-bool token_is_type(TokenKind kind) {
+
+bool token_is_value_type(TokenKind kind) {
 	switch (kind) {
-	case TokenKind::VOID_T:
 	case TokenKind::INT_T:
 	case TokenKind::FLOAT_T:
 	case TokenKind::BOOL_T:
 	case TokenKind::STRING_T:
+		return true;
+	default:
+		return false;
+	}
+}
+
+bool token_is_type(TokenKind kind) {
+	if (token_is_value_type(kind)) {
+		return true;
+	}
+
+	switch (kind) {
+	case TokenKind::VOID_T:
 	case TokenKind::SPRITE_T:
+		return true;
+	default:
+		return false;
+	}
+}
+
+bool token_is_boolean(TokenKind kind) {
+	switch (kind) {
+	case TokenKind::TRUE:
+	case TokenKind::FALSE:
 		return true;
 	default:
 		return false;
