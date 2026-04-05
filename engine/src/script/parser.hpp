@@ -22,6 +22,21 @@ using namespace core;
 
 class Parser {
 private:
+	using CommandArgsMap =
+		std::unordered_map<std::string, std::vector<TokenKind>>;
+	inline static const CommandArgsMap command_args = {
+		{CMD_UP_LEX, {TokenKind::INT_T}},
+		{CMD_DOWN_LEX, {TokenKind::INT_T}},
+		{CMD_RIGHT_LEX, {TokenKind::INT_T}},
+		{CMD_LEFT_LEX, {TokenKind::INT_T}},
+		{CMD_GOTO_LEX, {TokenKind::INT_T, TokenKind::INT_T}},
+		{CMD_SPAWN_LEX, {}},
+		{CMD_DESPAWN_LEX, {}},
+		{CMD_SHOW_LEX, {}},
+		{CMD_UPDATE_LEX, {TokenKind::VOID_T}},
+		{CMD_COLLIDE_LEX, {TokenKind::SPRITE_T, TokenKind::VOID_T}},
+	};
+
 	// Arena allocator for nodes.
 	BumpArena& arena;
 
@@ -196,6 +211,15 @@ private:
 		node->attr = attr;
 		return ASTNode(&node->kind);
 	}
+
+	const std::vector<TokenKind>& get_command_args(const std::string& cmd) {
+		auto it = command_args.find(cmd);
+
+		// Whether a command exist should already be checked during parsing.
+		assert(it != command_args.end());
+
+		return it->second;
+	} 
 };
 
 } // namespace scr

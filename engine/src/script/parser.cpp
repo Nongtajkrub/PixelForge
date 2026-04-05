@@ -6,7 +6,6 @@
 #include "parser.hpp"
 #include "ast.hpp"
 #include "pattern.hpp"
-#include "command_props.hpp"
 
 #include <cassert>
 #include <cstddef>
@@ -368,7 +367,7 @@ std::optional<ASTNode> Parser::parse_cmd_stmt() {
 
 	if (!parse_func_call_args(
 			node->operands,
-			get_command_prop(cmd).arg_types, TokenKind::SEMICOLON)) {
+			get_command_args(cmd), TokenKind::SEMICOLON)) {
 		return std::nullopt;
 	}
 
