@@ -1,5 +1,6 @@
 #include "compiler.hpp"
 #include "code_generator.hpp"
+#include "const_pool.hpp"
 #include "diagnostic.hpp"
 #include "lexer.hpp"
 #include "parser.hpp"
@@ -33,9 +34,12 @@ bool Compiler::compile() {
 	}
 
 	auto nodes_arena = BumpArena(DEFAULT_NODES_ARENA_SIZE); 
+	auto const_poool = ConstPool();
 
 	auto parser =
-		Parser(lexer.get_token(), this->symbols, nodes_arena, this->err_stream);
+		Parser(
+			lexer.get_token(),
+			this->symbols, const_poool, nodes_arena, this->err_stream);
 	if (!parser.parse()) {
 		return false;
 	}

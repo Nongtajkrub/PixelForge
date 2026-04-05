@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../core/bump_arena.hpp"
+#include "const_pool.hpp"
 #include "location.hpp"
 #include "token.hpp"
 #include "symbol_table.hpp"
@@ -37,12 +38,12 @@ private:
 		{CMD_COLLIDE_LEX, {TokenKind::SPRITE_T, TokenKind::VOID_T}},
 	};
 
-	// Arena allocator for nodes.
-	BumpArena& arena;
-
 	TokenStream tokens;
 
+	// Arena allocator for nodes.
+	BumpArena& arena;
 	SymbolTable& symbols;
+	ConstPool& cpool;
 
 	// The stream to output error to.
 	std::ostream& err_stream;
@@ -53,9 +54,11 @@ private:
 public:
 	Parser(
 		const std::span<Token> tokens,
-		SymbolTable& symbols, BumpArena& arena, std::ostream& err_stream) :
+		SymbolTable& symbols,
+		ConstPool& cpool, BumpArena& arena, std::ostream& err_stream) :
 		tokens(tokens, err_stream),
 		symbols(symbols),
+		cpool(cpool),
 		arena(arena),
 		err_stream(err_stream)
 	{ }
@@ -209,6 +212,13 @@ private:
 		node->kind = ASTNodeKind::IDENTIFIER;
 		node->id = id;
 		node->attr = attr;
+		return ASTNode(&node->kind);
+	}
+
+	inline ASTNode new_literal_node(ConstIndex index) {
+		auto node = this->arena.alloc<LiteralExpr>();
+		node->kind = ASTNodeKind::LITERAL;
+		node->index = index;
 		return ASTNode(&node->kind);
 	}
 

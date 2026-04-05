@@ -450,7 +450,9 @@ std::optional<ASTNode> Parser::pratt_nud() {
 	case TokenKind::INTEGER:
 	case TokenKind::FLOAT:
 	case TokenKind::STRING:
-		return new_primary_node(ASTNodeKind::LITERAL, this->tokens.advance());
+		return 
+			new_literal_node(
+				this->cpool.intern_const(Const(this->tokens.advance())));
 	case TokenKind::TRUE: 
 		this->tokens.advance(); // Ignore true keyword.
 		return ASTNode(&(new_node<AtomicNode>(ASTNodeKind::TRUE)->kind));
@@ -748,8 +750,8 @@ std::optional<TokenKind> Parser::resolve_expr_type(
 		return TokenKind::BOOL_T;
 	case ASTNodeKind::LITERAL: {
 		return 
-			token_to_type(
-				reinterpret_cast<const PrimaryExpr*>(expr.adr)->token.kind);
+			this->cpool.get(
+				reinterpret_cast<const LiteralExpr*>(expr.adr)->index).type; 
 	}
 	case ASTNodeKind::DOT:
 		return 

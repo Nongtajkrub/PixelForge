@@ -9,6 +9,7 @@
 #include <cassert>
 #include <cstddef>
 #include <functional>
+#include <string_view>
 #include <utility>
 
 namespace scr {
@@ -28,11 +29,7 @@ struct Const {
 		StringIndex str_index;
 	} data;	
 
-	Const(TokenKind type) :
-		type(type)
-	{ 
-		assert(token_is_value_type(type));
-	}
+	explicit Const(const Token& literal);
 
 	bool operator==(const Const& other) const {
 		if (this->type != other.type) {
@@ -104,6 +101,10 @@ public:
 
 	// Push a const into pool if it does not already exist and return const index.
 	ConstIndex intern_const(const Const& value);
+
+	inline const Const& get(ConstIndex index) const {
+		return this->pool[index];
+	}
 };
 
 } // namespace scr

@@ -48,8 +48,8 @@ void ast_output(std::ostream &stream, ASTNode root, const u32 level) {
 	case ASTNodeKind::FALSE:
 		break;
 	case ASTNodeKind::LITERAL: {
-		auto node = reinterpret_cast<const PrimaryExpr*>(root.adr);
-		stream << indent << "literal: " << *node->token.lexeme << '\n';
+		auto node = reinterpret_cast<const LiteralExpr*>(root.adr);
+		stream << indent << "literal: " << node->index << '\n';
 		break;
 	}
 	case ASTNodeKind::IDENTIFIER: {

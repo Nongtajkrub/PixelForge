@@ -2,6 +2,7 @@
 
 #include "../global.hpp"
 #include "symbol_table.hpp"
+#include "const_pool.hpp"
 #include "token.hpp"
 
 #include <optional>
@@ -73,6 +74,12 @@ struct PrimaryExpr {
 
 	Token token;
 }; 
+
+struct LiteralExpr {
+	ASTNodeKind kind;
+
+	ConstIndex index;
+};
 
 struct IdentifierExpr {
 	ASTNodeKind kind;

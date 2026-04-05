@@ -132,6 +132,9 @@ TokenKind token_to_type(TokenKind kind) {
 	case TokenKind::STRING: return TokenKind::STRING_T;
 	case TokenKind::INTEGER: return TokenKind::INT_T;
 	case TokenKind::FLOAT: return TokenKind::FLOAT_T;
+	case TokenKind::TRUE:
+	case TokenKind::FALSE:
+		return TokenKind::BOOL_T;
 	default: 
 		LOG_ERR("This TokenKind can not be interpret as a type");
 		std::unreachable();
