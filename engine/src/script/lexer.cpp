@@ -1,6 +1,7 @@
 #include "diagnostic.hpp"
 #include "token.hpp"
 #include "lexer.hpp"
+#include "vm_def.h"
 
 #include <cctype>
 #include <unordered_map>

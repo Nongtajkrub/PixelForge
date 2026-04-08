@@ -38,6 +38,15 @@ bool SymbolTable::contains(IdentifierId id) {
 	return false;
 }
 
+bool SymbolTable::contains_in_scope(IdentifierId id) {
+	auto& scope = this->scopes.top();
+	if (const auto it = scope.table.find(id); 
+			it != scope.table.end() && it->second.top().in_scope) {
+		return true;
+	}
+	return false;
+}
+
 bool SymbolTable::in_scope(ScopeKind kind) {
 	for (const auto& scope : std::views::reverse(this->scopes)) {
 		if (scope.kind == kind) {

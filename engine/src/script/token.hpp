@@ -82,30 +82,6 @@ enum class TokenKind : u8 {
 	COMMAND,
 };
 
-// Differents lexeme for each commands.
-constexpr const char* CMD_UP_LEX = "UP";
-constexpr const char* CMD_DOWN_LEX = "DOWN";
-constexpr const char* CMD_RIGHT_LEX = "RIGHT";
-constexpr const char* CMD_LEFT_LEX = "LEFT";
-constexpr const char* CMD_GOTO_LEX = "GOTO";
-constexpr const char* CMD_SPAWN_LEX = "SPAWN";
-constexpr const char* CMD_DESPAWN_LEX = "DESPAWN";
-constexpr const char* CMD_SHOW_LEX = "SHOW";
-constexpr const char* CMD_UPDATE_LEX = "UPDATE";
-constexpr const char* CMD_COLLIDE_LEX = "COLLIDE";
-
-// Built in types lexemes.
-constexpr const char* VOID_T_LEX = "void";
-constexpr const char* INT_T_LEX = "int";
-constexpr const char* FLOAT_T_LEX = "float";
-constexpr const char* BOOL_T_LEX = "bool";
-constexpr const char* STRING_T_LEX = "str";
-constexpr const char* SPRITE_T_LEX = "Sprite";
-
-// Builtin property lexemes.
-constexpr const char PROP_X_LEX = 'x';
-constexpr const char PROP_Y_LEX = 'y';
-
 struct Token {
 	TokenKind kind;
 

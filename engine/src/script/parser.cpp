@@ -101,12 +101,13 @@ std::optional<ASTNode> Parser::parse_var_declaration_stmt() {
 	}
 
 	// Resolve whether the declaration statment initialize anything.
-	switch (this->tokens.advance().kind) {
+	switch (this->tokens.peek().kind) {
 	case TokenKind::SEMICOLON:
+		this->tokens.advance();
 		node->init = std::nullopt;
 		return ASTNode(&node->kind);
 	case TokenKind::EQUAL: {
-		const auto eq_loc = this->tokens.prev().location;
+		const auto eq_loc = this->tokens.advance().location;
 
 		if (node->init = parse_expr(TokenKind::SEMICOLON); !node->init) {
 			return std::nullopt;
@@ -123,7 +124,7 @@ std::optional<ASTNode> Parser::parse_var_declaration_stmt() {
 		return ASTNode(&node->kind);
 	}
 	default:
-		emit(DiagnosticKind::UNEXPECTED_TOKEN, this->tokens.prev());
+		emit(DiagnosticKind::UNEXPECTED_TOKEN, this->tokens.advance());
 		return std::nullopt;
 	}
 }

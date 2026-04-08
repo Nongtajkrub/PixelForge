@@ -8,6 +8,7 @@
 #include "diagnostic.hpp"
 #include "ast.hpp"
 #include "pattern.hpp"
+#include "vm_def.h"
 
 #include <cassert>
 #include <cstddef>
@@ -129,7 +130,13 @@ private:
 		}
 
 		const auto id =
-			this->symbols.intern_iden(*(this->tokens.advance().lexeme)); 
+			this->symbols.intern_iden(*(this->tokens.advance().lexeme));
+
+		// Check for varaible redeclaration.
+		if (this->symbols.contains_in_scope(id)) {
+			emit(DiagnosticKind::VARIABLE_REDECLARATION, this->tokens.prev());
+			return std::nullopt;
+		}
 
 		this->tokens.advance(); // Skip colon (':').
 		

@@ -53,7 +53,7 @@ bool Compiler::compile() {
 		return false;
 	}
 
-	code_generator.output_inst(std::cout);
+	code_generator.output_code(std::cout);
 
 	return true;
 }

@@ -1,6 +1,6 @@
 #include "token.hpp"
-#include "const_pool.hpp"
 #include "diagnostic.hpp"
+#include "vm_def.h"
 #include "../core/log.hpp"
 
 #include <cassert>

@@ -39,6 +39,7 @@ std::string_view Diagnostic::resolve_msg() const {
 	case DiagnosticKind::FUNC_DECL_NOT_ALLOW: 
 		return "Function declaration not allow";
 	case DiagnosticKind::RETURN_NOT_ALLOW: return "Return not allow";
+	case DiagnosticKind::VARIABLE_REDECLARATION: return "Varaible redeclaration";
     }
 
 	return "Error message not implemented";

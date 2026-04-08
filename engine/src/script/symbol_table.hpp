@@ -2,6 +2,7 @@
 
 #include "../core/cursor_stack.hpp"
 #include "../core/incremental_id.hpp"
+#include "../core/free_list_id.hpp"
 #include "../core/interner.hpp"
 #include "token.hpp"
 
@@ -15,6 +16,7 @@ namespace scr {
 
 using namespace core;
 using IdentifierId = u32;
+using IdentifierSlot = u16;
 
 enum class IdenKind : u8 {
 	VAR,
@@ -24,21 +26,19 @@ enum class IdenKind : u8 {
 struct IdenAttr {
 	IdenKind kind;
 	
-	// Identifier data types.
-	TokenKind type;
 	bool in_scope = true;
+	TokenKind type;
 
-	// Argument type list for wehn kind is FUNC.
+	// Where the identifier is store when kind is VAR.
+	std::optional<IdentifierSlot> slot;
+
+	// Argument type list for when kind is FUNC.
 	std::optional<std::vector<TokenKind>> arg_types = std::nullopt;
 
 	IdenAttr() = default;
 	explicit IdenAttr(IdenKind kind, TokenKind type) :
 		kind(kind), type(type)
 	{
-		if (kind == IdenKind::FUNC) {
-			arg_types = std::vector<TokenKind>{};
-		}
-	
 		assert(token_is_type(type));
 	}
 };
@@ -73,11 +73,18 @@ private:
 	IncrementalIdGen<IdentifierId> iden_id_generator = 
 		IncrementalIdGen<IdentifierId>(0);
 
+	// Generate slot for variable identifiers.
+	FreeListIdGen<IdentifierSlot> slot_generator =
+		FreeListIdGen<IdentifierSlot>(0);
+
 public:
 	SymbolTable();
 
 	// Check whether a symbol exist.
 	bool contains(IdentifierId id);
+
+	// Check whether symbol exist in the current scope only.
+	bool contains_in_scope(IdentifierId id);
 
 	bool in_scope(ScopeKind kind);
 
@@ -106,7 +113,14 @@ public:
 
 		// Move all identifier in the current scope out of scope.
 		for (auto& [_, attr_stack] : this->scopes.top().table) {
-			attr_stack.top().in_scope = false;
+			auto& attr = attr_stack.top();
+
+			attr.in_scope = false;
+
+			// Free the slot for variable.
+			if (attr.kind == IdenKind::VAR) {
+				this->slot_generator.free(*attr.slot);
+			}
 		}
 		
 		this->scopes.rewind();
@@ -118,15 +132,26 @@ public:
 
 	// Add a new or replace symbol.
 	inline IdenAttr& new_identifier(IdentifierId id, IdenAttr attr) {
-		auto [it, _] = this->scopes.top().table.try_emplace(id);
-		it->second.push(attr);
-		return it->second.top();
+		return new_identifier(id, attr, this->scopes.top());
 	}
 
 	// Add a new or replace global symbol.
 	inline IdenAttr& new_identifier_global(IdentifierId id, IdenAttr attr) {
-		auto [it, _] = this->scopes.bottom().table.try_emplace(id);
-		it->second.push(attr);
+		return new_identifier(id, attr, this->scopes.bottom());
+	}
+
+private:
+	inline IdenAttr& new_identifier(
+		IdentifierId id, IdenAttr attr, Scope& scope) {
+		if (attr.kind == IdenKind::VAR) {
+			attr.slot = this->slot_generator.generate();
+		}
+		if (attr.kind == IdenKind::FUNC) {
+			attr.arg_types = std::vector<TokenKind>{};
+		}
+
+		auto [it, _] = scope.table.try_emplace(id);
+		it->second.emplace(std::move(attr));
 		return it->second.top();
 	}
 };
