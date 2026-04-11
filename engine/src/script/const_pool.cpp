@@ -3,7 +3,6 @@
 
 #include <cassert>
 #include <cstddef>
-#include <utility>
 
 namespace scr {
 
@@ -27,7 +26,7 @@ Const::Const(const Token& literal) :
 		break;
 	default:
 		LOG_ERR("Literals should only be value type.");
-		std::unreachable();
+		exit(1);
 	}
 }
 

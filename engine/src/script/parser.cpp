@@ -11,7 +11,6 @@
 #include <cstddef>
 #include <optional>
 #include <tuple>
-#include <utility>
 #include <vector>
 
 namespace scr {
@@ -322,7 +321,7 @@ std::optional<ASTNode> Parser::parse_jump_stmt() {
 		return parse_atomic(ASTNodeKind::CONTINUE);
 	default:
 		LOG_ERR("This statement is not a jump one");
-		std::unreachable();
+		exit(1);
 	}
 }
 
@@ -555,7 +554,7 @@ std::optional<ASTNode> Parser::pratt_led(Token op, ASTNode left, u8 min_bp) {
 		const auto left_attr_ref = this->symbols.lookup(id);
 		if (!left_attr_ref) {
 			LOG_ERR("Unkown identifier, ensure pratt parser checked existence.");
-			std::unreachable();
+			exit(1);
 		}
 
 		if (const auto expr_type = resolve_expr_type(node->expr, op.location)) {

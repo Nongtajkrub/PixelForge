@@ -54,10 +54,25 @@ typedef enum : u8 {
 typedef u16 instruction_t;
 
 typedef enum : instruction_t {
+	OP_BEGIN,
+	OP_END,
 	OP_CONST,
 	OP_LOAD,
 	OP_STORE,
-	OP_CMD,
+	OP_COMMAND,
+	OP_ADD,
+	OP_MINUS,
+	OP_MULTIPLY,
+	OP_DIVIDE,
+	OP_COMPARE_EQUAL,
+	OP_COMPARE_GEATER,
+	OP_COMPARE_LESS,
+	OP_COMPARE_NOT_EQUAL,
+	OP_COMPARE_GEATER_EQUAL,
+	OP_COMPARE_LESS_EQUAL,
+	OP_JMP,
+	OP_JMP_TRUE,
+	OP_JMP_FALSE,
 } opcode_t;
 
 const char* op_to_str(opcode_t op);

@@ -10,7 +10,6 @@
 #include <cstddef>
 #include <functional>
 #include <string_view>
-#include <utility>
 
 namespace scr {
 
@@ -47,7 +46,7 @@ struct Const {
 			return this->data.str_index == other.data.str_index;
 		default:
 			LOG_ERR("Type for constants can only be value type");
-			std::unreachable();
+			exit(1);
 		}
 	}
 };
@@ -75,7 +74,7 @@ struct std::hash<scr::Const> {
 			break;
 		default:
 			LOG_ERR("Type for constants can only be value type");
-			std::unreachable();
+			exit(1);
 		}
 
 		return h1 ^ (h2 << 1);;

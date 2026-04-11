@@ -137,7 +137,7 @@ TokenKind token_to_type(TokenKind kind) {
 		return TokenKind::BOOL_T;
 	default: 
 		LOG_ERR("This TokenKind can not be interpret as a type");
-		std::unreachable();
+		exit(1);
 	}
 }
 
@@ -148,7 +148,7 @@ TokenKind property_to_type(char prop) {
 		return TokenKind::INT_T;
 	default:
 		LOG_ERR("Property does not exist.");
-		std::unreachable();
+		exit(1);
 	}
 }
 
@@ -160,7 +160,7 @@ bool token_to_boolean(TokenKind kind) {
 	case TokenKind::FALSE: return false;
 	default: 
 		LOG_ERR("This token can't be convert to boolean");
-		std::unreachable();
+		exit(1);
 	}
 }
 
