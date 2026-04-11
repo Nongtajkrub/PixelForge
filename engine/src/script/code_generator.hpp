@@ -35,6 +35,16 @@ struct CodeEntry {
 	explicit CodeEntry(Label label) :
 		kind(CodeEntryKind::LABEL), data(label)
 	{ }
+
+	inline instruction_t get_inst() const {
+		assert(kind == CodeEntryKind::INSTRUCTION);
+		return std::get<instruction_t>(this->data);
+	}
+
+	inline Label get_label() const {
+		assert(kind == CodeEntryKind::LABEL);
+		return std::get<Label>(this->data);
+	}
 };
 
 class CodeGenerator {

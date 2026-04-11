@@ -5,6 +5,7 @@
 #include "vm_def.h"
 
 #include <cassert>
+#include <cstddef>
 #include <cstdlib>
 
 namespace scr {
@@ -30,39 +31,30 @@ static const char* label_to_str(Label label) {
 }
 
 void CodeGenerator::output_code(std::ostream& stream) {
-	for (u32 i = 0; i < this->code.size(); i++) {
+	for (size_t i = 0; i < this->code.size(); i++) {
 		const auto& entry = this->code[i];
 
-		switch (entry.kind) {
-		case CodeEntryKind::INSTRUCTION: {
-			const auto op =
-				static_cast<opcode_t>(std::get<instruction_t>(entry.data));
+		if (entry.kind == CodeEntryKind::INSTRUCTION) {
+			const auto op = static_cast<opcode_t>(entry.get_inst());
 
-			stream << op_to_str(op);
+			stream << op_to_str(op); 
 
-			// Output opcode operand if exist and not a label.
 			if (op_have_operand(op)) {
 				assert(i + 1 < this->code.size());
-				i++;
+				const auto& operand_entry = this->code[++i];
 
-				if (this->code[i].kind != CodeEntryKind::LABEL) {
-					stream 
-						<< ": " << std::get<instruction_t>(this->code[i].data);
+				stream << ": ";
+				if (operand_entry.kind == CodeEntryKind::INSTRUCTION) {
+					stream << operand_entry.get_inst();
 				} else {
-					stream 
-						<< ": "
-						<< label_to_str(std::get<Label>(this->code[i].data));
+					stream << label_to_str(operand_entry.get_label());
 				}
 			}
-
-			break;
-		}
-		case CodeEntryKind::LABEL:
-			stream << "   " << label_to_str(std::get<Label>(entry.data));
-			break;
+		} else if (entry.kind == CodeEntryKind::LABEL) {
+			stream << "    " << label_to_str(std::get<Label>(entry.data));
 		}
 
-		stream << '\n';
+		stream << "\n";
 	}
 }
 
