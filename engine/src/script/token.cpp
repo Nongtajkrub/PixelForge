@@ -1,12 +1,12 @@
 #include "token.hpp"
+
+#include "../core/cplusplus/io/log.hpp"
 #include "diagnostic.hpp"
 #include "vm_def.h"
-#include "../core/log.hpp"
 
 #include <cassert>
 #include <initializer_list>
 #include <string_view>
-#include <utility>
 
 namespace scr {
 

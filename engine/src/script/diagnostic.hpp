@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../global.hpp"
+#include "../core/cplusplus/types.hpp"
 #include "location.hpp"
 #include "token.hpp"
 

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../global.hpp"
+#include "../core/cplusplus/types.hpp"
 #include "symbol_table.hpp"
 #include "const_pool.hpp"
 #include "token.hpp"

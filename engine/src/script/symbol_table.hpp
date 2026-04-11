@@ -1,9 +1,9 @@
 #pragma once
 
-#include "../core/cursor_stack.hpp"
-#include "../core/incremental_id.hpp"
-#include "../core/free_list_id.hpp"
-#include "../core/interner.hpp"
+#include "../core/cplusplus/container/cursor_stack.hpp"
+#include "../core/cplusplus/utilities/incremental_id.hpp"
+#include "../core/cplusplus/utilities/free_list_id.hpp"
+#include "../core/cplusplus/utilities/id_interner.hpp"
 #include "token.hpp"
 
 #include <cassert>

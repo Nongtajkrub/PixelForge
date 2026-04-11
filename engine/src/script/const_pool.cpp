@@ -1,4 +1,5 @@
 #include "const_pool.hpp"
+
 #include "token.hpp"
 
 #include <cassert>

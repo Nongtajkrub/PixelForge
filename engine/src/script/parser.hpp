@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../core/bump_arena.hpp"
+#include "../core/cplusplus/container/bump_arena.hpp"
 #include "const_pool.hpp"
 #include "location.hpp"
 #include "token.hpp"

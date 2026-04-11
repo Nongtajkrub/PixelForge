@@ -1,9 +1,11 @@
-#include "../core/log.hpp"
+#include "parser.hpp"
+
+#include "../core/cplusplus/io/log.hpp"
+#include "../core/cplusplus/macros.hpp"
 #include "diagnostic.hpp"
 #include "location.hpp"
 #include "symbol_table.hpp"
 #include "token.hpp"
-#include "parser.hpp"
 #include "ast.hpp"
 #include "pattern.hpp"
 

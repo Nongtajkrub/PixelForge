@@ -1,8 +1,10 @@
-#include "util/bump_arena.hpp"
+#include "../src/core/cplusplus/container/bump_arena.hpp"
 
 #include <cassert>
 #include <iostream>
 #include <cstdint>
+
+using namespace core;
 
 // Test types with different sizes and alignments
 struct SmallType {

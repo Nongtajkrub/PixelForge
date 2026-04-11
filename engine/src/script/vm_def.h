@@ -10,7 +10,7 @@
 extern "C" {
 #endif // #ifdef __cplusplus
 
-#include "../global.h"
+#include "../core/c/types.h"
 
 #include <stdbool.h>
 

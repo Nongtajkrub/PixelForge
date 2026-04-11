@@ -1,4 +1,6 @@
 #include "code_generator.hpp"
+
+#include "../core/cplusplus/macros.hpp"
 #include "ast.hpp"
 #include "symbol_table.hpp"
 #include "token.hpp"
