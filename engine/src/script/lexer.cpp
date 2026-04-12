@@ -2,7 +2,7 @@
 
 #include "diagnostic.hpp"
 #include "token.hpp"
-#include "vm_def.h"
+#include "specs.h"
 
 #include <cctype>
 #include <unordered_map>
@@ -15,7 +15,6 @@ static const std::unordered_map<std::string, TokenKind> keywords = {
 	{"if", TokenKind::IF},
 	{"else", TokenKind::ELSE},
 	{"true", TokenKind::TRUE},
-	{"self", TokenKind::SELF},
 	{"false", TokenKind::FALSE},
 	{"while", TokenKind::WHILE},
 	{"for", TokenKind::FOR},
@@ -28,6 +27,7 @@ static const std::unordered_map<std::string, TokenKind> keywords = {
 	{"end", TokenKind::END},
 	{"@sprite", TokenKind::DIRECT_SPRITE},
 	{"@use", TokenKind::DIRECT_USE},
+	{"@self", TokenKind::DIRECT_SELF},
 	{"@update", TokenKind::DIRECT_UPDATE},
 	{"@collide", TokenKind::DIRECT_COLLIDE},
 	{VOID_T_LEX, TokenKind::VOID_T},

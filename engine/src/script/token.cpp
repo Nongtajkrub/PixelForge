@@ -2,7 +2,7 @@
 
 #include "../core/cplusplus/io/log.hpp"
 #include "diagnostic.hpp"
-#include "vm_def.h"
+#include "specs.h"
 
 #include <cassert>
 #include <initializer_list>
@@ -98,7 +98,6 @@ const char* token_kind_as_str(TokenKind kind) {
 	case TokenKind::ELSE: return "ELSE";
 	case TokenKind::TRUE: return "TRUE";
 	case TokenKind::FALSE: return "FALSE";
-	case TokenKind::SELF: return "SELF";
 	case TokenKind::WHILE: return "WHILE";
 	case TokenKind::FOR: return "FOR";
 	case TokenKind::RETURN: return "RETURN";
@@ -118,6 +117,7 @@ const char* token_kind_as_str(TokenKind kind) {
 	
 	case TokenKind::DIRECT_SPRITE: return "DIRECT_SPRITE";
 	case TokenKind::DIRECT_USE: return "DIRECT_USE";
+	case TokenKind::DIRECT_SELF: return "DIRECT_SELF";
 	case TokenKind::DIRECT_UPDATE: return "DIRECT_UPDATE";
 	case TokenKind::DIRECT_COLLIDE: return "DIRECT_COLLIDE";
 

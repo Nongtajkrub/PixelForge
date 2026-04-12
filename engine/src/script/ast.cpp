@@ -23,7 +23,6 @@ const char* ASTNode::kind_as_str() const {
 	case ASTNodeKind::IDENTIFIER: return "IDENTIFIER";
 	case ASTNodeKind::TYPE: return "TYPE";
 	case ASTNodeKind::KEYWORD: return "KEYWORD";
-	case ASTNodeKind::SELF: return "SELF";
 	case ASTNodeKind::BREAK: return "BREAK";
 	case ASTNodeKind::CONTINUE: return "CONTINUE";
 	case ASTNodeKind::RETURN: return "RETURN";
@@ -41,7 +40,6 @@ void ast_output(std::ostream &stream, ASTNode root, const u32 level) {
 
 	switch (*root.adr) {
 	case ASTNodeKind::NOP:
-	case ASTNodeKind::SELF:
 	case ASTNodeKind::BREAK:
 	case ASTNodeKind::CONTINUE:
 	case ASTNodeKind::TRUE:
@@ -245,13 +243,13 @@ void ast_output(std::ostream &stream, ASTNode root, const u32 level) {
 		auto node = reinterpret_cast<const CommandStmt*>(root.adr);
 
 		stream << indent << "command:\n";
-		ast_output(stream, node->command, level + 1);
+		stream << indent  << '\t' << node->id;
 
 		stream << indent << "target:\n";
 		ast_output(stream, node->target, level + 1);
 
-		stream << indent << "args (" << node->operands.size() << "):\n";
-		for (const auto operand : node->operands) {
+		stream << indent << "args (" << node->args.size() << "):\n";
+		for (const auto operand : node->args) {
 			ast_output(stream, operand, level + 1);
 		}
 

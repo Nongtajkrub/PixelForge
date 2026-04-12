@@ -1,14 +1,14 @@
 #pragma once
 
 #include "../core/cplusplus/container/bump_arena.hpp"
-#include "const_pool.hpp"
-#include "location.hpp"
-#include "token.hpp"
 #include "symbol_table.hpp"
+#include "const_pool.hpp"
+#include "token.hpp"
 #include "diagnostic.hpp"
-#include "ast.hpp"
+#include "location.hpp"
 #include "pattern.hpp"
-#include "vm_def.h"
+#include "ast.hpp"
+#include "specs.h"
 
 #include <cassert>
 #include <cstddef>
@@ -23,35 +23,6 @@ namespace scr {
 using namespace core;
 
 class Parser {
-private:
-	using CommandArgsMap =
-		std::unordered_map<std::string, std::vector<TokenKind>>;
-	inline static const CommandArgsMap command_args = {
-		{CMD_UP_LEX, {TokenKind::INT_T}},
-		{CMD_DOWN_LEX, {TokenKind::INT_T}},
-		{CMD_RIGHT_LEX, {TokenKind::INT_T}},
-		{CMD_LEFT_LEX, {TokenKind::INT_T}},
-		{CMD_GOTO_LEX, {TokenKind::INT_T, TokenKind::INT_T}},
-		{CMD_SPAWN_LEX, {}},
-		{CMD_DESPAWN_LEX, {}},
-		{CMD_SHOW_LEX, {}},
-		{CMD_UPDATE_LEX, {TokenKind::VOID_T}},
-		{CMD_COLLIDE_LEX, {TokenKind::SPRITE_T, TokenKind::VOID_T}},
-	};
-
-	TokenStream tokens;
-
-	// Arena allocator for nodes.
-	BumpArena& arena;
-	SymbolTable& symbols;
-	ConstPool& cpool;
-
-	// The stream to output error to.
-	std::ostream& err_stream;
-
-	// Abstract Syntax Tree separated into each statements.
-	std::vector<ASTNode> ast;
-
 public:
 	Parser(
 		const std::span<Token> tokens,
@@ -73,6 +44,50 @@ public:
 	inline const ASTNode get_ast(size_t line) {
 		return this->ast[line];
 	}
+
+private:
+	using CommandIdsMap =
+		std::unordered_map<std::string, command_id_t>;
+	inline static const CommandIdsMap command_ids = {
+		{CMD_UP_LEX, CID_UP},
+		{CMD_DOWN_LEX, CID_DOWN},
+		{CMD_RIGHT_LEX, CID_RIGHT},
+		{CMD_LEFT_LEX, CID_LEFT},
+		{CMD_GOTO_LEX, CID_GOTO},
+		{CMD_SPAWN_LEX, CID_SPAWN},
+		{CMD_DESPAWN_LEX, CID_DESPAWN},
+		{CMD_SHOW_LEX, CID_SHOW},
+		{CMD_UPDATE_LEX, CID_UPDATE},
+		{CMD_COLLIDE_LEX, CID_COLLIDE},
+	};
+
+	using CommandArgsMap =
+		std::unordered_map<command_id_t, std::vector<TokenKind>>;
+	inline static const CommandArgsMap command_args = {
+		{CID_UP, {TokenKind::INT_T}},
+		{CID_DOWN, {TokenKind::INT_T}},
+		{CID_RIGHT, {TokenKind::INT_T}},
+		{CID_LEFT, {TokenKind::INT_T}},
+		{CID_GOTO, {TokenKind::INT_T, TokenKind::INT_T}},
+		{CID_SPAWN, {}},
+		{CID_DESPAWN, {}},
+		{CID_SHOW, {}},
+		{CID_UPDATE, {TokenKind::VOID_T}},
+		{CID_COLLIDE, {TokenKind::SPRITE_T, TokenKind::VOID_T}},
+	};
+
+	TokenStream tokens;
+
+	// Arena allocator for nodes.
+	BumpArena& arena;
+	SymbolTable& symbols;
+	ConstPool& cpool;
+
+	// The stream to output error to.
+	std::ostream& err_stream;
+
+	// Abstract Syntax Tree separated into each statements.
+	std::vector<ASTNode> ast;
 
 private:
 	std::optional<ASTNode> parse_block(
@@ -228,15 +243,6 @@ private:
 		node->index = index;
 		return ASTNode(&node->kind);
 	}
-
-	const std::vector<TokenKind>& get_command_args(const std::string& cmd) {
-		auto it = command_args.find(cmd);
-
-		// Whether a command exist should already be checked during parsing.
-		assert(it != command_args.end());
-
-		return it->second;
-	} 
 };
 
 } // namespace scr

@@ -1,10 +1,10 @@
 #pragma once
 
-#include "token.hpp"
 #include "../core/cplusplus/types.hpp"
 #include "../core/cplusplus/container/pool.hpp"
 #include "../core/cplusplus/utilities/id_interner.hpp"
 #include "../core/cplusplus/io/log.hpp"
+#include "token.hpp"
 
 #include <cassert>
 #include <cstddef>

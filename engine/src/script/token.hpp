@@ -56,7 +56,6 @@ enum class TokenKind : u8 {
 	ELSE,
 	TRUE,
 	FALSE,
-	SELF,
 	WHILE,
 	FOR,
 	CONTINUE,
@@ -76,6 +75,7 @@ enum class TokenKind : u8 {
 
 	DIRECT_SPRITE,
 	DIRECT_USE,
+	DIRECT_SELF,
 	DIRECT_UPDATE,
 	DIRECT_COLLIDE,
 

@@ -17,9 +17,13 @@ bool Preprocessor::process() {
 }
 
 bool Preprocessor::process_direct() {
+	// Sprite directive was already handle.
 	switch (this->tokens.peek().kind) {
 	case TokenKind::DIRECT_USE:
 		return process_use_direct();
+	case TokenKind::DIRECT_SELF:
+		process_self_direct();
+		return true;
 	case TokenKind::DIRECT_UPDATE:
 		process_update_direct();
 		return true;
@@ -47,6 +51,7 @@ bool Preprocessor::process_sprite_direct() {
 	// Skip sprite direcitive.
 	this->tokens.skip();
 
+	this->script_sprite = *(this->tokens.peek().lexeme);
 	// Add sprite identifier to global scope.
 	this->symbols.new_identifier_global(
 		this->symbols.intern_iden(*(this->tokens.skip().lexeme)),
@@ -58,7 +63,6 @@ bool Preprocessor::process_sprite_direct() {
 	return true;
 }
 
-// Similar process sprite directive, only change pattern matching expectations. 
 bool Preprocessor::process_use_direct() {
 	// Skip use directive.
 	this->tokens.skip();
@@ -81,6 +85,14 @@ bool Preprocessor::process_use_direct() {
 	this->tokens.skip();
 
 	return true;
+}
+
+void Preprocessor::process_self_direct() {
+	this->tokens.replace_and_insert({
+		Token(
+			TokenKind::IDENTIFIER,
+			this->script_sprite, this->tokens.peek().location)
+	});
 }
 
 void Preprocessor::process_update_direct() {

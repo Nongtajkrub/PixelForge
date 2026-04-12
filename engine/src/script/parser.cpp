@@ -330,46 +330,28 @@ std::optional<ASTNode> Parser::parse_jump_stmt() {
 std::optional<ASTNode> Parser::parse_cmd_stmt() {
 	auto node = new_node<CommandStmt>(ASTNodeKind::COMMAND);
 
-	const std::string& cmd = *this->tokens.peek().lexeme;
-	node->command =
-		new_primary_node(ASTNodeKind::KEYWORD, this->tokens.advance());
+	node->id = command_ids.at(*this->tokens.advance().lexeme);
 
-	if (!this->tokens.ensure_not_eof()) {
+	if (!this->tokens.expect_peek(TokenKind::IDENTIFIER)) {
 		return std::nullopt;
 	}
 
-	// Expect both identifier and the self keyword.
-	switch (this->tokens.peek().kind) {
-	case TokenKind::IDENTIFIER: {
-		const auto id = 
-			this->symbols.intern_iden(*(this->tokens.advance().lexeme));
-
-		if (const auto& attr_ref = this->symbols.lookup(id)) {
-			node->target = new_identifier_node(id, &(*attr_ref).get());
-		} else {
-			emit(DiagnosticKind::UNKNOWN_IDENTIFIER, this->tokens.peek());
-			return std::nullopt;
-		}
-
-		break;
-	}
-	case TokenKind::SELF:
-		node->target = ASTNode(&(new_node<AtomicNode>(ASTNodeKind::SELF)->kind));
-		this->tokens.advance();
-		break;
-	default:
-		emit(DiagnosticKind::UNEXPECTED_TOKEN, this->tokens.advance());
+	const auto id = 
+		this->symbols.intern_iden(*(this->tokens.advance().lexeme));
+	if (const auto& attr_ref = this->symbols.lookup(id)) {
+		node->target = new_identifier_node(id, &(*attr_ref).get());
+	} else {
+		emit(DiagnosticKind::UNKNOWN_IDENTIFIER, this->tokens.peek());
 		return std::nullopt;
 	}
 
 	if (this->tokens.match_kind(TokenKind::SEMICOLON)) {
-		node->operands = {};
+		node->args = {};
 		return ASTNode(&node->kind);
 	}
 
 	if (!parse_func_call_args(
-			node->operands,
-			get_command_args(cmd), TokenKind::SEMICOLON)) {
+			node->args, command_args.at(node->id), TokenKind::SEMICOLON)) {
 		return std::nullopt;
 	}
 
@@ -461,9 +443,6 @@ std::optional<ASTNode> Parser::pratt_nud() {
 	case TokenKind::FALSE:
 		this->tokens.advance(); // Ignore false keyword.
 		return ASTNode(&(new_node<AtomicNode>(ASTNodeKind::FALSE)->kind));
-	case TokenKind::SELF:
-		this->tokens.advance();
-		return ASTNode(&(new_node<AtomicNode>(ASTNodeKind::SELF)->kind));
 	case TokenKind::IDENTIFIER: { 
 		const auto id =
 			this->symbols.intern_iden(*(this->tokens.advance().lexeme));
@@ -572,8 +551,7 @@ std::optional<ASTNode> Parser::pratt_led(Token op, ASTNode left, u8 min_bp) {
 	}
 	// Parse dot notation expression.
 	case TokenKind::DOT: {
-		if (*left.adr != ASTNodeKind::IDENTIFIER 
-				&& *left.adr != ASTNodeKind::SELF) {
+		if (*left.adr != ASTNodeKind::IDENTIFIER) {
 			emit(DiagnosticKind::EXPECTED_IDENTIFIER, op);
 			return std::nullopt;
 		 }

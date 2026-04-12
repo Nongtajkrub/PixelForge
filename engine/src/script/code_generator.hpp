@@ -2,7 +2,7 @@
 
 #include "ast.hpp"
 #include "symbol_table.hpp"
-#include "vm_def.h"
+#include "vm/instruction.h"
 
 #include <cassert>
 #include <cstddef>
@@ -71,6 +71,7 @@ private:
 	void handle_var_declaration(const VarDeclarationStmt* node);
 	void handle_assign_stmt(const AssignStmt* node);
 	void handle_if_stmt(const IfStmt* node);
+	void handle_command(const CommandStmt* node);
 	void handle_expr(const ASTNode& expr);
 	void handle_binary_operator(TokenKind op);
 

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../core/cplusplus/types.hpp"
+#include "specs.h"
 #include "symbol_table.hpp"
 #include "const_pool.hpp"
 #include "token.hpp"
@@ -35,7 +36,6 @@ enum class ASTNodeKind : u8 {
 	IDENTIFIER,
 	TYPE,
 	KEYWORD,
-	SELF,
 	BREAK,
 	CONTINUE,
 	RETURN,
@@ -185,9 +185,9 @@ struct IfStmt {
 struct CommandStmt {
 	ASTNodeKind kind;
 
-	ASTNode command;
+	command_id_t id;
 	ASTNode target;
-	std::vector<ASTNode> operands;
+	std::vector<ASTNode> args;
 };
 
 void ast_output(std::ostream& stream, ASTNode root, const u32 level = 0);

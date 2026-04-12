@@ -11,10 +11,12 @@ namespace scr {
 class Preprocessor {
 private:
 	MutTokenStream tokens;
-
 	SymbolTable& symbols;
 
 	std::ostream& err_stream;
+
+	// Name of the sprite that own the script.
+	std::string script_sprite;
 
 public:
 	Preprocessor(
@@ -31,6 +33,7 @@ private:
 	bool process_direct();
 	bool process_sprite_direct();
 	bool process_use_direct();
+	void process_self_direct();
 	void process_update_direct();
 	void process_collide_direct();
 };

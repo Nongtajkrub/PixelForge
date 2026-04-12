@@ -1,4 +1,4 @@
-#include "vm_def.h"
+#include "instruction.h"
 
 const char* op_to_str(opcode_t op) {
 	switch (op) {

@@ -1,10 +1,10 @@
 #include "code_generator.hpp"
 
 #include "../core/cplusplus/macros.hpp"
+#include "vm/instruction.h"
 #include "ast.hpp"
 #include "symbol_table.hpp"
 #include "token.hpp"
-#include "vm_def.h"
 
 #include <cassert>
 #include <cstddef>
@@ -72,6 +72,9 @@ bool CodeGenerator::handle_node(const ASTNode& node) {
 	case ASTNodeKind::IF:
 		handle_if_stmt(reinterpret_cast<const IfStmt*>(node.adr));
 		break;
+	case ASTNodeKind::COMMAND:
+		handle_command(reinterpret_cast<const CommandStmt*>(node.adr));
+		break;
 	default:
 		break;
 	}
@@ -125,6 +128,17 @@ void CodeGenerator::handle_if_stmt(const IfStmt* node) {
 	} 
 
 	push(Label::IF_END);
+}
+
+void CodeGenerator::handle_command(const CommandStmt* node) {
+	for (const auto& arg : node->args) {
+		handle_expr(arg);
+	}
+
+	handle_expr(node->target);
+
+	push(OP_COMMAND);
+	push(static_cast<instruction_t>(node->id));
 }
 
 void CodeGenerator::handle_binary_operator(TokenKind op) {
