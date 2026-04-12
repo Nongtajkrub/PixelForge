@@ -115,11 +115,13 @@ public:
 		for (auto& [_, attr_stack] : this->scopes.top().table) {
 			auto& attr = attr_stack.top();
 
-			attr.in_scope = false;
+			if (attr.in_scope) {
+				attr.in_scope = false;
 
-			// Free the slot for variable.
-			if (attr.kind == IdenKind::VAR) {
-				this->slot_generator.free(*attr.slot);
+				// Free the slot for variable.
+				if (attr.kind == IdenKind::VAR) {
+					this->slot_generator.free(*attr.slot);
+				}
 			}
 		}
 		

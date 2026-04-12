@@ -50,10 +50,8 @@ bool Compiler::compile() {
 	}
 	
 	auto code_generator = CodeGenerator(parser.get_ast());
-	if (!code_generator.generate()) {
-		return false;
-	}
 
+	code_generator.generate();
 	code_generator.output_code(std::cout);
 
 	return true;

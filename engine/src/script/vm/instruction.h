@@ -23,6 +23,7 @@ typedef enum : instruction_t {
 	OP_LOAD,
 	OP_STORE,
 	OP_COMMAND,
+	OP_CALL,
 	OP_ADD,
 	OP_MINUS,
 	OP_MULTIPLY,

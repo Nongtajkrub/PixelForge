@@ -2,26 +2,16 @@
 
 #include "../core/cplusplus/macros.hpp"
 #include "vm/instruction.h"
-#include "ast.hpp"
 #include "symbol_table.hpp"
 #include "token.hpp"
+#include "ast.hpp"
 
 #include <cassert>
 #include <cstddef>
 #include <cstdlib>
+#include <vector>
 
 namespace scr {
-
-bool CodeGenerator::generate() {
-	push(OP_BEGIN);
-	for (const auto& node : this->ast) {
-		if (!handle_node(node)) {
-			return false;
-		}
-	}
-	push(OP_END);
-	return  true;
-}
 
 static const char* label_to_str(Label label) {
 	switch (label) {
@@ -32,9 +22,10 @@ static const char* label_to_str(Label label) {
 	}
 }
 
-void CodeGenerator::output_code(std::ostream& stream) {
-	for (size_t i = 0; i < this->code.size(); i++) {
-		const auto& entry = this->code[i];
+void CodeGenerator::output_code(
+	std::ostream& stream, const std::vector<CodeEntry>& code) {
+	for (size_t i = 0; i < code.size(); i++) {
+		const auto& entry = code[i];
 
 		if (entry.kind == CodeEntryKind::INSTRUCTION) {
 			const auto op = static_cast<opcode_t>(entry.get_inst());
@@ -42,8 +33,8 @@ void CodeGenerator::output_code(std::ostream& stream) {
 			stream << op_to_str(op); 
 
 			if (op_have_operand(op)) {
-				assert(i + 1 < this->code.size());
-				const auto& operand_entry = this->code[++i];
+				assert(i + 1 < code.size());
+				const auto& operand_entry = code[++i];
 
 				stream << ": ";
 				if (operand_entry.kind == CodeEntryKind::INSTRUCTION) {
@@ -53,18 +44,31 @@ void CodeGenerator::output_code(std::ostream& stream) {
 				}
 			}
 		} else if (entry.kind == CodeEntryKind::LABEL) {
-			stream << "    " << label_to_str(std::get<Label>(entry.data));
+			stream << '\t' << label_to_str(std::get<Label>(entry.data));
 		}
 
-		stream << "\n";
+		stream << '\n';
 	}
 }
 
-bool CodeGenerator::handle_node(const ASTNode& node) {
+void CodeGenerator::output_code(std::ostream& stream) {
+	output_code(stream, this->code);
+
+	for (const auto& entry : this->func) {
+		stream << "\tFUNC_ID: " << entry.id << '\n';
+		output_code(stream, entry.body);
+	}
+}
+
+void CodeGenerator::handle_node(const ASTNode& node) {
 	switch (*node.adr) {
-	case  ASTNodeKind::VAR_DECLARATION:
+	case ASTNodeKind::VAR_DECLARATION:
 		handle_var_declaration(
 			reinterpret_cast<const VarDeclarationStmt*>(node.adr));
+		break;
+	case ASTNodeKind::FUNC_DECLARATION:
+		handle_func_declaration(
+			reinterpret_cast<const FuncDeclarationStmt*>(node.adr));
 		break;
 	case ASTNodeKind::ASSIGN:
 		handle_assign_stmt(reinterpret_cast<const AssignStmt*>(node.adr));
@@ -78,8 +82,6 @@ bool CodeGenerator::handle_node(const ASTNode& node) {
 	default:
 		break;
 	}
-
-	return true;
 }
 
 void CodeGenerator::handle_var_declaration(const VarDeclarationStmt* node) {
@@ -98,6 +100,15 @@ void CodeGenerator::handle_assign_stmt(const AssignStmt* node) {
 		reinterpret_cast<const IdentifierExpr*>(node->identifier.adr));
 }
 
+void CodeGenerator::handle_func_declaration(const FuncDeclarationStmt* node) {
+	auto& entry = this->func.emplace_back();
+
+	auto guard = switch_push_buffer(&entry.body);
+	entry.id =
+		(reinterpret_cast<const IdentifierExpr*>(node->identifier.adr))->id;
+	generate(reinterpret_cast<const BlockStmt*>(node->body.adr)->block);
+}
+
 void CodeGenerator::handle_if_stmt(const IfStmt* node) {
 	handle_expr(node->expr);
 
@@ -106,11 +117,7 @@ void CodeGenerator::handle_if_stmt(const IfStmt* node) {
 
 	// Handle then branch.
 	push(Label::THEN_BRANCH);
-	const auto then_branch =
-		reinterpret_cast<const BlockStmt*>(node->then_branch.adr);
-	for (const auto& then_node : then_branch->block) {
-		handle_node(then_node);
-	}
+	generate(reinterpret_cast<const BlockStmt*>(node->then_branch.adr)->block);
 
 	// Push jump instruction to avoid executing else branch after then branch.
 	push(OP_JMP);
@@ -120,11 +127,8 @@ void CodeGenerator::handle_if_stmt(const IfStmt* node) {
 
 	// Handle else branch if exist.
 	if (node->else_branch) {
-		const auto else_branch =
-			reinterpret_cast<const BlockStmt*>((*node->else_branch).adr);
-		for (const auto& else_node : else_branch->block) {
-			handle_node(else_node);
-		}
+		generate(
+			reinterpret_cast<const BlockStmt*>((*node->else_branch).adr)->block);
 	} 
 
 	push(Label::IF_END);

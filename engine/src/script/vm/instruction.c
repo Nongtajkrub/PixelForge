@@ -8,6 +8,7 @@ const char* op_to_str(opcode_t op) {
 	case OP_LOAD: return "LOAD";
 	case OP_STORE: return "STORE";
 	case OP_COMMAND: return "CMD";
+	case OP_CALL: return "CALL";
 	case OP_ADD: return "ADD";
 	case OP_MINUS: return "MIN";
 	case OP_MULTIPLY: return "MUL";
@@ -30,6 +31,7 @@ bool op_have_operand(opcode_t op) {
 	case OP_LOAD:
 	case OP_STORE: 
 	case OP_COMMAND:
+	case OP_CALL:
 	case OP_JMP:
 	case OP_JMP_TRUE:
 	case OP_JMP_FALSE:
