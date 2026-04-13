@@ -3,7 +3,7 @@
 ![Embedded Systems](https://img.shields.io/badge/Embedded--Systems-ESP32-000000?logo=microchip&logoColor=white)
 ![Engine](https://img.shields.io/badge/Engine-Custom--Built-eb34d2?logo=gamedeveloper)
   
-![LOC](https://img.shields.io/badge/LOC-3300-blueviolet)
+![LOC](https://img.shields.io/badge/LOC-3524-blueviolet)
 ![GoLang](https://img.shields.io/badge/lang-GoLang-00ADD8?logo=go&logoColor=white)
 ![Rust](https://img.shields.io/badge/lang-Rust-orange?logo=rust)
 ![C](https://img.shields.io/badge/language-C-A8B9CC?logo=c&logoColor=white)
