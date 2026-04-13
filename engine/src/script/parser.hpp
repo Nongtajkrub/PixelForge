@@ -11,6 +11,7 @@
 #include "specs.h"
 
 #include <cassert>
+#include <concepts>
 #include <cstddef>
 #include <functional>
 #include <optional>
@@ -115,7 +116,7 @@ private:
 	bool parse_func_args(std::vector<ASTNode>& buf, IdenAttr& func_attr);
 	bool parse_func_call_args(
 		std::vector<ASTNode>& buf,
-		std::vector<TokenKind> arg_types, TokenKind terminator);
+		const std::vector<TokenKind>& arg_types, TokenKind terminator);
 
 	// Resolve data type of expression, take source location to emit errors.
 	// Optional ltype, typically passed internally during binary expr parsing.
@@ -134,7 +135,8 @@ private:
 	template<typename T>
 	requires (std::is_same_v<T, VarDeclarationStmt*> 
 		|| std::is_same_v<T, FuncArgument*>)
-	std::optional<TokenKind> parse_type_annotation(T node) {
+	std::optional<TokenKind> parse_type_annotation(
+		T node, bool func_arg = false) {
 		// Ensure correct type annotation syntax.
 		if (!Pattern<
 				TokenStream,
@@ -163,11 +165,19 @@ private:
 		const auto& type_token = this->tokens.advance();
 		node->type = new_primary_node(ASTNodeKind::TYPE, type_token); 
 
-		node->identifier =
-			new_identifier_node(
-				id,
-				&this->symbols.new_identifier(
-					id, IdenAttr(IdenKind::VAR, type_token.kind)));
+		if constexpr (std::same_as<std::decay_t<T>, VarDeclarationStmt*>) {
+			node->identifier =
+				new_identifier_node(
+					id,
+					&this->symbols.new_identifier(
+						id, IdenAttr(type_token.kind, VarAttr())));
+		} else if constexpr (std::same_as<std::decay_t<T>, FuncArgument*>) {
+			node->identifier =
+				new_identifier_node(
+					id,
+					&this->symbols.new_identifier(
+						id, IdenAttr(type_token.kind, ArgAttr())));
+		}
 
 		return type_token.kind;
 	}

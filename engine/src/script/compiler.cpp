@@ -45,9 +45,11 @@ bool Compiler::compile() {
 		return false;
 	}
 
+	/*
 	for (auto ast : parser.get_ast()) {
 		ast_output(std::cout, ast);
 	}
+	*/
 	
 	auto code_generator = CodeGenerator(parser.get_ast());
 

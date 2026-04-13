@@ -14,18 +14,18 @@ SymbolTable::SymbolTable() :
 
 	// Setup builtin identifiers.
 	new_identifier(
-		intern_iden("bi_key_up"), IdenAttr(IdenKind::VAR ,TokenKind::BOOL_T));
+		intern_iden("bi_key_up"), IdenAttr(TokenKind::BOOL_T, VarAttr()));
 	new_identifier(
-		intern_iden("bi_key_down"), IdenAttr(IdenKind::VAR ,TokenKind::BOOL_T));
+		intern_iden("bi_key_down"), IdenAttr(TokenKind::BOOL_T, VarAttr()));
 	new_identifier(
-		intern_iden("bi_key_right"), IdenAttr(IdenKind::VAR ,TokenKind::BOOL_T));
+		intern_iden("bi_key_right"), IdenAttr(TokenKind::BOOL_T, VarAttr()));
 	new_identifier(
-		intern_iden("bi_key_left"), IdenAttr(IdenKind::VAR ,TokenKind::BOOL_T));
+		intern_iden("bi_key_left"), IdenAttr(TokenKind::BOOL_T, VarAttr()));
 
 	new_identifier(
-		intern_iden("bi_random_x"), IdenAttr(IdenKind::FUNC ,TokenKind::INT_T));
+		intern_iden("bi_random_x"), IdenAttr(TokenKind::INT_T, FuncAttr()));
 	new_identifier(
-		intern_iden("bi_random_y"), IdenAttr(IdenKind::FUNC ,TokenKind::INT_T));
+		intern_iden("bi_random_y"), IdenAttr(TokenKind::INT_T, FuncAttr()));
 }
 
 bool SymbolTable::contains(IdentifierId id) {

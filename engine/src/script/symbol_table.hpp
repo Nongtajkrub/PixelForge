@@ -4,40 +4,48 @@
 #include "../core/cplusplus/utilities/incremental_id.hpp"
 #include "../core/cplusplus/utilities/free_list_id.hpp"
 #include "../core/cplusplus/utilities/id_interner.hpp"
+#include "../core/cplusplus/utilities/variant.hpp"
 #include "token.hpp"
 
+#include <unordered_map>
+#include <optional>
+#include <concepts>
 #include <cassert>
 #include <cstddef>
-#include <optional>
-#include <unordered_map>
+#include <utility>
 #include <stack>
 
 namespace scr {
 
 using namespace core;
 using IdentifierId = u32;
-using IdentifierSlot = u16;
+using VariableSlot = u16;
+using ArgStackIndex = u16;
 
-enum class IdenKind : u8 {
-	VAR,
-	FUNC,
+struct VarAttr {
+	VariableSlot slot;
+};
+
+struct ArgAttr{
+	ArgStackIndex index;
+};
+
+struct FuncAttr {
+	std::vector<TokenKind> args_types;
 };
 
 struct IdenAttr {
-	IdenKind kind;
-	
 	bool in_scope = true;
 	TokenKind type;
 
-	// Where the identifier is store when kind is VAR.
-	std::optional<IdentifierSlot> slot;
-
-	// Argument type list for when kind is FUNC.
-	std::optional<std::vector<TokenKind>> arg_types = std::nullopt;
+	Variant<VarAttr, ArgAttr, FuncAttr> data;
 
 	IdenAttr() = default;
-	explicit IdenAttr(IdenKind kind, TokenKind type) :
-		kind(kind), type(type)
+	template <typename T>
+	requires std::same_as<T, VarAttr> 
+		|| std::same_as<T, ArgAttr> || std::same_as<T, FuncAttr>
+	IdenAttr(TokenKind type, T&& attr) :
+		type(type), data(std::forward<T>(attr))
 	{
 		assert(token_is_type(type));
 	}
@@ -60,6 +68,7 @@ struct Scope {
 	Scope(ScopeKind kind) : 
 		kind(kind), table()
 	{ }
+
 };
  
 class SymbolTable {
@@ -70,12 +79,18 @@ private:
 
 	// Assigns a unique slot to each identifier, identical share same slot.
 	IdInterner<std::string, IdentifierId> iden_interner; 
+
+	// Generate ID for identifiers.
 	IncrementalIdGen<IdentifierId> iden_id_generator = 
 		IncrementalIdGen<IdentifierId>(0);
 
 	// Generate slot for variable identifiers.
-	FreeListIdGen<IdentifierSlot> slot_generator =
-		FreeListIdGen<IdentifierSlot>(0);
+	FreeListIdGen<VariableSlot> var_slot_generator =
+		FreeListIdGen<VariableSlot>(0);
+
+	// Generate slot for function arguments.
+	IncrementalIdGen<ArgStackIndex> stack_index_generator =
+		IncrementalIdGen<ArgStackIndex>(0);
 
 public:
 	SymbolTable();
@@ -105,11 +120,14 @@ public:
 		if (!inserted) {
 			scope.kind = kind;
 		}
+
+		this->stack_index_generator.reset();
 	}
 
 	inline void leave_scope() {
 		// Ensure do not pop global scope.
 		assert(this->scopes.size() > 1);
+		this->stack_index_generator.reset();
 
 		// Move all identifier in the current scope out of scope.
 		for (auto& [_, attr_stack] : this->scopes.top().table) {
@@ -118,9 +136,9 @@ public:
 			if (attr.in_scope) {
 				attr.in_scope = false;
 
-				// Free the slot for variable.
-				if (attr.kind == IdenKind::VAR) {
-					this->slot_generator.free(*attr.slot);
+				// Free the slot used.
+				if (attr.data.is<VarAttr>()) {
+					this->var_slot_generator.free(attr.data.get<VarAttr>().slot);
 				}
 			}
 		}
@@ -145,11 +163,13 @@ public:
 private:
 	inline IdenAttr& new_identifier(
 		IdentifierId id, IdenAttr attr, Scope& scope) {
-		if (attr.kind == IdenKind::VAR) {
-			attr.slot = this->slot_generator.generate();
-		}
-		if (attr.kind == IdenKind::FUNC) {
-			attr.arg_types = std::vector<TokenKind>{};
+		if (attr.data.is<VarAttr>()) {
+			attr.data.get<VarAttr>().slot = this->var_slot_generator.generate();
+		} else if (attr.data.is<ArgAttr>()) {
+			attr.data.get<ArgAttr>().index =
+				this->stack_index_generator.generate();
+		} else if (attr.data.is<FuncAttr>()) {
+			attr.data.get<FuncAttr>().args_types = std::vector<TokenKind>{};
 		}
 
 		auto [it, _] = scope.table.try_emplace(id);

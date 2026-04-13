@@ -76,6 +76,9 @@ void CodeGenerator::handle_node(const ASTNode& node) {
 	case ASTNodeKind::IF:
 		handle_if_stmt(reinterpret_cast<const IfStmt*>(node.adr));
 		break;
+	case ASTNodeKind::CALL:
+		handle_expr(node);
+		break;
 	case ASTNodeKind::COMMAND:
 		handle_command(reinterpret_cast<const CommandStmt*>(node.adr));
 		break;
@@ -103,10 +106,17 @@ void CodeGenerator::handle_assign_stmt(const AssignStmt* node) {
 void CodeGenerator::handle_func_declaration(const FuncDeclarationStmt* node) {
 	auto& entry = this->func.emplace_back();
 
+	const auto identifier =
+		reinterpret_cast<const IdentifierExpr*>(node->identifier.adr);
+	entry.id = identifier->id;
+
 	auto guard = switch_push_buffer(&entry.body);
-	entry.id =
-		(reinterpret_cast<const IdentifierExpr*>(node->identifier.adr))->id;
+
 	generate(reinterpret_cast<const BlockStmt*>(node->body.adr)->block);
+	const size_t arg_n = identifier->attr->data.get<FuncAttr>().args_types.size();
+	for (size_t i = 0; i < arg_n; i++){
+		push(OP_POP);
+	}
 }
 
 void CodeGenerator::handle_if_stmt(const IfStmt* node) {
@@ -199,12 +209,7 @@ void CodeGenerator::handle_expr(const ASTNode& expr) {
 		generate_const(reinterpret_cast<const LiteralExpr*>(expr.adr));
 		break;
 	case ASTNodeKind::IDENTIFIER: {
-		const auto node = reinterpret_cast<const IdentifierExpr*>(expr.adr);
-
-		if (node->attr->kind == IdenKind::VAR) {
-			generate_load(node);
-		}
-
+		generate_load(reinterpret_cast<const IdentifierExpr*>(expr.adr));
 		break;
 	}
 	case ASTNodeKind::DOT:
@@ -226,9 +231,19 @@ void CodeGenerator::handle_expr(const ASTNode& expr) {
 
 		break;
 	}
-	case ASTNodeKind::CALL:
-		TODO();
+	case ASTNodeKind::CALL: {
+		const auto node = reinterpret_cast<const CallExpr*>(expr.adr);
+
+		for (const auto arg : node->args) {
+			handle_expr(arg);
+			push(OP_PUSH);
+		}
+
+		push(OP_CALL);
+		push(reinterpret_cast<const IdentifierExpr*>(node->identifier.adr)->id);
+
 		break;
+	}
 	case ASTNodeKind::RANGE:
 		TODO();
 		break;

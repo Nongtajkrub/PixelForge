@@ -55,7 +55,7 @@ bool Preprocessor::process_sprite_direct() {
 	// Add sprite identifier to global scope.
 	this->symbols.new_identifier_global(
 		this->symbols.intern_iden(*(this->tokens.skip().lexeme)),
-		IdenAttr(IdenKind::VAR, TokenKind::SPRITE_T));
+		IdenAttr(TokenKind::SPRITE_T, VarAttr()));
 
 	// Skip semicolon.
 	this->tokens.skip();
@@ -79,7 +79,7 @@ bool Preprocessor::process_use_direct() {
 	// Add sprite identifier to global scope.
 	this->symbols.new_identifier_global(
 		this->symbols.intern_iden(*(this->tokens.skip().lexeme)),
-		IdenAttr(IdenKind::VAR, TokenKind::SPRITE_T));
+		IdenAttr(TokenKind::SPRITE_T, VarAttr()));
 
 	// Skip semicolon.
 	this->tokens.skip();

@@ -115,15 +115,24 @@ private:
 	}
 
 	inline void generate_load(const IdentifierExpr* node) {
-		assert(node->attr->kind == IdenKind::VAR);
-		push(OP_LOAD);
-		push(*(node->attr->slot));
+		assert(node->attr->data.is<VarAttr>() || node->attr->data.is<ArgAttr>());
+
+		if (node->attr->data.is<VarAttr>()) {
+			push(OP_LOAD);
+			push(node->attr->data.get<VarAttr>().slot);
+		} else if (node->attr->data.is<ArgAttr>()) {
+			push(OP_LOAD_STACK);
+			push(node->attr->data.get<ArgAttr>().index);
+		} else {
+			LOG_ERR("Unimplemented identifier attribute loading");
+			exit(1);
+		}
 	}
 
 	inline void generate_store(const IdentifierExpr* node) {
-		assert(node->attr->kind == IdenKind::VAR);
+		assert(node->attr->data.is<VarAttr>());
 		push(OP_STORE);
-		push(*(node->attr->slot));
+		push(node->attr->data.get<VarAttr>().slot);
 	}
 
 	inline void push(instruction_t inst) {

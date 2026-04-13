@@ -2,18 +2,18 @@
 
 #include "../core/cplusplus/io/log.hpp"
 #include "../core/cplusplus/macros.hpp"
+#include "symbol_table.hpp"
 #include "diagnostic.hpp"
 #include "location.hpp"
-#include "symbol_table.hpp"
+#include "pattern.hpp"
 #include "token.hpp"
 #include "ast.hpp"
-#include "pattern.hpp"
 
+#include <optional>
 #include <cassert>
 #include <cstddef>
-#include <optional>
-#include <tuple>
 #include <vector>
+#include <tuple>
 
 namespace scr {
 
@@ -160,7 +160,7 @@ std::optional<ASTNode> Parser::parse_func_declaration_stmt() {
 	// Create a new identifier symbol for the function.
 	auto& attr =
 		this->symbols.new_identifier(
-			id, IdenAttr(IdenKind::FUNC, type_token.kind));
+			id, IdenAttr(type_token.kind, FuncAttr()));
 	node->identifier = new_identifier_node(id, &attr);
 	node->type = new_primary_node(ASTNodeKind::TYPE, type_token);
 
@@ -254,7 +254,7 @@ std::optional<ASTNode> Parser::parse_for_stmt() {
 			new_identifier_node(
 				id,
 				&this->symbols.new_identifier(
-					id, IdenAttr(IdenKind::VAR, TokenKind::INT_T)));
+					id, IdenAttr(TokenKind::INT_T, VarAttr())));
 
 		break;
 	}
@@ -377,7 +377,7 @@ std::optional<ASTNode> Parser::parse_directive() {
 		new_identifier_node(
 			id,
 			&this->symbols.new_identifier_global(
-				id, IdenAttr(IdenKind::VAR, TokenKind::SPRITE_T))); 
+				id, IdenAttr(TokenKind::SPRITE_T, VarAttr()))); 
 
 	this->tokens.advance(); // Skip semicolon.
 
@@ -498,17 +498,17 @@ std::optional<ASTNode> Parser::pratt_led(Token op, ASTNode left, u8 min_bp) {
 		if (auto func_attr_ref =
 				this->symbols.lookup(
 					reinterpret_cast<const IdentifierExpr*>(left.adr)->id)) {
-			if ((*func_attr_ref).get().kind != IdenKind::FUNC) {
+			const auto func_attr = (*func_attr_ref).get();
+
+			if (!func_attr.data.is<FuncAttr>()) {
 				emit(DiagnosticKind::EXPECTED_FUNCTION, op);
 				return std::nullopt;
 			}
 
-			// Added for readability.
-			const std::optional<std::vector<TokenKind>>& args_types =
-				(*func_attr_ref).get().arg_types;
-
 			if (!parse_func_call_args(
-					node->args, *args_types, TokenKind::RIGHT_PAREN)) {
+					node->args,
+					func_attr.data.get<FuncAttr>().args_types,
+					TokenKind::RIGHT_PAREN)) {
 				return std::nullopt;
 			}
 		} else {
@@ -639,7 +639,8 @@ std::optional<ASTNode> Parser::parse_atomic(ASTNodeKind kind) {
 }
 
 bool Parser::parse_func_args(std::vector<ASTNode>& buf, IdenAttr& func_attr) {
-	assert(func_attr.arg_types && func_attr.kind == IdenKind::FUNC);
+	assert(func_attr.data.is<FuncAttr>());
+	auto& attr = func_attr.data.get<FuncAttr>();
 
 	if (!this->tokens.expect(TokenKind::LEFT_PAREN)) {
 		return false;
@@ -655,7 +656,7 @@ bool Parser::parse_func_args(std::vector<ASTNode>& buf, IdenAttr& func_attr) {
 
 		if (const auto arg_type = parse_type_annotation<FuncArgument*>(node)) {
 			buf.push_back(ASTNode(&node->kind));
-			(*func_attr.arg_types).push_back(*arg_type);
+			attr.args_types.push_back(*arg_type);
 		} else {
 			return false;
 		}
@@ -678,7 +679,7 @@ bool Parser::parse_func_args(std::vector<ASTNode>& buf, IdenAttr& func_attr) {
 
 bool Parser::parse_func_call_args(
 	std::vector<ASTNode>& buf,
-	std::vector<TokenKind> arg_types, TokenKind terminator) {
+	const std::vector<TokenKind>& arg_types, TokenKind terminator) {
 	auto arg_it = arg_types.begin();
 
 	while (!this->tokens.is_eof()) {
