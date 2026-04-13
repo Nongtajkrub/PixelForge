@@ -106,6 +106,10 @@ public:
 	// Look up a symbol and return the reference to its attr.
 	std::optional<Ref<IdenAttr>> lookup(IdentifierId id);
 
+	inline std::optional<Ref<IdenAttr>> lookup_global(IdentifierId id) {
+		return lookup(id, this->scopes.bottom());
+	}
+
 	// Intern an identifier to ID.
 	inline IdentifierId intern_iden(const std::string& iden) {
 		auto [id, _] = this->iden_interner.intern(iden);
@@ -176,6 +180,9 @@ private:
 		it->second.emplace(std::move(attr));
 		return it->second.top();
 	}
+
+	// Look up a symbol and return the reference to its attr.
+	std::optional<Ref<IdenAttr>> lookup(IdentifierId id, Scope& scope);
 };
 
 } // namespace scr

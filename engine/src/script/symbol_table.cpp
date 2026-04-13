@@ -1,5 +1,7 @@
 #include "symbol_table.hpp"
+#include "code_generator.hpp"
 
+#include <optional>
 #include <ranges>
 
 namespace scr {
@@ -58,10 +60,17 @@ bool SymbolTable::in_scope(ScopeKind kind) {
 
 std::optional<Ref<IdenAttr>> SymbolTable::lookup(IdentifierId id) {
 	for (auto& scope : std::views::reverse(this->scopes)) {
-		if (auto it = scope.table.find(id);
-				it != scope.table.end() && it->second.top().in_scope) {
-			return std::ref(it->second.top());
+		if (auto attr = lookup(id, scope)) {
+			return attr;
 		}
+	}
+	return std::nullopt;
+}
+
+std::optional<Ref<IdenAttr>> SymbolTable::lookup(IdentifierId id, Scope& scope) {
+	if (auto it = scope.table.find(id);
+			it != scope.table.end() && it->second.top().in_scope) {
+		return std::ref(it->second.top());
 	}
 	return std::nullopt;
 }

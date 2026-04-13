@@ -58,6 +58,7 @@ private:
 		{CMD_SPAWN_LEX, CID_SPAWN},
 		{CMD_DESPAWN_LEX, CID_DESPAWN},
 		{CMD_SHOW_LEX, CID_SHOW},
+		{CMD_WAIT_LEX, CID_WAIT},
 		{CMD_UPDATE_LEX, CID_UPDATE},
 		{CMD_COLLIDE_LEX, CID_COLLIDE},
 	};
@@ -73,6 +74,7 @@ private:
 		{CID_SPAWN, {}},
 		{CID_DESPAWN, {}},
 		{CID_SHOW, {}},
+		{CID_WAIT, {TokenKind::INT_T}},
 		{CID_UPDATE, {TokenKind::VOID_T}},
 		{CID_COLLIDE, {TokenKind::SPRITE_T, TokenKind::VOID_T}},
 	};

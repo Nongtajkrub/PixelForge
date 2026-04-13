@@ -17,6 +17,7 @@ extern "C" {
 typedef u16 instruction_t;
 
 typedef enum : instruction_t {
+	OP_NOP,
 	OP_BEGIN,
 	OP_END,
 	OP_CONST,
@@ -25,6 +26,7 @@ typedef enum : instruction_t {
 	OP_PUSH,
 	OP_POP,
 	OP_LOAD_STACK,
+	OP_STORE_STACK,
 	OP_CALL,
 	OP_COMMAND,
 	OP_ADD,

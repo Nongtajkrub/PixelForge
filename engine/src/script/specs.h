@@ -20,6 +20,7 @@ extern "C" {
 #define CMD_SPAWN_LEX "SPAWN"
 #define CMD_DESPAWN_LEX "DESPAWN"
 #define CMD_SHOW_LEX "SHOW"
+#define CMD_WAIT_LEX "WAIT"
 #define CMD_UPDATE_LEX "UPDATE"
 #define CMD_COLLIDE_LEX "COLLIDE"
 
@@ -33,6 +34,7 @@ typedef enum : u8 {
 	CID_SPAWN,
 	CID_DESPAWN,
 	CID_SHOW,
+	CID_WAIT,
 	CID_UPDATE,
 	CID_COLLIDE,
 } command_id_t;

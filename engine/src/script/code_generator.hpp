@@ -96,6 +96,9 @@ private:
 	void handle_expr(const ASTNode& expr);
 	void handle_binary_operator(TokenKind op);
 
+	void generate_load(const IdentifierExpr* node);
+	void generate_store(const IdentifierExpr* node);
+
 	inline void generate(const std::vector<ASTNode>& nodes) {
 		for (const auto& node : nodes) {
 			handle_node(node);
@@ -112,27 +115,6 @@ private:
 	inline void generate_const(const LiteralExpr* node) {
 		push(OP_CONST);
 		push(node->index);
-	}
-
-	inline void generate_load(const IdentifierExpr* node) {
-		assert(node->attr->data.is<VarAttr>() || node->attr->data.is<ArgAttr>());
-
-		if (node->attr->data.is<VarAttr>()) {
-			push(OP_LOAD);
-			push(node->attr->data.get<VarAttr>().slot);
-		} else if (node->attr->data.is<ArgAttr>()) {
-			push(OP_LOAD_STACK);
-			push(node->attr->data.get<ArgAttr>().index);
-		} else {
-			LOG_ERR("Unimplemented identifier attribute loading");
-			exit(1);
-		}
-	}
-
-	inline void generate_store(const IdentifierExpr* node) {
-		assert(node->attr->data.is<VarAttr>());
-		push(OP_STORE);
-		push(node->attr->data.get<VarAttr>().slot);
 	}
 
 	inline void push(instruction_t inst) {

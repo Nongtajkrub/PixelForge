@@ -26,8 +26,6 @@ const char* ASTNode::kind_as_str() const {
 	case ASTNodeKind::BREAK: return "BREAK";
 	case ASTNodeKind::CONTINUE: return "CONTINUE";
 	case ASTNodeKind::RETURN: return "RETURN";
-	case ASTNodeKind::TRUE: return "TRUE";
-	case ASTNodeKind::FALSE: return "FALSEW";
     }
 
     return "UNKNOWN_AST_NODE";
@@ -42,8 +40,6 @@ void ast_output(std::ostream &stream, ASTNode root, const u32 level) {
 	case ASTNodeKind::NOP:
 	case ASTNodeKind::BREAK:
 	case ASTNodeKind::CONTINUE:
-	case ASTNodeKind::TRUE:
-	case ASTNodeKind::FALSE:
 		break;
 	case ASTNodeKind::LITERAL: {
 		auto node = reinterpret_cast<const LiteralExpr*>(root.adr);

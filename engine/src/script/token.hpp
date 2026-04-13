@@ -34,6 +34,7 @@ enum class TokenKind : u8 {
 	LESS,
 	DOT,
 	UNDERSCORE,
+	DOLLAR_SIGN,
 
 	// Multiples charactor token
 	DOUBLE_EQUAL,

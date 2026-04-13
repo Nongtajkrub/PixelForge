@@ -75,6 +75,7 @@ std::optional<ASTNode> Parser::parse_stmt() {
 	case TokenKind::DIRECT_UPDATE:
 	case TokenKind::DIRECT_COLLIDE:
 		return parse_directive();
+	case TokenKind::DOLLAR_SIGN:
 	case TokenKind::IDENTIFIER:
 		return parse_expr(TokenKind::SEMICOLON);
 	case TokenKind::PASS:
@@ -434,20 +435,34 @@ std::optional<ASTNode> Parser::pratt_nud() {
 	case TokenKind::INTEGER:
 	case TokenKind::FLOAT:
 	case TokenKind::STRING:
+	case TokenKind::TRUE:
+	case TokenKind::FALSE:
 		return 
 			new_literal_node(
 				this->cpool.intern_const(Const(this->tokens.advance())));
-	case TokenKind::TRUE: 
-		this->tokens.advance(); // Ignore true keyword.
-		return ASTNode(&(new_node<AtomicNode>(ASTNodeKind::TRUE)->kind));
-	case TokenKind::FALSE:
-		this->tokens.advance(); // Ignore false keyword.
-		return ASTNode(&(new_node<AtomicNode>(ASTNodeKind::FALSE)->kind));
+	case TokenKind::DOLLAR_SIGN: {
+		// Ignore dollar sign.
+		this->tokens.advance();
+
+		if (!this->tokens.expect_peek(TokenKind::IDENTIFIER)) {
+			return std::nullopt;
+		}
+
+		const auto id =
+			this->symbols.intern_iden(*(this->tokens.advance().lexeme));
+
+		if (const auto attr_ref = this->symbols.lookup_global(id)) {
+			return new_identifier_node(id, &(*attr_ref).get());
+		} else {
+			emit(DiagnosticKind::UNKNOWN_IDENTIFIER, this->tokens.peek());
+			return std::nullopt;
+		}
+	}
 	case TokenKind::IDENTIFIER: { 
 		const auto id =
 			this->symbols.intern_iden(*(this->tokens.advance().lexeme));
 
-		if (const auto& attr_ref = this->symbols.lookup(id)) {
+		if (const auto attr_ref = this->symbols.lookup(id)) {
 			return new_identifier_node(id, &(*attr_ref).get());
 		} else {
 			emit(DiagnosticKind::UNKNOWN_IDENTIFIER, this->tokens.peek());
@@ -726,9 +741,6 @@ bool Parser::parse_func_call_args(
 std::optional<TokenKind> Parser::resolve_expr_type(
 	ASTNode expr, Location err_loc) {
 	switch (*expr.adr) {
-	case ASTNodeKind::FALSE:
-	case ASTNodeKind::TRUE:
-		return TokenKind::BOOL_T;
 	case ASTNodeKind::LITERAL: {
 		return 
 			this->cpool.get(

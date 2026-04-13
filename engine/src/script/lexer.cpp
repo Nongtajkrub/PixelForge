@@ -44,6 +44,7 @@ static const std::unordered_map<std::string, TokenKind> keywords = {
 	{CMD_LEFT_LEX, TokenKind::COMMAND},
 	{CMD_GOTO_LEX, TokenKind::COMMAND},
 	{CMD_SHOW_LEX, TokenKind::COMMAND},
+	{CMD_WAIT_LEX, TokenKind::COMMAND},
 	{CMD_UPDATE_LEX, TokenKind::COMMAND},
 	{CMD_COLLIDE_LEX, TokenKind::COMMAND},
 };
@@ -92,6 +93,9 @@ bool Lexer::lex() {
 			break;
 		case '.':
 			add_token(TokenKind::DOT);
+			break;
+		case '$':
+			add_token(TokenKind::DOLLAR_SIGN);
 			break;
 		case ':':
 			add_token(

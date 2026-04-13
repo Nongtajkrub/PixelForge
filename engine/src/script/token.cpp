@@ -76,6 +76,7 @@ const char* token_kind_as_str(TokenKind kind) {
 	case TokenKind::LESS: return "LESS";
 	case TokenKind::DOT: return "DOT";
 	case TokenKind::UNDERSCORE: return "UNDERSCORE";
+	case TokenKind::DOLLAR_SIGN: return "DOLLAR_SIGN";
 
 	// Multi-character tokens
 	case TokenKind::DOUBLE_EQUAL: return "DOUBLE_EQUAL";
