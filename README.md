@@ -6,7 +6,7 @@
 ![LOC](https://img.shields.io/badge/LOC-3524-blueviolet)
 ![GoLang](https://img.shields.io/badge/lang-GoLang-00ADD8?logo=go&logoColor=white)
 ![Rust](https://img.shields.io/badge/lang-Rust-orange?logo=rust)
-![C](https://img.shields.io/badge/language-C-A8B9CC?logo=c&logoColor=white)
+![C](https://img.shields.io/badge/lang-C-A8B9CC?logo=c&logoColor=white)
 ![C++](https://img.shields.io/badge/lang-C%2B%2B-00599C?logo=c%2B%2B&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/lang-TypeScript-3178C6?logo=typescript&logoColor=white)
   
