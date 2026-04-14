@@ -1,5 +1,9 @@
 # PixelForge (Extremely Early Stage)
 
+<p align="center">
+  <img src="logo.png" width="70%">
+</p>
+
 ![Embedded Systems](https://img.shields.io/badge/Embedded--Systems-ESP32-000000?logo=microchip&logoColor=white)
 ![Engine](https://img.shields.io/badge/Engine-Custom--Built-eb34d2?logo=gamedeveloper)
   
