@@ -165,7 +165,6 @@ std::optional<ASTNode> Parser::parse_func_declaration_stmt() {
 	node->identifier = new_identifier_node(id, &attr);
 	node->type = new_primary_node(ASTNodeKind::TYPE, type_token);
 
-
 	// Push scope here to include function arguments in the scope as well.
 	this->symbols.enter_scope(ScopeKind::FUNC);
 

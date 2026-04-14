@@ -13,53 +13,6 @@
 
 namespace scr {
 
-static const char* label_to_str(Label label) {
-	switch (label) {
-	case Label::HOLE: return "HOLE"; 
-	case Label::THEN_BRANCH: return "THEN_BRANCH";
-	case Label::ELSE_BRANCH: return "ELSE_BRANCH";
-	case Label::IF_END: return "IF_END";
-	}
-}
-
-void CodeGenerator::output_code(
-	std::ostream& stream, const std::vector<CodeEntry>& code) {
-	for (size_t i = 0; i < code.size(); i++) {
-		const auto& entry = code[i];
-
-		if (entry.kind == CodeEntryKind::INSTRUCTION) {
-			const auto op = static_cast<opcode_t>(entry.get_inst());
-
-			stream << op_to_str(op); 
-
-			if (op_have_operand(op)) {
-				assert(i + 1 < code.size());
-				const auto& operand_entry = code[++i];
-
-				stream << ": ";
-				if (operand_entry.kind == CodeEntryKind::INSTRUCTION) {
-					stream << operand_entry.get_inst();
-				} else {
-					stream << label_to_str(operand_entry.get_label());
-				}
-			}
-		} else if (entry.kind == CodeEntryKind::LABEL) {
-			stream << '\t' << label_to_str(std::get<Label>(entry.data));
-		}
-
-		stream << '\n';
-	}
-}
-
-void CodeGenerator::output_code(std::ostream& stream) {
-	output_code(stream, this->code);
-
-	for (const auto& entry : this->func) {
-		stream << "\tFUNC_ID: " << entry.id << '\n';
-		output_code(stream, entry.body);
-	}
-}
-
 void CodeGenerator::handle_node(const ASTNode& node) {
 	switch (*node.adr) {
 	case ASTNodeKind::VAR_DECLARATION:
@@ -120,6 +73,8 @@ void CodeGenerator::handle_func_declaration(const FuncDeclarationStmt* node) {
 	for (size_t i = 0; i < arg_n; i++){
 		push(OP_POP);
 	}
+
+	push(OP_JMP_RETURN);
 }
 
 void CodeGenerator::handle_if_stmt(const IfStmt* node) {
@@ -244,6 +199,10 @@ void CodeGenerator::handle_expr(const ASTNode& expr) {
 	case ASTNodeKind::CALL: {
 		const auto node = reinterpret_cast<const CallExpr*>(expr.adr);
 
+		// Pusing return address.
+		push(Label::RETURN_ADDR);
+		push(OP_PUSH);
+
 		for (const auto arg : node->args) {
 			handle_expr(arg);
 			push(OP_PUSH);
@@ -251,6 +210,7 @@ void CodeGenerator::handle_expr(const ASTNode& expr) {
 
 		push(OP_CALL);
 		push(reinterpret_cast<const IdentifierExpr*>(node->identifier.adr)->id);
+		push(Label::RETURN_ADDR);
 
 		break;
 	}
@@ -290,6 +250,54 @@ void CodeGenerator::generate_store(const IdentifierExpr* node) {
 	} else {
 		LOG_ERR("Unimplemented identifier attribute loading");
 		exit(1);
+	}
+}
+static const char* label_to_str(Label label) {
+	switch (label) {
+	case Label::HOLE: return "HOLE"; 
+	case Label::THEN_BRANCH: return "THEN_BRANCH";
+	case Label::ELSE_BRANCH: return "ELSE_BRANCH";
+	case Label::IF_END: return "IF_END";
+	case Label::RETURN_ADDR: return "RETURN_ADDR";
+	}
+}
+
+void CodeGenerator::output_code(
+	std::ostream& stream, const std::vector<CodeEntry>& code) {
+	for (size_t i = 0; i < code.size(); i++) {
+		const auto& entry = code[i];
+
+		if (entry.kind == CodeEntryKind::INSTRUCTION) {
+			const auto op =
+				static_cast<opcode_t>(entry.data.get<instruction_t>());
+
+			stream << op_to_str(op); 
+
+			if (op_have_operand(op)) {
+				assert(i + 1 < code.size());
+				const auto& operand_entry = code[++i];
+
+				stream << ": ";
+				if (operand_entry.kind == CodeEntryKind::INSTRUCTION) {
+					stream << operand_entry.data.get<instruction_t>();
+				} else {
+					stream << label_to_str(operand_entry.data.get<Label>());
+				}
+			}
+		} else if (entry.kind == CodeEntryKind::LABEL) {
+			stream << '\t' << label_to_str(entry.data.get<Label>());
+		}
+
+		stream << '\n';
+	}
+}
+
+void CodeGenerator::output_code(std::ostream& stream) {
+	output_code(stream, this->code);
+
+	for (const auto& entry : this->func) {
+		stream << "\tFUNC_ID: " << entry.id << '\n';
+		output_code(stream, entry.body);
 	}
 }
 

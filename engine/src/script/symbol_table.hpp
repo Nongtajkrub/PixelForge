@@ -60,7 +60,8 @@ enum class ScopeKind {
 
 struct Scope {
 	ScopeKind kind;
-
+	
+	// Owner of the scope if exist (Usually function).
 	// IdenAttr store in a stack to support identifier shadowing.
 	std::unordered_map<IdentifierId, std::stack<IdenAttr>> table;
 
@@ -120,7 +121,7 @@ public:
 		auto [scope, inserted] = this->scopes.try_emplace_back(kind);
 
 		// If no new scope was inserted (cursor reused an existing slot),
-		// update the scope kind manually.		
+		// construct the scope manually.
 		if (!inserted) {
 			scope.kind = kind;
 		}

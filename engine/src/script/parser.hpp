@@ -114,7 +114,7 @@ private:
 
 	std::optional<ASTNode> parse_atomic(ASTNodeKind kind);
 
-	// Usually parse arguments as `FuncArgument` but can also parse as expression.
+	// Helper methods for parsing functions.
 	bool parse_func_args(std::vector<ASTNode>& buf, IdenAttr& func_attr);
 	bool parse_func_call_args(
 		std::vector<ASTNode>& buf,

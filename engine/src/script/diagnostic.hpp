@@ -47,6 +47,8 @@ enum class DiagnosticKind : u8 {
 	FUNC_DECL_NOT_ALLOW,
 	RETURN_NOT_ALLOW,
 	VARIABLE_REDECLARATION,
+	FUNC_EXPECTED_RETURN,
+	FUNC_UNEXPECTED_RETURN,
 };
 
 DiagnosticKind resolve_diag_expect_kind(TokenKind kind);

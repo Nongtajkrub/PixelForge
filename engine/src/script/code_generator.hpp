@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../core/cplusplus/utilities/ref_state_guard.hpp"
+#include "../core/cplusplus/utilities/variant.hpp"
 #include "vm/instruction.h"
 #include "symbol_table.hpp"
 #include "ast.hpp"
@@ -9,7 +10,6 @@
 #include <cstddef>
 #include <ostream>
 #include <queue>
-#include <variant>
 #include <vector>
 
 namespace scr {
@@ -24,11 +24,12 @@ enum class Label : u8 {
 	THEN_BRANCH,
 	ELSE_BRANCH,
 	IF_END,
+	RETURN_ADDR,
 };
 
 struct CodeEntry {
 	CodeEntryKind kind;
-	std::variant<instruction_t, Label> data;
+	Variant<instruction_t, Label> data;
 
 	explicit CodeEntry(instruction_t inst) :
 		kind(CodeEntryKind::INSTRUCTION), data(inst)
@@ -36,16 +37,6 @@ struct CodeEntry {
 	explicit CodeEntry(Label label) :
 		kind(CodeEntryKind::LABEL), data(label)
 	{ }
-
-	inline instruction_t get_inst() const {
-		assert(kind == CodeEntryKind::INSTRUCTION);
-		return std::get<instruction_t>(this->data);
-	}
-
-	inline Label get_label() const {
-		assert(kind == CodeEntryKind::LABEL);
-		return std::get<Label>(this->data);
-	}
 };
 
 struct FuncEntry {
