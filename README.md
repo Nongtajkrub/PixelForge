@@ -1,4 +1,4 @@
-# PixelForge (Extremely Early Stage)
+# 👾 PixelForge (Extremely Early Stage)
 
 <p align="center">
   <img src="logo.png" width="70%">
