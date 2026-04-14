@@ -215,9 +215,16 @@ void CodeGenerator::handle_expr(const ASTNode& expr) {
 		generate_load(reinterpret_cast<const IdentifierExpr*>(expr.adr));
 		break;
 	}
-	case ASTNodeKind::DOT:
-		TODO();
+	case ASTNodeKind::DOT: {
+		const auto node = reinterpret_cast<const DotExpr*>(expr.adr);
+
+		generate_load(reinterpret_cast<const IdentifierExpr*>(node->object.adr));
+
+		push(OP_LOAD_PROP);
+		push(static_cast<u8>(node->property));
+
 		break;
+	}
 	case ASTNodeKind::BINARY: {
 		const auto node = reinterpret_cast<const BinaryExpr*>(expr.adr);
 
