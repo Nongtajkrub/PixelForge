@@ -115,7 +115,7 @@ private:
 	std::optional<ASTNode> parse_atomic(ASTNodeKind kind);
 
 	// Helper methods for parsing functions.
-	bool parse_func_args(std::vector<ASTNode>& buf, IdenAttr& func_attr);
+	bool parse_func_args(std::vector<ASTNode>& buf, IdenAttr* func_attr);
 	bool parse_func_call_args(
 		std::vector<ASTNode>& buf,
 		const std::vector<TokenKind>& arg_types, TokenKind terminator);
@@ -171,13 +171,13 @@ private:
 			node->identifier =
 				new_identifier_node(
 					id,
-					&this->symbols.new_identifier(
+					this->symbols.new_identifier(
 						id, IdenAttr(type_token.kind, VarAttr())));
 		} else if constexpr (std::same_as<std::decay_t<T>, FuncArgument*>) {
 			node->identifier =
 				new_identifier_node(
 					id,
-					&this->symbols.new_identifier(
+					this->symbols.new_identifier(
 						id, IdenAttr(type_token.kind, ArgAttr())));
 		}
 
@@ -196,7 +196,7 @@ private:
 		assert(token_is_type(type));
 
 		if (const auto attr = this->symbols.lookup(id); attr) {
-			if ((*attr).get().type != type) {
+			if (attr->type != type) {
 				emit(DiagnosticKind::TYPE_ERROR, this->tokens.advance());
 				return false;
 			}
@@ -208,13 +208,19 @@ private:
 	}
 
 	// Take source location to emit errors.
-	inline bool ensure_type_same(TokenKind t1, TokenKind t2, Location loc) {
-		assert(token_is_type(t1) && token_is_type(t2));
+	inline bool ensure_expr_type(
+		const ASTNode& expr, TokenKind type, Location loc) {
+		assert(token_is_type(type));
 
-		if (t1 != t2) {
-			emit(resolve_diag_expect_kind(t2), loc);
+		if (const auto expr_type = resolve_expr_type(expr, loc)) {
+			if (*expr_type != type) {
+				emit(resolve_diag_expect_kind(type), loc);
+				return false;
+			}
+		} else {
 			return false;
 		}
+
 		return true;
 	}
 

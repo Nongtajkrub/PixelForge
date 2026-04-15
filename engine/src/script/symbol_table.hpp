@@ -8,7 +8,6 @@
 #include "token.hpp"
 
 #include <unordered_map>
-#include <optional>
 #include <concepts>
 #include <cassert>
 #include <cstddef>
@@ -60,14 +59,17 @@ enum class ScopeKind {
 
 struct Scope {
 	ScopeKind kind;
+
+	// Owner of the scope if exist (Often a function).
+	IdenAttr* owner;
 	
 	// Owner of the scope if exist (Usually function).
 	// IdenAttr store in a stack to support identifier shadowing.
 	std::unordered_map<IdentifierId, std::stack<IdenAttr>> table;
 
 	Scope() = default;
-	Scope(ScopeKind kind) : 
-		kind(kind), table()
+	Scope(ScopeKind kind, IdenAttr* owner = nullptr) : 
+		kind(kind), owner(owner), table() 
 	{ }
 
 };
@@ -104,10 +106,12 @@ public:
 
 	bool in_scope(ScopeKind kind);
 
-	// Look up a symbol and return the reference to its attr.
-	std::optional<Ref<IdenAttr>> lookup(IdentifierId id);
+	IdenAttr* get_scope_owner();
 
-	inline std::optional<Ref<IdenAttr>> lookup_global(IdentifierId id) {
+	// Look up a symbol and return the reference to its attr.
+	IdenAttr* lookup(IdentifierId id);
+
+	inline IdenAttr* lookup_global(IdentifierId id) {
 		return lookup(id, this->scopes.bottom());
 	}
 
@@ -117,13 +121,14 @@ public:
 		return id;
 	}
 
-	inline void enter_scope(ScopeKind kind) {
-		auto [scope, inserted] = this->scopes.try_emplace_back(kind);
+	inline void enter_scope(ScopeKind kind, IdenAttr* owner = nullptr) {
+		auto [scope, inserted] = this->scopes.try_emplace_back(kind, owner);
 
 		// If no new scope was inserted (cursor reused an existing slot),
 		// construct the scope manually.
 		if (!inserted) {
 			scope.kind = kind;
+			scope.owner = owner;
 		}
 
 		this->stack_index_generator.reset();
@@ -156,17 +161,17 @@ public:
 	}
 
 	// Add a new or replace symbol.
-	inline IdenAttr& new_identifier(IdentifierId id, IdenAttr attr) {
+	inline IdenAttr* new_identifier(IdentifierId id, IdenAttr attr) {
 		return new_identifier(id, attr, this->scopes.top());
 	}
 
 	// Add a new or replace global symbol.
-	inline IdenAttr& new_identifier_global(IdentifierId id, IdenAttr attr) {
+	inline IdenAttr* new_identifier_global(IdentifierId id, IdenAttr attr) {
 		return new_identifier(id, attr, this->scopes.bottom());
 	}
 
 private:
-	inline IdenAttr& new_identifier(
+	inline IdenAttr* new_identifier(
 		IdentifierId id, IdenAttr attr, Scope& scope) {
 		if (attr.data.is<VarAttr>()) {
 			attr.data.get<VarAttr>().slot = this->var_slot_generator.generate();
@@ -179,11 +184,11 @@ private:
 
 		auto [it, _] = scope.table.try_emplace(id);
 		it->second.emplace(std::move(attr));
-		return it->second.top();
+		return &it->second.top();
 	}
 
 	// Look up a symbol and return the reference to its attr.
-	std::optional<Ref<IdenAttr>> lookup(IdentifierId id, Scope& scope);
+	IdenAttr* lookup(IdentifierId id, Scope& scope);
 };
 
 } // namespace scr
