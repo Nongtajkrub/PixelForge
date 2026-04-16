@@ -41,6 +41,9 @@ enum class ASTNodeKind : u8 {
 	RETURN,
 };
 
+// Forward declaration.
+struct BlockStmt;
+
 // Store info about where the node is stored in memory and how to interpret it.
 // Since first member of every kind of expression is its kind.
 struct ASTNode {
@@ -54,6 +57,10 @@ struct ASTNode {
 
 	// Turn ASTNodeKind enum into string.
 	const char* kind_as_str() const;
+
+	std::vector<const BlockStmt*> get_child_blocks() const;
+
+	void output(std::ostream& stream, const u32 level = 0) const;
 };
 
 struct AtomicNode {
@@ -187,7 +194,5 @@ struct CommandStmt {
 	ASTNode target;
 	std::vector<ASTNode> args;
 };
-
-void ast_output(std::ostream& stream, ASTNode root, const u32 level = 0);
 
 } // namespace scr

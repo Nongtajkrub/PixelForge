@@ -119,6 +119,7 @@ private:
 	bool parse_func_call_args(
 		std::vector<ASTNode>& buf,
 		const std::vector<TokenKind>& arg_types, TokenKind terminator);
+	bool ensure_func_returns(const BlockStmt* body);
 
 	// Resolve data type of expression, take source location to emit errors.
 	// Optional ltype, typically passed internally during binary expr parsing.

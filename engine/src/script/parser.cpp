@@ -119,7 +119,7 @@ std::optional<ASTNode> Parser::parse_var_declaration_stmt() {
 			return std::nullopt;
 		}
 
-		return ASTNode(&node->kind);
+return ASTNode(&node->kind);
 	}
 	default:
 		emit(DiagnosticKind::UNEXPECTED_TOKEN, this->tokens.advance());
@@ -183,6 +183,15 @@ std::optional<ASTNode> Parser::parse_func_declaration_stmt() {
 
 	if (!this->tokens.expect(TokenKind::SEMICOLON)) {
 		return std::nullopt;
+	}
+
+	// Ensure none void function return.
+	if (type_token.kind != TokenKind::VOID_T) {
+		if (!ensure_func_returns(
+				reinterpret_cast<const BlockStmt*>(node->body.adr))) {
+			emit(DiagnosticKind::FUNC_EXPECTED_RETURN, type_token.location);
+			return std::nullopt;
+		}
 	}
 
 	return ASTNode(&node->kind);
@@ -723,6 +732,33 @@ bool Parser::parse_func_call_args(
 		} else if (kind != terminator) {
 			emit(DiagnosticKind::EXPECTED_COMMA, this->tokens.peek());
 			return false;
+		}
+	}
+
+	return false;
+}
+
+bool Parser::ensure_func_returns(const BlockStmt* body) {
+	for (const auto& node : body->block) {
+		if (*node.adr == ASTNodeKind::RETURN) {
+			return true;
+		}
+
+		if (const auto child_blocks = node.get_child_blocks(); 
+				!child_blocks.empty()) {
+			// Check whether all child blocks have return statment.
+			bool all_block_returns = true;
+			for (const auto& block: child_blocks) {
+				if (!ensure_func_returns(block)) {
+					all_block_returns = false;
+					break;
+				}
+			}
+			if (!all_block_returns) {
+				continue;
+			}
+
+			return true;
 		}
 	}
 
