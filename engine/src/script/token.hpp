@@ -14,6 +14,8 @@
 namespace scr {
 
 enum class TokenKind : u8 {
+	UNKNOWN,
+	
 	// Single charactor tokens
 	LEFT_BRACE,
 	RIGHT_BRACE,

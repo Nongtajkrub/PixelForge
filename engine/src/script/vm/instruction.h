@@ -29,6 +29,7 @@ typedef enum : instruction_t {
 	OP_PUSH,
 	OP_POP,
 	OP_CALL,
+	OP_RETURN,
 	OP_COMMAND,
 	OP_ADD,
 	OP_MINUS,
@@ -43,7 +44,6 @@ typedef enum : instruction_t {
 	OP_JMP,
 	OP_JMP_TRUE,
 	OP_JMP_FALSE,
-	OP_JMP_RETURN,
 } opcode_t;
 
 const char* op_to_str(opcode_t op);

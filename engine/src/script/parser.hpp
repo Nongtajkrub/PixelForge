@@ -197,7 +197,7 @@ private:
 		assert(token_is_type(type));
 
 		if (const auto attr = this->symbols.lookup(id); attr) {
-			if (attr->type != type) {
+			if (attr->get_type() != type) {
 				emit(DiagnosticKind::TYPE_ERROR, this->tokens.advance());
 				return false;
 			}

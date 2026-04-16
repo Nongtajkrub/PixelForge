@@ -32,6 +32,9 @@ void CodeGenerator::handle_node(const ASTNode& node) {
 	case ASTNodeKind::CALL:
 		handle_expr(node);
 		break;
+	case ASTNodeKind::RETURN:
+		handle_return_stmt(reinterpret_cast<const ReturnStmt*>(node.adr));
+		break;
 	case ASTNodeKind::COMMAND:
 		handle_command(reinterpret_cast<const CommandStmt*>(node.adr));
 		break;
@@ -69,12 +72,22 @@ void CodeGenerator::handle_func_declaration(const FuncDeclarationStmt* node) {
 	auto guard = switch_push_buffer(&entry.body);
 
 	generate(reinterpret_cast<const BlockStmt*>(node->body.adr)->block);
-	const size_t arg_n = identifier->attr->data.get<FuncAttr>().args_types.size();
+
+	push(Label::RETURN);
+	const size_t arg_n = identifier->attr->get_data<FuncAttr>().arg_n();
 	for (size_t i = 0; i < arg_n; i++){
 		push(OP_POP);
 	}
+	push(OP_RETURN);
+}
 
-	push(OP_JMP_RETURN);
+void CodeGenerator::handle_return_stmt(const ReturnStmt* node) {
+	if (node->expr) {
+		handle_expr(*node->expr);
+	}
+
+	push(OP_JMP);
+	push(Label::RETURN);
 }
 
 void CodeGenerator::handle_if_stmt(const IfStmt* node) {
@@ -224,14 +237,14 @@ void CodeGenerator::handle_expr(const ASTNode& expr) {
 }
 
 void CodeGenerator::generate_load(const IdentifierExpr* node) {
-	assert(node->attr->data.is<VarAttr>() || node->attr->data.is<ArgAttr>());
+	assert(node->attr->kind_is<VarAttr>() || node->attr->kind_is<ArgAttr>());
 
-	if (node->attr->data.is<VarAttr>()) {
+	if (node->attr->kind_is<VarAttr>()) {
 		push(OP_LOAD);
-		push(node->attr->data.get<VarAttr>().slot);
-	} else if (node->attr->data.is<ArgAttr>()) {
+		push(node->attr->get_data<VarAttr>().slot);
+	} else if (node->attr->kind_is<ArgAttr>()) {
 		push(OP_LOAD_STACK);
-		push(node->attr->data.get<ArgAttr>().index);
+		push(node->attr->get_data<ArgAttr>().index);
 	} else {
 		LOG_ERR("Unimplemented identifier attribute loading");
 		exit(1);
@@ -239,14 +252,14 @@ void CodeGenerator::generate_load(const IdentifierExpr* node) {
 }
 
 void CodeGenerator::generate_store(const IdentifierExpr* node) {
-	assert(node->attr->data.is<VarAttr>() || node->attr->data.is<ArgAttr>());
+	assert(node->attr->kind_is<VarAttr>() || node->attr->kind_is<ArgAttr>());
 
-	if (node->attr->data.is<VarAttr>()) {
+	if (node->attr->kind_is<VarAttr>()) {
 		push(OP_STORE);
-		push(node->attr->data.get<VarAttr>().slot);
-	} else if (node->attr->data.is<ArgAttr>()) {
+		push(node->attr->get_data<VarAttr>().slot);
+	} else if (node->attr->kind_is<ArgAttr>()) {
 		push(OP_STORE_STACK);
-		push(node->attr->data.get<ArgAttr>().index);
+		push(node->attr->get_data<ArgAttr>().index);
 	} else {
 		LOG_ERR("Unimplemented identifier attribute loading");
 		exit(1);
@@ -259,6 +272,7 @@ static const char* label_to_str(Label label) {
 	case Label::ELSE_BRANCH: return "ELSE_BRANCH";
 	case Label::IF_END: return "IF_END";
 	case Label::RETURN_ADDR: return "RETURN_ADDR";
+	case Label::RETURN: return "RETURN";
 	}
 }
 

@@ -1,6 +1,5 @@
 #include "symbol_table.hpp"
 
-#include <optional>
 #include <ranges>
 
 namespace scr {

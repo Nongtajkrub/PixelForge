@@ -31,23 +31,62 @@ struct ArgAttr{
 
 struct FuncAttr {
 	std::vector<TokenKind> args_types;
+
+	inline size_t arg_n() const {
+		return this->args_types.size();
+	}
 };
 
-struct IdenAttr {
-	bool in_scope = true;
-	TokenKind type;
+template <typename T>
+concept AttrType = 
+	std::same_as<T, VarAttr> 
+		|| std::same_as<T, ArgAttr> || std::same_as<T, FuncAttr>;
 
-	Variant<VarAttr, ArgAttr, FuncAttr> data;
-
+class IdenAttr {
+public:
 	IdenAttr() = default;
 	template <typename T>
-	requires std::same_as<T, VarAttr> 
-		|| std::same_as<T, ArgAttr> || std::same_as<T, FuncAttr>
+	requires AttrType<T>
 	IdenAttr(TokenKind type, T&& attr) :
 		type(type), data(std::forward<T>(attr))
 	{
-		assert(token_is_type(type));
+		if (type != TokenKind::UNKNOWN) {
+			assert(token_is_type(type));
+		}
 	}
+
+	inline void set_type(TokenKind type) {
+		assert(token_is_type(type));
+		this->type = type;
+	}
+
+	inline TokenKind get_type() const {
+		return this->type;
+	}
+
+	template <typename T>
+	requires AttrType<T>
+	inline bool kind_is() const {
+		return this->data.is<T>();
+	}
+
+	template <typename T>
+	requires AttrType<T>
+	inline T& get_data() {
+		return this->data.get<T>();
+	}
+
+	template <typename T>
+	requires AttrType<T>
+	inline const T& get_data() const {
+		return this->data.get<T>();
+	}
+
+	bool in_scope = true;
+
+private:
+	TokenKind type;
+	Variant<VarAttr, ArgAttr, FuncAttr> data;
 };
 
 enum class ScopeKind {
@@ -147,8 +186,8 @@ public:
 				attr.in_scope = false;
 
 				// Free the slot used.
-				if (attr.data.is<VarAttr>()) {
-					this->var_slot_generator.free(attr.data.get<VarAttr>().slot);
+				if (attr.kind_is<VarAttr>()) {
+					this->var_slot_generator.free(attr.get_data<VarAttr>().slot);
 				}
 			}
 		}
@@ -173,13 +212,13 @@ public:
 private:
 	inline IdenAttr* new_identifier(
 		IdentifierId id, IdenAttr attr, Scope& scope) {
-		if (attr.data.is<VarAttr>()) {
-			attr.data.get<VarAttr>().slot = this->var_slot_generator.generate();
-		} else if (attr.data.is<ArgAttr>()) {
-			attr.data.get<ArgAttr>().index =
+		if (attr.kind_is<VarAttr>()) {
+			attr.get_data<VarAttr>().slot = this->var_slot_generator.generate();
+		} else if (attr.kind_is<ArgAttr>()) {
+			attr.get_data<ArgAttr>().index =
 				this->stack_index_generator.generate();
-		} else if (attr.data.is<FuncAttr>()) {
-			attr.data.get<FuncAttr>().args_types = std::vector<TokenKind>{};
+		} else if (attr.kind_is<FuncAttr>()) {
+			attr.get_data<FuncAttr>().args_types = std::vector<TokenKind>{};
 		}
 
 		auto [it, _] = scope.table.try_emplace(id);

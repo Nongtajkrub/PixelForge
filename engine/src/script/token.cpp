@@ -57,6 +57,8 @@ void MutTokenStream::replace_and_insert(std::initializer_list<Token> v) {
 
 const char* token_kind_as_str(TokenKind kind) {
 	switch (kind) {
+	case TokenKind::UNKNOWN: return "UNKNOWN";
+
 	case TokenKind::LEFT_BRACE: return "LEFT_BRACE";
 	case TokenKind::RIGHT_BRACE: return "RIGHT_BRACE";
 	case TokenKind::LEFT_BRACKET: return "LEFT_BRACKET";

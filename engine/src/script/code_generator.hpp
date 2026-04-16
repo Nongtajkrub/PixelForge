@@ -25,6 +25,7 @@ enum class Label : u8 {
 	ELSE_BRANCH,
 	IF_END,
 	RETURN_ADDR,
+	RETURN,
 };
 
 struct CodeEntry {
@@ -81,6 +82,7 @@ private:
 
 	void handle_var_declaration(const VarDeclarationStmt* node);
 	void handle_func_declaration(const FuncDeclarationStmt* node);
+	void handle_return_stmt(const ReturnStmt* node);
 	void handle_assign_stmt(const AssignStmt* node);
 	void handle_if_stmt(const IfStmt* node);
 	void handle_command(const CommandStmt* node);

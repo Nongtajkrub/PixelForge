@@ -144,22 +144,11 @@ std::optional<ASTNode> Parser::parse_func_declaration_stmt() {
 	}
 	const auto id = this->symbols.intern_iden(*(this->tokens.advance()).lexeme);
 
-	if (!this->tokens.expect(TokenKind::ARROW)) {
-		return std::nullopt;
-	}
-
-	if (!token_is_type(this->tokens.peek().kind)) {
-		emit(DiagnosticKind::EXPECTED_TYPE, this->tokens.peek());
-		return std::nullopt;
-	}
-	const auto& type_token = this->tokens.advance();
-
-	// Create a new identifier symbol for the function.
+	// Create a new identifier symbol for the function (Return type unknown).
 	auto attr =
 		this->symbols.new_identifier(
-			id, IdenAttr(type_token.kind, FuncAttr()));
+			id, IdenAttr(TokenKind::UNKNOWN, FuncAttr()));
 	node->identifier = new_identifier_node(id, attr);
-	node->type = new_primary_node(ASTNodeKind::TYPE, type_token);
 
 	// Push scope here to include function arguments in the scope as well.
 	this->symbols.enter_scope(ScopeKind::FUNC, attr);
@@ -167,6 +156,20 @@ std::optional<ASTNode> Parser::parse_func_declaration_stmt() {
 	if (!parse_func_args(node->args, attr)) {
 		return std::nullopt;
 	}
+
+	// Parse return type.
+	if (!this->tokens.expect(TokenKind::ARROW)) {
+		return std::nullopt;
+	}
+	if (!token_is_type(this->tokens.peek().kind)) {
+		emit(DiagnosticKind::EXPECTED_TYPE, this->tokens.peek());
+		return std::nullopt;
+	}
+	const auto& type_token = this->tokens.advance();
+
+	node->type = new_primary_node(ASTNodeKind::TYPE, type_token);
+	attr->set_type(type_token.kind);
+
 	if (!this->tokens.expect(TokenKind::SEMICOLON)) {
 		return std::nullopt;
 	}
@@ -299,7 +302,7 @@ std::optional<ASTNode> Parser::parse_return_stmt() {
 	const auto scope_owner = this->symbols.get_scope_owner();
 
 	// Ensure return is allow in current scope.
-	if (scope_owner == nullptr || !scope_owner->data.is<FuncAttr>()) {
+	if (scope_owner == nullptr || !scope_owner->kind_is<FuncAttr>()) {
 		emit(DiagnosticKind::RETURN_NOT_ALLOW, this->tokens.peek());
 		return std::nullopt;
 	}
@@ -310,7 +313,7 @@ std::optional<ASTNode> Parser::parse_return_stmt() {
 	switch (this->tokens.peek().kind) {
 	case TokenKind::SEMICOLON:
 		// Ensure function is void.
-		if (scope_owner->type != TokenKind::VOID_T) {
+		if (scope_owner->get_type() != TokenKind::VOID_T) {
 			emit(DiagnosticKind::FUNC_EXPECTED_RETURN, this->tokens.advance());
 			return std::nullopt;
 		}
@@ -323,7 +326,7 @@ std::optional<ASTNode> Parser::parse_return_stmt() {
 		OPT_ASSIGN_OR_RETURN(node->expr, parse_expr(TokenKind::SEMICOLON));
 
 		// Ensure correct return type.
-		if (!ensure_expr_type(*(node->expr), scope_owner->type, expr_loc)) {
+		if (!ensure_expr_type(*(node->expr), scope_owner->get_type(), expr_loc)) {
 			return std::nullopt;
 		}
 
@@ -533,14 +536,14 @@ std::optional<ASTNode> Parser::pratt_led(Token op, ASTNode left, u8 min_bp) {
 		if (auto func_attr =
 				this->symbols.lookup(
 					reinterpret_cast<const IdentifierExpr*>(left.adr)->id)) {
-			if (!func_attr->data.is<FuncAttr>()) {
+			if (!func_attr->kind_is<FuncAttr>()) {
 				emit(DiagnosticKind::EXPECTED_FUNCTION, op);
 				return std::nullopt;
 			}
 
 			if (!parse_func_call_args(
 					node->args,
-					func_attr->data.get<FuncAttr>().args_types,
+					func_attr->get_data<FuncAttr>().args_types,
 					TokenKind::RIGHT_PAREN)) {
 				return std::nullopt;
 			}
@@ -565,7 +568,8 @@ std::optional<ASTNode> Parser::pratt_led(Token op, ASTNode left, u8 min_bp) {
 		const auto id = reinterpret_cast<const IdentifierExpr*>(left.adr)->id;
 
 		if (const auto left_attr = this->symbols.lookup(id)) {
-			if (!ensure_expr_type(node->expr, left_attr->type, op.location)) {
+			if (!ensure_expr_type(
+					node->expr, left_attr->get_type(), op.location)) {
 				return std::nullopt;
 			}
 		} else {
@@ -609,10 +613,17 @@ std::optional<ASTNode> Parser::pratt_led(Token op, ASTNode left, u8 min_bp) {
 		}
 
 		switch (this->tokens.peek().kind) {
-		case TokenKind::COMMA:
+		case TokenKind::COMMA: {
 			this->tokens.advance(); // Skip the comma.
+			const auto expr_loc = this->tokens.peek().location;
 			OPT_ASSIGN_OR_RETURN(node->step, pratt_parser());
+
+			if (!ensure_expr_type(*node->step, TokenKind::INT_T, expr_loc)) {
+				return std::nullopt;
+			}
+
 			break;
+		}
 		case TokenKind::SEMICOLON:
 			node->step = std::nullopt;
 			break;
@@ -660,8 +671,8 @@ std::optional<ASTNode> Parser::parse_atomic(ASTNodeKind kind) {
 }
 
 bool Parser::parse_func_args(std::vector<ASTNode>& buf, IdenAttr* func_attr) {
-	assert(func_attr->data.is<FuncAttr>());
-	auto& attr = func_attr->data.get<FuncAttr>();
+	assert(func_attr->kind_is<FuncAttr>());
+	auto& attr = func_attr->get_data<FuncAttr>();
 
 	if (!this->tokens.expect(TokenKind::LEFT_PAREN)) {
 		return false;
@@ -785,7 +796,7 @@ std::optional<TokenKind> Parser::resolve_expr_type(
 		const auto id = reinterpret_cast<const IdentifierExpr*>(expr.adr)->id;
 
 		if (const auto attr = this->symbols.lookup(id)) {
-			return attr->type;
+			return attr->get_type();
 		}
 
 		// Identifier dont exist.

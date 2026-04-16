@@ -14,6 +14,7 @@ const char* op_to_str(opcode_t op) {
 	case OP_PUSH: return "PUSH";
 	case OP_POP: return "POP";
 	case OP_CALL: return "CALL";
+	case OP_RETURN: return "RETURN";
 	case OP_COMMAND: return "CMD";
 	case OP_ADD: return "ADD";
 	case OP_MINUS: return "MIN";
@@ -28,7 +29,6 @@ const char* op_to_str(opcode_t op) {
 	case OP_JMP: return "JMP";
 	case OP_JMP_TRUE: return "JMP_TRUE";
 	case OP_JMP_FALSE: return "JMP_FALSE";
-	case OP_JMP_RETURN: return "JMP_RETURN";
 	}
 }
 
@@ -61,7 +61,7 @@ bool op_have_operand(opcode_t op) {
 	case OP_COMPARE_NOT_EQUAL:
 	case OP_COMPARE_GEATER_EQUAL:
 	case OP_COMPARE_LESS_EQUAL:
-	case OP_JMP_RETURN:
+	case OP_RETURN:
 		return false;
 	}
 }
