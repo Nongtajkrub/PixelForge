@@ -4,7 +4,6 @@
 #include "token.hpp"
 #include "specs.h"
 
-#include <cctype>
 #include <unordered_map>
 
 namespace scr {
@@ -102,11 +101,6 @@ bool Lexer::lex() {
 				(this->source.match(':')) ?
 					TokenKind::RANGE_OP : TokenKind::COLON);
 			break;
-		case '-':
-			add_token(
-				(this->source.match('>')) ?
-					TokenKind::ARROW : TokenKind::MINUS);
-			break;
 		case '=':
 			add_token(
 				(this->source.match('=')) ?
@@ -147,6 +141,15 @@ bool Lexer::lex() {
 			this->source.advance();
 			break;
 		}
+		case '-':
+			if (std::isdigit(this->source.peek())) {
+				break;
+			}
+
+			add_token(
+				(this->source.match('>')) ?
+					TokenKind::ARROW : TokenKind::MINUS);
+			break;
 		case '0':
 		case '1':
 		case '2':
@@ -157,12 +160,15 @@ bool Lexer::lex() {
 		case '7':
 		case '8':
 		case '9': {
+			const bool neg = this->source.prev() == '-';
 			const auto sub_info =
 				this->source.advance_until(
 					[](auto c) -> bool {
 						return !std::isdigit(c) && c != '.'; });
 			const auto lexeme = 
-				this->source.data().substr(sub_info.begin, sub_info.size);
+				(neg) ? "-" : "" 
+					+ this->source.data().substr(sub_info.begin, sub_info.size);
+
 			add_token(
 				(lexeme.contains('.')) ?
 					TokenKind::FLOAT : TokenKind::INTEGER, lexeme);
@@ -193,8 +199,8 @@ bool Lexer::lex() {
 					[](auto c) -> bool { 
 						return !std::isalpha(c) 
 							&& c != '_' && !std::isdigit(c); });
-			const std::string lexeme =
-			this->source.data().substr(sub_info.begin, sub_info.size);
+			const auto lexeme = 
+				this->source.data().substr(sub_info.begin, sub_info.size);
 			this->location.col += sub_info.size;
 
 			// If the keyword is a command then keep it's lexeme as well.
