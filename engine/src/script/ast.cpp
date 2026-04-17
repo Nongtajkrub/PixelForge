@@ -225,10 +225,8 @@ void ASTNode::output(std::ostream &stream, const u32 level) const {
 	case ASTNodeKind::FOR_LOOP: {
 		auto node = reinterpret_cast<const ForLoopStmt*>(this->adr);
 
-		if (node->it) {
-			stream << indent << "iterator:\n";
-			(*node->it).output(stream, level + 1);
-		}
+		stream << indent << "iterator:\n";
+		node->it.output(stream, level + 1);
 
 		stream << indent << "range:\n";
 		node->range.output(stream, level + 1);

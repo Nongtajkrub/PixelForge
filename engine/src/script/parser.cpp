@@ -249,27 +249,26 @@ std::optional<ASTNode> Parser::parse_for_stmt() {
 	this->tokens.advance();
 	this->symbols.enter_scope(ScopeKind::LOOP);
 
+	// Resolve iterator identifier id.
+	IdentifierId id;
 	switch (this->tokens.peek().kind) {
-	case TokenKind::UNDERSCORE:
-		node->it = std::nullopt; 
-		this->tokens.advance();
+	case TokenKind::UNDERSCORE: 
+		id = this->symbols.intern_iden(this->identifier_generator.generate());
+		this->tokens.advance(); // Ignore underscore.
 		break;
-	case TokenKind::IDENTIFIER: {
-		const auto id =
-			this->symbols.intern_iden(*(this->tokens.advance().lexeme));
-
-		node->it = 
-			new_identifier_node(
-				id,
-				this->symbols.new_identifier(
-					id, IdenAttr(TokenKind::INT_T, VarAttr())));
-
+	case TokenKind::IDENTIFIER: 
+		id = this->symbols.intern_iden(*(this->tokens.advance().lexeme));
 		break;
-	}
 	default:
 		emit(DiagnosticKind::UNEXPECTED_TOKEN, this->tokens.peek());
 		return std::nullopt;
 	}
+
+	node->it = 
+		new_identifier_node(
+			id,
+			this->symbols.new_identifier(
+				id, IdenAttr(TokenKind::INT_T, VarAttr())));
 
 	const auto range_expr_start = this->tokens.peek().location;
 	OPT_ASSIGN_OR_RETURN(node->range, parse_expr(TokenKind::SEMICOLON));

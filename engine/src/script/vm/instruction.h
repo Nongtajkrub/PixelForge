@@ -21,6 +21,7 @@ typedef enum : instruction_t {
 	OP_BEGIN,
 	OP_END,
 	OP_CONST,
+	OP_CONST_DIRECT,
 	OP_LOAD,
 	OP_LOAD_STACK,
 	OP_LOAD_PROP,

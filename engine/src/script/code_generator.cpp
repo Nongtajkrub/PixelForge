@@ -29,6 +29,9 @@ void CodeGenerator::handle_node(const ASTNode& node) {
 	case ASTNodeKind::IF:
 		handle_if_stmt(reinterpret_cast<const IfStmt*>(node.adr));
 		break;
+	case ASTNodeKind::FOR_LOOP:
+		handle_for_stmt(reinterpret_cast<const ForLoopStmt*>(node.adr));
+		break;
 	case ASTNodeKind::CALL:
 		handle_expr(node);
 		break;
@@ -113,6 +116,36 @@ void CodeGenerator::handle_if_stmt(const IfStmt* node) {
 	} 
 
 	push(Label::IF_END);
+}
+
+void CodeGenerator::handle_for_stmt(const ForLoopStmt* node) {
+	const auto range_node = reinterpret_cast<const RangeExpr*>(node->range.adr);
+	const auto it = reinterpret_cast<const IdentifierExpr*>(node->it.adr);
+
+	// Store begin in iterator.
+	handle_expr(range_node->begin);
+	generate_store(it);
+
+	// Generate code for loop block.
+	push(Label::LOOP_BEGIN);
+	generate(reinterpret_cast<const BlockStmt*>(node->block.adr)->block);
+
+	// Increment iterator.
+	generate_load(it);
+	if (!range_node->step) {
+		push(OP_CONST_DIRECT);
+		push(1);
+	} else {
+		handle_expr(*range_node->step);
+	}
+	push(OP_ADD);
+	generate_store(it);
+
+	// Range checking.
+	handle_expr(range_node->end);
+	push(OP_COMPARE_LESS);
+	push(OP_JMP);
+	push(Label::LOOP_BEGIN);
 }
 
 void CodeGenerator::handle_command(const CommandStmt* node) {
@@ -271,6 +304,7 @@ static const char* label_to_str(Label label) {
 	case Label::THEN_BRANCH: return "THEN_BRANCH";
 	case Label::ELSE_BRANCH: return "ELSE_BRANCH";
 	case Label::IF_END: return "IF_END";
+	case Label::LOOP_BEGIN: return "LOOP_BEGIN";
 	case Label::RETURN_ADDR: return "RETURN_ADDR";
 	case Label::RETURN: return "RETURN";
 	}

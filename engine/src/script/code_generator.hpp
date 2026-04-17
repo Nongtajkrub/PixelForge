@@ -23,6 +23,7 @@ enum class Label : u8 {
 	HOLE,
 	THEN_BRANCH,
 	ELSE_BRANCH,
+	LOOP_BEGIN,
 	IF_END,
 	RETURN_ADDR,
 	RETURN,
@@ -85,6 +86,7 @@ private:
 	void handle_return_stmt(const ReturnStmt* node);
 	void handle_assign_stmt(const AssignStmt* node);
 	void handle_if_stmt(const IfStmt* node);
+	void handle_for_stmt(const ForLoopStmt* node);
 	void handle_command(const CommandStmt* node);
 	void handle_expr(const ASTNode& expr);
 	void handle_binary_operator(TokenKind op);

@@ -47,7 +47,7 @@ bool Compiler::compile() {
 
 	/*
 	for (auto ast : parser.get_ast()) {
-		ast_output(std::cout, ast);
+		ast.output(std::cout);
 	}
 	*/
 	

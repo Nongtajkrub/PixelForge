@@ -91,17 +91,12 @@ private:
 
 	Pool<std::string> str_pool;
 
-	ConstIndex builtin_true;
-	ConstIndex builtin_false;
-
 public:
 	ConstPool() :
 		const_index([this]() -> ConstIndex {
 			return this->pool.size();
 		})
-	{
-
-	}
+	{ }
 
 	// Push a const into pool if it does not already exist and return const index.
 	ConstIndex intern_const(const Const& value);

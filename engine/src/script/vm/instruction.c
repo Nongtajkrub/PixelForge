@@ -6,6 +6,7 @@ const char* op_to_str(opcode_t op) {
 	case OP_BEGIN: return "BEGIN";
 	case OP_END: return "END";
 	case OP_CONST: return "CONST";
+	case OP_CONST_DIRECT: return "CONST_DIRECT";
 	case OP_LOAD: return "LOAD";
 	case OP_LOAD_STACK: return "LOAD_STACK";
 	case OP_LOAD_PROP: return "LOAD_PROP";
@@ -35,6 +36,7 @@ const char* op_to_str(opcode_t op) {
 bool op_have_operand(opcode_t op) {
 	switch (op) {
 	case OP_CONST:
+	case OP_CONST_DIRECT:
 	case OP_LOAD:
 	case OP_LOAD_STACK:
 	case OP_LOAD_PROP:

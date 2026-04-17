@@ -133,7 +133,7 @@ struct ReturnStmt {
 struct ForLoopStmt {
 	ASTNodeKind kind;
 
-	std::optional<ASTNode> it;
+	ASTNode it;
 	ASTNode range;
 
 	ASTNode block; 

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../core/cplusplus/container/bump_arena.hpp"
+#include "../core/cplusplus/utilities/unique_string.hpp"
 #include "symbol_table.hpp"
 #include "const_pool.hpp"
 #include "token.hpp"
@@ -88,6 +89,9 @@ private:
 
 	// The stream to output error to.
 	std::ostream& err_stream;
+
+	UniqueStringGenerator identifier_generator =
+		UniqueStringGenerator("__");
 
 	// Abstract Syntax Tree separated into each statements.
 	std::vector<ASTNode> ast;
