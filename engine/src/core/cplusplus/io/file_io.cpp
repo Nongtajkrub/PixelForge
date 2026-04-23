@@ -1,5 +1,6 @@
 #include "file_io.hpp"
 
+#include <cstddef>
 #include <optional>
 #include <fstream>
 #include <iterator>

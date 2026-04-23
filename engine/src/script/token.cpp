@@ -90,9 +90,9 @@ const char* token_kind_as_str(TokenKind kind) {
 
 	// Literals
 	case TokenKind::IDENTIFIER: return "IDENTIFIER";
-	case TokenKind::STRING: return "STRING";
-	case TokenKind::INTEGER: return "INTEGER";
-	case TokenKind::FLOAT: return "FLOAT";
+	case TokenKind::STRING_LIT: return "STRING";
+	case TokenKind::INTEGER_LIT: return "INTEGER";
+	case TokenKind::FLOAT_LIT: return "FLOAT";
 
 	// Keywords
 	case TokenKind::AND: return "AND";
@@ -132,9 +132,9 @@ const char* token_kind_as_str(TokenKind kind) {
 
 TokenKind token_to_type(TokenKind kind) {
 	switch (kind) {
-	case TokenKind::STRING: return TokenKind::STRING_T;
-	case TokenKind::INTEGER: return TokenKind::INT_T;
-	case TokenKind::FLOAT: return TokenKind::FLOAT_T;
+	case TokenKind::STRING_LIT: return TokenKind::STRING_T;
+	case TokenKind::INTEGER_LIT: return TokenKind::INT_T;
+	case TokenKind::FLOAT_LIT: return TokenKind::FLOAT_T;
 	case TokenKind::TRUE:
 	case TokenKind::FALSE:
 		return TokenKind::BOOL_T;

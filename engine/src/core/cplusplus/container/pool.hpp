@@ -41,6 +41,22 @@ public:
 	const T& operator[](size_t index) const {
 		return this->pool[index];
 	}
+
+	inline auto begin() {
+		return this->pool.begin();
+	}
+
+	inline auto end() {
+		return this->pool.end();
+	}
+
+	inline auto rbegin() {
+		return this->pool.rbegin();
+	}
+
+	inline auto rend() {
+		return this->pool.rend();
+	}
 };
 
 } // namespace core;

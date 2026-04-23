@@ -10,15 +10,14 @@
 extern "C" {
 #endif // #ifdef __cplusplus
 
-#include "../../core/c/types.h"
+#include "../specs.h"
 
 #include <stdbool.h>
 
-typedef u16 instruction_t;
+typedef word_t instruction_t;
 
 typedef enum : instruction_t {
 	OP_NOP,
-	OP_BEGIN,
 	OP_END,
 	OP_CONST,
 	OP_CONST_DIRECT,

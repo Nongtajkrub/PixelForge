@@ -57,7 +57,7 @@ DiagnosticKind resolve_diag_expect_kind(TokenKind kind) {
 	case TokenKind::RIGHT_PAREN: return DiagnosticKind::EXPECTED_RIGHT_PAREN;
 	case TokenKind::ARROW: return DiagnosticKind::EXPECTED_ARROW;
 	case TokenKind::COMMA: return DiagnosticKind::EXPECTED_COMMA;
-	case TokenKind::INTEGER: return DiagnosticKind::EXPECTED_INTEGER;
+	case TokenKind::INTEGER_LIT: return DiagnosticKind::EXPECTED_INTEGER;
 	case TokenKind::INT_T: return DiagnosticKind::EXPECTED_INTEGER;
 	case TokenKind::FLOAT_T: return DiagnosticKind::EXPECTED_FLOAT;
 	case TokenKind::BOOL_T: return DiagnosticKind::EXPECTED_BOOL;

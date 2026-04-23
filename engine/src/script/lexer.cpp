@@ -133,7 +133,7 @@ bool Lexer::lex() {
 			}
 
 			add_token(
-				TokenKind::STRING,
+				TokenKind::STRING_LIT,
 				this->source.data().substr(sub_info.begin, sub_info.size));
 			this->location.col += sub_info.size;
 
@@ -171,7 +171,7 @@ bool Lexer::lex() {
 
 			add_token(
 				(lexeme.contains('.')) ?
-					TokenKind::FLOAT : TokenKind::INTEGER, lexeme);
+					TokenKind::FLOAT_LIT : TokenKind::INTEGER_LIT, lexeme);
 
 			this->location.col += sub_info.size;
 			break;

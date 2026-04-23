@@ -2,8 +2,7 @@
 
 const char* op_to_str(opcode_t op) {
 	switch (op) {
-	case OP_NOP: return "OP_NOP";
-	case OP_BEGIN: return "BEGIN";
+	case OP_NOP: return "NOP";
 	case OP_END: return "END";
 	case OP_CONST: return "CONST";
 	case OP_CONST_DIRECT: return "CONST_DIRECT";
@@ -11,7 +10,7 @@ const char* op_to_str(opcode_t op) {
 	case OP_LOAD_STACK: return "LOAD_STACK";
 	case OP_LOAD_PROP: return "LOAD_PROP";
 	case OP_STORE: return "STORE";
-	case OP_STORE_STACK: return "OP_STORE_STACK";
+	case OP_STORE_STACK: return "STORE_STACK";
 	case OP_PUSH: return "PUSH";
 	case OP_POP: return "POP";
 	case OP_CALL: return "CALL";
@@ -49,7 +48,6 @@ bool op_have_operand(opcode_t op) {
 	case OP_JMP_FALSE:
 		return true;
 	case OP_NOP:
-	case OP_BEGIN:
 	case OP_END:
 	case OP_PUSH:
 	case OP_POP:

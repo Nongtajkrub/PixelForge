@@ -454,9 +454,9 @@ static std::tuple<u8, u8> resolve_binding_power(TokenKind kind) {
 
 std::optional<ASTNode> Parser::pratt_nud() {
 	switch (this->tokens.peek().kind) {
-	case TokenKind::INTEGER:
-	case TokenKind::FLOAT:
-	case TokenKind::STRING:
+	case TokenKind::INTEGER_LIT:
+	case TokenKind::FLOAT_LIT:
+	case TokenKind::STRING_LIT:
 	case TokenKind::TRUE:
 	case TokenKind::FALSE:
 		return 
@@ -781,7 +781,7 @@ std::optional<TokenKind> Parser::resolve_expr_type(
 	case ASTNodeKind::LITERAL: {
 		return 
 			this->cpool.get(
-				reinterpret_cast<const LiteralExpr*>(expr.adr)->index).type; 
+				reinterpret_cast<const LiteralExpr*>(expr.adr)->index).get_type(); 
 	}
 	case ASTNodeKind::DOT:
 		return 

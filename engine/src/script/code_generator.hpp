@@ -14,12 +14,7 @@
 
 namespace scr {
 
-enum class CodeEntryKind : u8 {
-	INSTRUCTION,
-	LABEL,
-};
-
-enum class Label : u8 {
+enum class LabelKind : u8 {
 	HOLE,
 	THEN_BRANCH,
 	ELSE_BRANCH,
@@ -29,15 +24,25 @@ enum class Label : u8 {
 	RETURN,
 };
 
+struct Label {
+	LabelKind kind;
+
+	// Label will be a reference when it is use as operands.
+	bool is_ref;
+
+	Label(LabelKind kind, bool is_ref) :
+		kind(kind), is_ref(is_ref)
+	{ }
+};
+
 struct CodeEntry {
-	CodeEntryKind kind;
 	Variant<instruction_t, Label> data;
 
 	explicit CodeEntry(instruction_t inst) :
-		kind(CodeEntryKind::INSTRUCTION), data(inst)
+		data(inst)
 	{ }
 	explicit CodeEntry(Label label) :
-		kind(CodeEntryKind::LABEL), data(label)
+		data(label)
 	{ }
 };
 
@@ -68,12 +73,15 @@ public:
 	{ }
 
 	inline void generate() {
-		push(OP_BEGIN);
 		generate(this->ast);
 		push(OP_END);
 	}
 
 	void output_code(std::ostream& stream);
+	void output_serialize(
+		std::ostream& stream, const std::vector<word_t>& buffer);
+
+	std::vector<u8> serialize();
 
 private:
 	static void output_code(
@@ -100,6 +108,11 @@ private:
 		}
 	}
 
+	// Get the offset of the first none reference label that appear from 
+	// a specific point (Ignore none reference labels).
+	size_t next_label_offset(size_t from, LabelKind label);
+	size_t prev_label_offset(size_t from, LabelKind label);
+
 	// Allow for switching push buffer with a state guard.
 	[[nodiscard]]
 	inline RefStateGuard<std::vector<CodeEntry>> switch_push_buffer(
@@ -112,20 +125,20 @@ private:
 		push(node->index);
 	}
 
-	inline void push(instruction_t inst) {
-		this->push_buffer->emplace_back(inst);
+	inline void push(word_t data) {
+		this->push_buffer->emplace_back(data);
 	}
 
 	inline void push(Label label) {
 		this->push_buffer->emplace_back(label);
 		
-		if (label == Label::HOLE) {
+		if (label.kind == LabelKind::HOLE) {
 			this->hole_indexes.push(this->code.size() - 1);
 		}
 	}
 
 	// Fill the first hole that appear in the code or push if no hole exist.
-	inline void patch_next_hole(instruction_t inst) {
+	inline void patch_next_hole(word_t inst) {
 		if (hole_indexes.size() > 0) {
 			(*this->push_buffer)[hole_indexes.front()] = CodeEntry(inst);
 			hole_indexes.pop();

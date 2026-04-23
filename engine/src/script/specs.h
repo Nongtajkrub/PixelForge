@@ -11,6 +11,10 @@ extern "C" {
 
 #include "../core/c/types.h"
 
+typedef u16 word_t;
+
+#define WORD_SIZE sizeof(word_t)
+
 // Differents lexeme for each commands.
 #define CMD_UP_LEX "UP"
 #define CMD_DOWN_LEX "DOWN"

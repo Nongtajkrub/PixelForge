@@ -1,11 +1,12 @@
 #pragma once
 
-#include "../core/cplusplus/container/cursor_stack.hpp"
 #include "../core/cplusplus/utilities/incremental_id.hpp"
+#include "../core/cplusplus/container/cursor_stack.hpp"
 #include "../core/cplusplus/utilities/free_list_id.hpp"
 #include "../core/cplusplus/utilities/id_interner.hpp"
 #include "../core/cplusplus/utilities/variant.hpp"
 #include "token.hpp"
+#include "specs.h"
 
 #include <unordered_map>
 #include <concepts>
@@ -18,8 +19,8 @@ namespace scr {
 
 using namespace core;
 using IdentifierId = u32;
-using VariableSlot = u16;
-using ArgStackIndex = u16;
+using VariableSlot = word_t;
+using ArgStackIndex = word_t;
 
 struct VarAttr {
 	VariableSlot slot;

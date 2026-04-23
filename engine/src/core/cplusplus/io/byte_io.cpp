@@ -5,11 +5,15 @@
 
 namespace core {
 
-void byte_output_stdout(const std::span<u8> bytes) {
+void bytes_output(const std::span<const u8> bytes, std::ostream& stream) {
 	for (const u8 byte : bytes) {
-		std::cout << std::hex << static_cast<int>(byte) << ' ';
+		stream <<  static_cast<int>(byte) << ' ';
 	}
 	std::cout << '\n';
+}
+
+void push_bytes(std::vector<u8>& dest, const char* bytes, size_t size) {
+	dest.insert(dest.end(), bytes, bytes + size);
 }
 
 } // namespace core

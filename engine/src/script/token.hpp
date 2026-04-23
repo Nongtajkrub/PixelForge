@@ -48,9 +48,9 @@ enum class TokenKind : u8 {
 
 	// Literals
 	IDENTIFIER,
-	STRING,
-	INTEGER,
-	FLOAT,
+	STRING_LIT,
+	INTEGER_LIT,
+	FLOAT_LIT,
 
 	// Keywords
 	AND,
