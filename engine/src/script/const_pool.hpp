@@ -5,8 +5,8 @@
 #include "../core/cplusplus/container/pool.hpp"
 #include "../core/cplusplus/io/log.hpp"
 #include "../core/cplusplus/types.hpp"
-#include "specs.h"
 #include "token.hpp"
+#include "specs.h"
 
 #include <cassert>
 #include <cstddef>
@@ -24,8 +24,6 @@ struct Const {
 
 	explicit Const(const Token& literal);
 
-	TokenKind get_type() const;
-
 	bool operator==(const Const& other) const {
 		if (this->data.is<i32>()) {
 			return this->data.get<i32>() == other.data.get<i32>();
@@ -37,7 +35,7 @@ struct Const {
 			return this->data.get<std::string>() == other.data.get<std::string>();
 		}
 
-		LOG_ERR("Unimplemented eq operator Const.");
+		BUG("Unimplemented eq operator Const.");
 		exit(1);
 	}
 };
@@ -58,7 +56,7 @@ struct std::hash<scr::Const> {
 		} else if (value.data.is<std::string>()) {
 			h = std::hash<std::string>{ }(value.data.get<std::string>());
 		} else {
-			LOG_ERR("Unimplemented hash Const.");
+			BUG("Unimplemented hash Const.");
 			exit(1);
 		}
 
@@ -82,9 +80,9 @@ public:
 	{ }
 
 	// Push a const into pool if it does not already exist and return const index.
-	ConstIndex intern_const(const Const& value);
+	ConstIndex intern(const Const& value);
 
-	std::vector<u8> serialize();
+	void serialize(std::vector<u8>& buf) const;
 
 	inline const Const& get(ConstIndex index) const {
 		return this->pool[index];

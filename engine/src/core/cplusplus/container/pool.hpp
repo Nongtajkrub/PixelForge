@@ -42,19 +42,19 @@ public:
 		return this->pool[index];
 	}
 
-	inline auto begin() {
+	inline auto begin() const {
 		return this->pool.begin();
 	}
 
-	inline auto end() {
+	inline auto end() const {
 		return this->pool.end();
 	}
 
-	inline auto rbegin() {
+	inline auto rbegin() const {
 		return this->pool.rbegin();
 	}
 
-	inline auto rend() {
+	inline auto rend() const {
 		return this->pool.rend();
 	}
 };

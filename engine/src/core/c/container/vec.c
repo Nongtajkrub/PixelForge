@@ -15,6 +15,13 @@ vec_t vec_new(size_t esize) {
 	};
 }
 
+void vec_init(vec_t* vec, size_t esize) {
+	vec->capacity = INIT_VEC_CAP;
+	vec->size = 0;
+	vec->esize = esize;
+	vec->data = (char*)malloc(INIT_VEC_CAP * esize);
+}
+
 void vec_push(vec_t* vec, char* data) {
 	if (vec->size == vec->capacity) {
 		vec->capacity *= 2;
@@ -40,10 +47,10 @@ void vec_pop(vec_t* vec) {
 	vec->size--;
 }
 
-char* vec_get(vec_t* vec, size_t n) {
+char* vec_get(const vec_t* vec, size_t n) {
 	return vec->data + (vec->esize * n);
 }
 
-block_t vec_get_copy(vec_t* vec, size_t n) {
+block_t vec_get_copy(const vec_t* vec, size_t n) {
 	return block_new(vec_get(vec, n), vec->esize);
 }

@@ -16,7 +16,7 @@ private:
 	std::vector<T> free_list;
 
 public:
-	FreeListIdGen(T start) :
+	FreeListIdGen(T start = 0) :
 		counter(start)
 	{ }
 

@@ -2,9 +2,10 @@
 
 #include "../core/cplusplus/utilities/ref_state_guard.hpp"
 #include "../core/cplusplus/utilities/variant.hpp"
-#include "vm/instruction.h"
 #include "symbol_table.hpp"
 #include "ast.hpp"
+#include "specs.h"
+#include "vm/instruction.h"
 
 #include <cassert>
 #include <cstddef>
@@ -47,7 +48,7 @@ struct CodeEntry {
 };
 
 struct FuncEntry {
-	IdentifierId id;
+	word_t index;
 	std::vector<CodeEntry> body;
 };
 
@@ -59,8 +60,10 @@ private:
 
 	// Main code buffer.
 	std::vector<CodeEntry> code;
+
 	// Function code buffer containing function definitions and implementations.
 	std::vector<FuncEntry> func;
+	IdInterner<IdentifierId, word_t> func_id_interner;
 
 	// Store index of hole labels in the code avoiding o(n) lookup.
 	std::queue<size_t> hole_indexes;
@@ -69,7 +72,8 @@ private:
 
 public:
 	CodeGenerator(const std::vector<ASTNode>& ast) :
-		ast(ast)
+		ast(ast),
+		func_id_interner([this]() -> word_t { return this->func.size(); })
 	{ }
 
 	inline void generate() {
@@ -78,15 +82,10 @@ public:
 	}
 
 	void output_code(std::ostream& stream);
-	void output_serialize(
-		std::ostream& stream, const std::vector<word_t>& buffer);
 
-	std::vector<u8> serialize();
+	void serialize(std::vector<u8>& buf) const;
 
 private:
-	static void output_code(
-		std::ostream& stream, const std::vector<CodeEntry>& code);
-
 	void handle_node(const ASTNode& node);
 
 	void handle_var_declaration(const VarDeclarationStmt* node);
@@ -102,16 +101,25 @@ private:
 	void generate_load(const IdentifierExpr* node);
 	void generate_store(const IdentifierExpr* node);
 
+	// Fill the first hole that appear in the code or push if no hole exist.
+	void patch_next_hole(word_t inst);
+	void patch_next_hole(Label label);
+
+	// Get the offset of the first none reference label that appear from 
+	// a specific point (Ignore none reference labels).
+	size_t next_label_offset(size_t from, LabelKind label) const;
+	size_t prev_label_offset(size_t from, LabelKind label) const;
+
+	void serialize(std::vector<u8>& buf, const std::vector<CodeEntry>& code) const;
+
+	static void output_code(
+		std::ostream& stream, const std::vector<CodeEntry>& code);
+
 	inline void generate(const std::vector<ASTNode>& nodes) {
 		for (const auto& node : nodes) {
 			handle_node(node);
 		}
 	}
-
-	// Get the offset of the first none reference label that appear from 
-	// a specific point (Ignore none reference labels).
-	size_t next_label_offset(size_t from, LabelKind label);
-	size_t prev_label_offset(size_t from, LabelKind label);
 
 	// Allow for switching push buffer with a state guard.
 	[[nodiscard]]
@@ -134,26 +142,6 @@ private:
 		
 		if (label.kind == LabelKind::HOLE) {
 			this->hole_indexes.push(this->code.size() - 1);
-		}
-	}
-
-	// Fill the first hole that appear in the code or push if no hole exist.
-	inline void patch_next_hole(word_t inst) {
-		if (hole_indexes.size() > 0) {
-			(*this->push_buffer)[hole_indexes.front()] = CodeEntry(inst);
-			hole_indexes.pop();
-		} else {
-			push(inst);
-		}
-	}
-
-	// Fill the first hole that appear in the code or push if no hole exist.
-	inline void patch_next_hole(Label label) {
-		if (hole_indexes.size() > 0) {
-			(*this->push_buffer)[hole_indexes.front()] = CodeEntry(label);
-			hole_indexes.pop();
-		} else {
-			push(label);
 		}
 	}
 };

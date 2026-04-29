@@ -166,7 +166,7 @@ void ASTNode::output(std::ostream &stream, const u32 level) const {
 		}
 
 		stream << indent << "return:\n";
-		node->type.output(stream, level + 1);
+		node->type->output(stream, level + 1);
 
 		stream << indent << "body:\n";
 		node->body.output(stream, level + 1);

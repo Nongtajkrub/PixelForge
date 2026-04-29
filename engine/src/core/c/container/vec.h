@@ -15,10 +15,11 @@ typedef struct {
 } vec_t;
 
 vec_t vec_new(size_t esize);
+void vec_init(vec_t* vec, size_t esize);
 
 void vec_push(vec_t* vec, char* data);
 void* vec_push_null(vec_t* vec);
 void vec_pop(vec_t* vec);
 
-char* vec_get(vec_t* vec, size_t n);
-block_t vec_get_copy(vec_t* vec, size_t n);
+char* vec_get(const vec_t* vec, size_t n);
+block_t vec_get_copy(const vec_t* vec, size_t n);

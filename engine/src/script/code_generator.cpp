@@ -2,58 +2,34 @@
 
 #include "../core/cplusplus/io/byte_io.hpp"
 #include "../core/cplusplus/macros.hpp"
-#include "vm/instruction.h"
 #include "symbol_table.hpp"
 #include "token.hpp"
 #include "ast.hpp"
+#include "specs.h"
+#include "vm/instruction.h"
 
 #include <cassert>
 #include <cstddef>
 #include <cstdlib>
 #include <ostream>
-#include <utility>
 #include <vector>
 
 namespace scr {
 
-std::vector<u8> CodeGenerator::serialize() {
-	std::vector<u8> buff;
-	buff.reserve((this->code.size() + this->func.size()) * sizeof(word_t));
+void CodeGenerator::serialize(std::vector<u8>& buf) const {
+	push_bytes<word_t>(buf, this->code.size() * WORD_SIZE);
+	serialize(buf, this->code);
 
-	for (size_t i = 0; i < this->code.size(); i++) {
-		const auto& entry = this->code[i];
-
-		if (entry.data.is<instruction_t>()) {
-			push_bytes(buff, entry.data.get<instruction_t>());
-		} else if (entry.data.is<Label>()) {
-			const auto label = entry.data.get<Label>();
-
-			if (label.kind == LabelKind::HOLE || !label.is_ref) {
-				continue;
-			}
-
-			switch (label.kind) {
-			// Scan forward.
-			case LabelKind::ELSE_BRANCH:
-			case LabelKind::THEN_BRANCH:
-			case LabelKind::IF_END:
-			case LabelKind::RETURN:
-			case LabelKind::RETURN_ADDR:
-				push_bytes<word_t>(
-					buff, buff.size() + next_label_offset(i + 1, label.kind));
-				break;
-			// Scan backward.
-			case LabelKind::LOOP_BEGIN:
-				push_bytes<word_t>(
-					buff, buff.size() - prev_label_offset(i - 1, label.kind));
-				break;
-			case LabelKind::HOLE:
-				std::unreachable();
-			}
-		}
+	std::vector<u8> func_buf;
+	for (const auto& entry : this->func) {
+		push_bytes<word_t>(func_buf, entry.body.size() * WORD_SIZE);
+		serialize(func_buf, entry.body);
 	}
 
-	return buff;
+	// Concat two buffer together with size information.
+	buf.reserve(WORD_SIZE + func_buf.size());
+	push_bytes<word_t>(buf, func_buf.size());
+	buf.insert(buf.end(), func_buf.begin(), func_buf.end());
 }
 
 void CodeGenerator::handle_node(const ASTNode& node) {
@@ -109,11 +85,14 @@ void CodeGenerator::handle_assign_stmt(const AssignStmt* node) {
 }
 
 void CodeGenerator::handle_func_declaration(const FuncDeclarationStmt* node) {
-	auto& entry = this->func.emplace_back();
-
 	const auto identifier =
 		reinterpret_cast<const IdentifierExpr*>(node->identifier.adr);
-	entry.id = identifier->id;
+
+	// Update function ID to index map (Do before pushing new entry).
+	const auto [index, _] = this->func_id_interner.intern(identifier->id);
+
+	auto& entry = this->func.emplace_back();
+	entry.index = index;
 
 	auto guard = switch_push_buffer(&entry.body);
 
@@ -245,7 +224,7 @@ void CodeGenerator::handle_binary_operator(TokenKind op) {
 		patch_next_hole(Label(LabelKind::THEN_BRANCH, true));
 		break;
 	default:
-		LOG_ERR("Unimplemented operator for code generator.");
+		BUG("Unimplemented operator for code generator.");
 		exit(1);
 	}
 }
@@ -297,8 +276,17 @@ void CodeGenerator::handle_expr(const ASTNode& expr) {
 			push(OP_PUSH);
 		}
 
+		const auto [index, inserted] =
+			this->func_id_interner.intern(
+				reinterpret_cast<const IdentifierExpr*>(node->identifier.adr)->id);
+
+		if (inserted) {
+			BUG("Function should already have their ID map before being call.");
+			exit(1);
+		}
+
 		push(OP_CALL);
-		push(reinterpret_cast<const IdentifierExpr*>(node->identifier.adr)->id);
+		push(index);
 		push(Label(LabelKind::RETURN_ADDR, false));
 
 		break;
@@ -307,7 +295,7 @@ void CodeGenerator::handle_expr(const ASTNode& expr) {
 		TODO();
 		break;
 	default:
-		LOG_ERR("Node is not an expression.");
+		BUG("Node is not an expression.");
 		exit(1);
 	}
 }
@@ -322,7 +310,7 @@ void CodeGenerator::generate_load(const IdentifierExpr* node) {
 		push(OP_LOAD_STACK);
 		push(node->attr->get_data<ArgAttr>().index);
 	} else {
-		LOG_ERR("Unimplemented identifier attribute loading");
+		BUG("Unimplemented identifier attribute loading");
 		exit(1);
 	}
 }
@@ -337,12 +325,31 @@ void CodeGenerator::generate_store(const IdentifierExpr* node) {
 		push(OP_STORE_STACK);
 		push(node->attr->get_data<ArgAttr>().index);
 	} else {
-		LOG_ERR("Unimplemented identifier attribute loading");
+		BUG("Unimplemented identifier attribute loading");
 		exit(1);
 	}
 }
 
-size_t CodeGenerator::next_label_offset(size_t from, LabelKind label) {
+void CodeGenerator::patch_next_hole(word_t inst) {
+	if (hole_indexes.size() > 0) {
+		(*this->push_buffer)[hole_indexes.front()] = CodeEntry(inst);
+		hole_indexes.pop();
+	} else {
+		push(inst);
+	}
+}
+
+// Fill the first hole that appear in the code or push if no hole exist.
+void CodeGenerator::patch_next_hole(Label label) {
+	if (hole_indexes.size() > 0) {
+		(*this->push_buffer)[hole_indexes.front()] = CodeEntry(label);
+		hole_indexes.pop();
+	} else {
+		push(label);
+	}
+}
+
+size_t CodeGenerator::next_label_offset(size_t from, LabelKind label) const {
 	assert(from < this->code.size());
 
 	size_t offset = 0;
@@ -360,11 +367,11 @@ size_t CodeGenerator::next_label_offset(size_t from, LabelKind label) {
 		}
 	}
 
-	LOG_ERR("Code is not correctly generated");
+	BUG("Code is not correctly generated");
 	exit(1);
 }
 
-size_t CodeGenerator::prev_label_offset(size_t from, LabelKind label) {
+size_t CodeGenerator::prev_label_offset(size_t from, LabelKind label) const {
 	assert(from < this->code.size());
 
 	size_t offset = 0;
@@ -382,8 +389,49 @@ size_t CodeGenerator::prev_label_offset(size_t from, LabelKind label) {
 		}
 	}
 
-	LOG_ERR("Code is not correctly generated");
+	BUG("Code is not correctly generated");
 	exit(1);
+}
+
+void CodeGenerator::serialize(
+	std::vector<u8>& buf, const std::vector<CodeEntry>& code) const {
+	buf.reserve(code.size() * WORD_SIZE);
+
+	// Serialize main instructions.
+	for (size_t i = 0; i < code.size(); i++) {
+		const auto& entry = code[i];
+
+		if (entry.data.is<instruction_t>()) {
+			push_bytes(buf, entry.data.get<instruction_t>());
+		} else if (entry.data.is<Label>()) {
+			// Resolve labels.
+			const auto label = entry.data.get<Label>();
+
+			if (label.kind == LabelKind::HOLE || !label.is_ref) {
+				continue;
+			}
+
+			switch (label.kind) {
+			// Scan forward.
+			case LabelKind::ELSE_BRANCH:
+			case LabelKind::THEN_BRANCH:
+			case LabelKind::IF_END:
+			case LabelKind::RETURN:
+			case LabelKind::RETURN_ADDR:
+				push_bytes<word_t>(
+					buf, buf.size() + next_label_offset(i + 1, label.kind));
+				break;
+			// Scan backward.
+			case LabelKind::LOOP_BEGIN:
+				push_bytes<word_t>(
+					buf, buf.size() - prev_label_offset(i - 1, label.kind));
+				break;
+			case LabelKind::HOLE:
+				BUG("LabelKind::HOLE should not be reach.");
+				exit(1);
+			}
+		}
+	}
 }
 
 static const char* label_to_str(LabelKind label) {
@@ -432,25 +480,8 @@ void CodeGenerator::output_code(std::ostream& stream) {
 	output_code(stream, this->code);
 
 	for (const auto& entry : this->func) {
-		stream << "\tFUNC_ID: " << entry.id << '\n';
+		stream << "\tFUNC_ID: " << entry.index << '\n';
 		output_code(stream, entry.body);
-	}
-}
-
-void CodeGenerator::output_serialize(
-	std::ostream& stream, const std::vector<instruction_t>& buffer) {
-	for (size_t i = 0; i < buffer.size(); i++) {
-		const auto op = static_cast<opcode_t>(buffer[i]);
-
-		stream << op_to_str(op); 
-
-		if (op_have_operand(op)) {
-			i++;
-			assert(i < buffer.size());
-			stream << '\n' << buffer[i];
-		}
-
-		stream << '\n';
 	}
 }
 

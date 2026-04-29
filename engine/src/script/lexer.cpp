@@ -27,14 +27,6 @@ static const std::unordered_map<std::string, TokenKind> keywords = {
 	{"@sprite", TokenKind::DIRECT_SPRITE},
 	{"@use", TokenKind::DIRECT_USE},
 	{"@self", TokenKind::DIRECT_SELF},
-	{"@update", TokenKind::DIRECT_UPDATE},
-	{"@collide", TokenKind::DIRECT_COLLIDE},
-	{VOID_T_LEX, TokenKind::VOID_T},
-	{INT_T_LEX, TokenKind::INT_T},
-	{FLOAT_T_LEX, TokenKind::FLOAT_T},
-	{BOOL_T_LEX, TokenKind::BOOL_T},
-	{STRING_T_LEX, TokenKind::STRING_T},
-	{SPRITE_T_LEX, TokenKind::SPRITE_T},
 	{CMD_SPAWN_LEX, TokenKind::COMMAND},
 	{CMD_DESPAWN_LEX, TokenKind::COMMAND},
 	{CMD_UP_LEX, TokenKind::COMMAND},
@@ -44,8 +36,6 @@ static const std::unordered_map<std::string, TokenKind> keywords = {
 	{CMD_GOTO_LEX, TokenKind::COMMAND},
 	{CMD_SHOW_LEX, TokenKind::COMMAND},
 	{CMD_WAIT_LEX, TokenKind::COMMAND},
-	{CMD_UPDATE_LEX, TokenKind::COMMAND},
-	{CMD_COLLIDE_LEX, TokenKind::COMMAND},
 };
 
 bool Lexer::lex() {

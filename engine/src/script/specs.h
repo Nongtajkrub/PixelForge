@@ -25,8 +25,6 @@ typedef u16 word_t;
 #define CMD_DESPAWN_LEX "DESPAWN"
 #define CMD_SHOW_LEX "SHOW"
 #define CMD_WAIT_LEX "WAIT"
-#define CMD_UPDATE_LEX "UPDATE"
-#define CMD_COLLIDE_LEX "COLLIDE"
 
 // IDs for each commands.
 typedef enum : u8 {
@@ -39,8 +37,6 @@ typedef enum : u8 {
 	CID_DESPAWN,
 	CID_SHOW,
 	CID_WAIT,
-	CID_UPDATE,
-	CID_COLLIDE,
 } command_id_t;
 
 // Built in types lexemes.
@@ -48,7 +44,7 @@ typedef enum : u8 {
 #define INT_T_LEX "int"
 #define FLOAT_T_LEX "float"
 #define BOOL_T_LEX "bool"
-#define STRING_T_LEX "str"
+#define STR_T_LEX "str"
 #define SPRITE_T_LEX "Sprite"
 
 // Builtin property lexemes.

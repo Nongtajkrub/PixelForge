@@ -110,49 +110,15 @@ const char* token_kind_as_str(TokenKind kind) {
 	case TokenKind::LET: return "LET";
 	case TokenKind::FUNC: return "FUNC";
 	case TokenKind::END: return "END";
-
-	case TokenKind::VOID_T: return "VOID_T";
-	case TokenKind::INT_T: return "INT_T";
-	case TokenKind::FLOAT_T: return "FLOAT_T";
-	case TokenKind::BOOL_T: return "BOOL_T";
-	case TokenKind::STRING_T: return "STRING_T";
-	case TokenKind::SPRITE_T: return "SPRITE_T";
 	
 	case TokenKind::DIRECT_SPRITE: return "DIRECT_SPRITE";
 	case TokenKind::DIRECT_USE: return "DIRECT_USE";
 	case TokenKind::DIRECT_SELF: return "DIRECT_SELF";
-	case TokenKind::DIRECT_UPDATE: return "DIRECT_UPDATE";
-	case TokenKind::DIRECT_COLLIDE: return "DIRECT_COLLIDE";
 
 	case TokenKind::COMMAND: return "COMMAND";
     }
 
     return "UNKNOWN_TOKEN";
-}
-
-TokenKind token_to_type(TokenKind kind) {
-	switch (kind) {
-	case TokenKind::STRING_LIT: return TokenKind::STRING_T;
-	case TokenKind::INTEGER_LIT: return TokenKind::INT_T;
-	case TokenKind::FLOAT_LIT: return TokenKind::FLOAT_T;
-	case TokenKind::TRUE:
-	case TokenKind::FALSE:
-		return TokenKind::BOOL_T;
-	default: 
-		LOG_ERR("This TokenKind can not be interpret as a type");
-		exit(1);
-	}
-}
-
-TokenKind property_to_type(char prop) {
-	switch (prop) {
-	case PROP_Y_LEX:
-	case PROP_X_LEX:
-		return TokenKind::INT_T;
-	default:
-		LOG_ERR("Property does not exist.");
-		exit(1);
-	}
 }
 
 bool token_to_boolean(TokenKind kind) {
@@ -162,7 +128,7 @@ bool token_to_boolean(TokenKind kind) {
 	case TokenKind::TRUE: return true;
 	case TokenKind::FALSE: return false;
 	default: 
-		LOG_ERR("This token can't be convert to boolean");
+		BUG("This token can't be convert to boolean");
 		exit(1);
 	}
 }
@@ -207,33 +173,6 @@ bool token_is_directive(TokenKind kind) {
 	switch (kind) {
 	case TokenKind::DIRECT_SPRITE:
 	case TokenKind::DIRECT_USE:
-		return true;
-	default:
-		return false;
-	}
-}
-
-
-bool token_is_value_type(TokenKind kind) {
-	switch (kind) {
-	case TokenKind::INT_T:
-	case TokenKind::FLOAT_T:
-	case TokenKind::BOOL_T:
-	case TokenKind::STRING_T:
-		return true;
-	default:
-		return false;
-	}
-}
-
-bool token_is_type(TokenKind kind) {
-	if (token_is_value_type(kind)) {
-		return true;
-	}
-
-	switch (kind) {
-	case TokenKind::VOID_T:
-	case TokenKind::SPRITE_T:
 		return true;
 	default:
 		return false;

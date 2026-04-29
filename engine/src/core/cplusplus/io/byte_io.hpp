@@ -2,6 +2,7 @@
 
 #include "../types.hpp"
 
+#include <algorithm>
 #include <cstddef>
 #include <span>
 #include <type_traits>
@@ -18,6 +19,13 @@ requires std::is_trivially_copyable_v<T>
 void push_bytes(std::vector<u8>& dest, T data) {
 	const auto bytes = reinterpret_cast<const char*>(&data);
 	dest.insert(dest.end(), bytes, bytes + sizeof(T));
+}
+
+template<typename T>
+requires std::is_trivially_copyable_v<T>
+void replace_bytes(std::vector<u8>& dest, size_t n, T data) {
+	const auto bytes = reinterpret_cast<const char*>(&data);
+	std::copy(bytes, bytes + sizeof(T), dest.begin() + n);
 }
 
 } // namespace core

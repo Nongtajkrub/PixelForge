@@ -58,11 +58,6 @@ DiagnosticKind resolve_diag_expect_kind(TokenKind kind) {
 	case TokenKind::ARROW: return DiagnosticKind::EXPECTED_ARROW;
 	case TokenKind::COMMA: return DiagnosticKind::EXPECTED_COMMA;
 	case TokenKind::INTEGER_LIT: return DiagnosticKind::EXPECTED_INTEGER;
-	case TokenKind::INT_T: return DiagnosticKind::EXPECTED_INTEGER;
-	case TokenKind::FLOAT_T: return DiagnosticKind::EXPECTED_FLOAT;
-	case TokenKind::BOOL_T: return DiagnosticKind::EXPECTED_BOOL;
-	case TokenKind::STRING_T: return DiagnosticKind::EXPECTED_STRING; 
-	case TokenKind::SPRITE_T: return DiagnosticKind::EXPECTED_SPRITE; 
 	case TokenKind::COMMAND: return DiagnosticKind::EXPECTED_COMMAND;
 	case TokenKind::DIRECT_SPRITE: return DiagnosticKind::EXPECTED_SPRITE_DIRECT;
 	case TokenKind::RANGE_OP: return DiagnosticKind::EXPECTED_RANGE_OP;

@@ -1,12 +1,13 @@
 #pragma once
 
 #include "../core/cplusplus/types.hpp"
+#include "code_generator.hpp"
+#include "const_pool.hpp"
 
 #include <vector>
-#include <span>
 
 namespace scr {
 
-std::vector<u8> pack(std::span<const u8> cpool, std::span<const u8> code);
+std::vector<u8> pack(const ConstPool& cpool, const CodeGenerator& code_gen);
 
 } // namespace scr

@@ -1,13 +1,13 @@
 #pragma once
 
-#include "../core/cplusplus/container/bump_arena.hpp"
 #include "../core/cplusplus/utilities/unique_string.hpp"
+#include "../core/cplusplus/container/bump_arena.hpp"
 #include "symbol_table.hpp"
 #include "const_pool.hpp"
-#include "token.hpp"
 #include "diagnostic.hpp"
 #include "location.hpp"
 #include "pattern.hpp"
+#include "token.hpp"
 #include "ast.hpp"
 #include "specs.h"
 
@@ -60,24 +60,6 @@ private:
 		{CMD_DESPAWN_LEX, CID_DESPAWN},
 		{CMD_SHOW_LEX, CID_SHOW},
 		{CMD_WAIT_LEX, CID_WAIT},
-		{CMD_UPDATE_LEX, CID_UPDATE},
-		{CMD_COLLIDE_LEX, CID_COLLIDE},
-	};
-
-	using CommandArgsMap =
-		std::unordered_map<command_id_t, std::vector<TokenKind>>;
-	inline static const CommandArgsMap command_args = {
-		{CID_UP, {TokenKind::INT_T}},
-		{CID_DOWN, {TokenKind::INT_T}},
-		{CID_RIGHT, {TokenKind::INT_T}},
-		{CID_LEFT, {TokenKind::INT_T}},
-		{CID_GOTO, {TokenKind::INT_T, TokenKind::INT_T}},
-		{CID_SPAWN, {}},
-		{CID_DESPAWN, {}},
-		{CID_SHOW, {}},
-		{CID_WAIT, {TokenKind::INT_T}},
-		{CID_UPDATE, {TokenKind::VOID_T}},
-		{CID_COLLIDE, {TokenKind::SPRITE_T, TokenKind::VOID_T}},
 	};
 
 	TokenStream tokens;
@@ -109,7 +91,6 @@ private:
 	std::optional<ASTNode> parse_return_stmt();
 	std::optional<ASTNode> parse_jump_stmt();
 	std::optional<ASTNode> parse_cmd_stmt();
-	std::optional<ASTNode> parse_directive();
 
 	std::optional<ASTNode> parse_expr(TokenKind terminator);
 	std::optional<ASTNode> pratt_nud();
@@ -122,12 +103,17 @@ private:
 	bool parse_func_args(std::vector<ASTNode>& buf, IdenAttr* func_attr);
 	bool parse_func_call_args(
 		std::vector<ASTNode>& buf,
-		const std::vector<TokenKind>& arg_types, TokenKind terminator);
+		const std::vector<TypeAttr*>& arg_types, TokenKind terminator);
 	bool ensure_func_returns(const BlockStmt* body);
+
+	std::vector<TypeAttr*> get_command_args(command_id_t id);
 
 	// Resolve data type of expression, take source location to emit errors.
 	// Optional ltype, typically passed internally during binary expr parsing.
-	std::optional<TokenKind> resolve_expr_type(ASTNode expr, Location err_loc);
+	TypeAttr* resolve_expr_type(ASTNode expr, Location err_loc);
+
+	IdenAttr* lookup_type_iden(IdentifierId id, Location err_loc);
+	bool ensure_expr_type(const ASTNode& expr, TypeAttr* type, Location err_loc);
 
 	inline void emit(DiagnosticKind kind, const Token& token) {
 		Diagnostic(kind, token).emit(this->err_stream);
@@ -142,51 +128,57 @@ private:
 	template<typename T>
 	requires (std::is_same_v<T, VarDeclarationStmt*> 
 		|| std::is_same_v<T, FuncArgument*>)
-	std::optional<TokenKind> parse_type_annotation(
-		T node, bool func_arg = false) {
+	TypeAttr* parse_type_annotation(T node, bool func_arg = false) {
 		// Ensure correct type annotation syntax.
 		if (!Pattern<
 				TokenStream,
 				TokenKind::IDENTIFIER,
 				TokenKind::COLON>
 					::match_peek(this->tokens, this->err_stream)) {
-			return std::nullopt;
+			return nullptr;
 		}
 
-		const auto id =
-			this->symbols.intern_iden(*(this->tokens.advance().lexeme));
+		const auto iden_id =
+			this->symbols.intern(*(this->tokens.advance().lexeme));
 
 		// Check for varaible redeclaration.
-		if (this->symbols.contains_in_scope(id)) {
+		if (this->symbols.contains_in_scope(iden_id)) {
 			emit(DiagnosticKind::VARIABLE_REDECLARATION, this->tokens.prev());
-			return std::nullopt;
+			return nullptr;
 		}
 
 		this->tokens.advance(); // Skip colon (':').
-		
+
+		const auto type_token = this->tokens.advance();
+		const auto type_id = this->symbols.intern(*type_token.lexeme);
+		const auto type = lookup_type_iden(type_id, type_token.location);
+		if (!type) return nullptr;
+
 		// Ensure parsed type is a value type.
-		if (!token_is_value_type(this->tokens.peek().kind)) {
+		if (!type->get_data<TypeAttr>().is_value) {
 			emit(DiagnosticKind::EXPECTED_VALUE_TYPE, this->tokens.peek());
-			return std::nullopt;
+			return nullptr;
 		}
-		const auto& type_token = this->tokens.advance();
-		node->type = new_primary_node(ASTNodeKind::TYPE, type_token); 
+
+		node->type = new_identifier_node(type_id, type); 
 
 		if constexpr (std::same_as<std::decay_t<T>, VarDeclarationStmt*>) {
 			node->identifier =
 				new_identifier_node(
-					id,
+					iden_id,
 					this->symbols.new_identifier(
-						id, IdenAttr(type_token.kind, VarAttr())));
+						iden_id,
+						IdenAttr(&type->get_data<TypeAttr>(), VarAttr())));
 		} else if constexpr (std::same_as<std::decay_t<T>, FuncArgument*>) {
 			node->identifier =
 				new_identifier_node(
-					id,
+					iden_id,
 					this->symbols.new_identifier(
-						id, IdenAttr(type_token.kind, ArgAttr())));
+						type_id,
+						IdenAttr(&type->get_data<TypeAttr>(), ArgAttr())));
 		}
 
-		return type_token.kind;
+		return &type->get_data<TypeAttr>();
 	}
 
 	inline bool ensure_iden_exist(IdentifierId id) {
@@ -194,38 +186,6 @@ private:
 			emit(DiagnosticKind::UNKNOWN_IDENTIFIER, this->tokens.peek()); 
 			return false;
 		}
-		return true;
-	}
-
-	inline bool ensure_iden_type(IdentifierId id, TokenKind type) {
-		assert(token_is_type(type));
-
-		if (const auto attr = this->symbols.lookup(id); attr) {
-			if (attr->get_type() != type) {
-				emit(DiagnosticKind::TYPE_ERROR, this->tokens.advance());
-				return false;
-			}
-		} else {
-			emit(DiagnosticKind::UNKNOWN_IDENTIFIER, this->tokens.advance());
-			return false;
-		}
-		return true;
-	}
-
-	// Take source location to emit errors.
-	inline bool ensure_expr_type(
-		const ASTNode& expr, TokenKind type, Location loc) {
-		assert(token_is_type(type));
-
-		if (const auto expr_type = resolve_expr_type(expr, loc)) {
-			if (*expr_type != type) {
-				emit(resolve_diag_expect_kind(type), loc);
-				return false;
-			}
-		} else {
-			return false;
-		}
-
 		return true;
 	}
 
@@ -247,7 +207,7 @@ private:
 		const std::string& symbol, IdenAttr* attr) {
 		auto node = this->arena.alloc<IdentifierExpr>();
 		node->kind = ASTNodeKind::IDENTIFIER;
-		node->id = this->symbols.intern_iden(symbol);
+		node->id = this->symbols.intern(symbol);
 		node->attr = attr;
 		return ASTNode(&node->kind);
 	}

@@ -5,10 +5,12 @@
 #include "../core/cplusplus/utilities/free_list_id.hpp"
 #include "../core/cplusplus/utilities/id_interner.hpp"
 #include "../core/cplusplus/utilities/variant.hpp"
-#include "token.hpp"
+#include "../core/cplusplus/io/log.hpp"
 #include "specs.h"
 
 #include <unordered_map>
+#include <type_traits>
+#include <optional>
 #include <concepts>
 #include <cassert>
 #include <cstddef>
@@ -22,16 +24,46 @@ using IdentifierId = u32;
 using VariableSlot = word_t;
 using ArgStackIndex = word_t;
 
+// Forward declaration.
+struct TypeAttr;
+
 struct VarAttr {
 	VariableSlot slot;
+	TypeAttr* type;
 };
 
 struct ArgAttr{
 	ArgStackIndex index;
+	TypeAttr* type;
+};
+
+enum class TypeId {
+	VOID,
+	INT,
+	FLOAT,
+	BOOL,
+	STR,
+	SPRITE
+};
+
+struct TypeAttr {
+	TypeId id;
+	bool is_value;
+
+	// Contains function ID for each routines methods.
+	struct {
+		std::optional<word_t> add = std::nullopt;
+		std::optional<word_t> minus = std::nullopt;
+		std::optional<word_t> eq = std::nullopt;
+		std::optional<word_t> size = std::nullopt;
+	} routines;
+
+	std::optional<std::vector<VarAttr>> properties = std::nullopt;
 };
 
 struct FuncAttr {
-	std::vector<TokenKind> args_types;
+	std::vector<TypeAttr*> args_types;
+	TypeAttr* type;
 
 	inline size_t arg_n() const {
 		return this->args_types.size();
@@ -39,30 +71,55 @@ struct FuncAttr {
 };
 
 template <typename T>
-concept AttrType = 
-	std::same_as<T, VarAttr> 
-		|| std::same_as<T, ArgAttr> || std::same_as<T, FuncAttr>;
+concept AttrType = std::same_as<T, TypeAttr> 
+	|| std::same_as<T, VarAttr> 
+	|| std::same_as<T, ArgAttr> || std::same_as<T, FuncAttr>;
 
 class IdenAttr {
 public:
 	IdenAttr() = default;
+
+	// Constructor for identifiers with a type.
 	template <typename T>
-	requires AttrType<T>
-	IdenAttr(TokenKind type, T&& attr) :
-		type(type), data(std::forward<T>(attr))
-	{
-		if (type != TokenKind::UNKNOWN) {
-			assert(token_is_type(type));
+	requires (AttrType<std::remove_cvref_t<T>> 
+		&& !std::is_same_v<std::remove_cvref_t<T>, TypeAttr>)
+	IdenAttr(TypeAttr* type, T&& attr) :
+		data(std::forward<T>(attr))
+	{ 
+		using U = std::remove_cvref_t<T>;
+		
+		if constexpr (std::same_as<U, VarAttr>) {
+			get_data<VarAttr>().type = type;
+		} else if constexpr (std::same_as<U, ArgAttr>) {
+			get_data<ArgAttr>().type = type;
+		} else if constexpr (std::same_as<U, FuncAttr>) {
+			get_data<FuncAttr>().type = type;
+		} else {
+			BUG("Assigning type for identifier not implemented.");
+			exit(1);
 		}
 	}
 
-	inline void set_type(TokenKind type) {
-		assert(token_is_type(type));
-		this->type = type;
-	}
+	// Constructor for identifier with no type.
+	template <typename T>
+	requires std::is_same_v<std::remove_cvref_t<T>, TypeAttr>
+	IdenAttr(T&& attr) :
+		data(std::forward<T>(attr))
+	{ }
 
-	inline TokenKind get_type() const {
-		return this->type;
+	inline TypeAttr* get_type() {
+		if (this->data.is<VarAttr>()) {
+			return this->data.get<VarAttr>().type;
+		} else if (this->data.is<ArgAttr>()) {
+			return this->data.get<ArgAttr>().type;
+		} else if (this->data.is<FuncAttr>()) {
+			return this->data.get<FuncAttr>().type;
+		} else if (this->data.is<TypeAttr>()) {
+			return &this->data.get<TypeAttr>();
+		} else {
+			BUG("Unimplemented get_type for IdenAttr.");
+			exit(1);
+		}
 	}
 
 	template <typename T>
@@ -86,8 +143,7 @@ public:
 	bool in_scope = true;
 
 private:
-	TokenKind type;
-	Variant<VarAttr, ArgAttr, FuncAttr> data;
+	Variant<VarAttr, ArgAttr, FuncAttr, TypeAttr> data;
 };
 
 enum class ScopeKind {
@@ -115,25 +171,15 @@ struct Scope {
 };
  
 class SymbolTable {
-private:
-	// Identifier table stored in a cursor stack to manage scopes while
-	// preserving identifier attributes, ensuring references remain valid.	
-	CursorStack<Scope> scopes;
-
-	// Assigns a unique slot to each identifier, identical share same slot.
-	IdInterner<std::string, IdentifierId> iden_interner; 
-
-	// Generate ID for identifiers.
-	IncrementalIdGen<IdentifierId> iden_id_generator = 
-		IncrementalIdGen<IdentifierId>(0);
-
-	// Generate slot for variable identifiers.
-	FreeListIdGen<VariableSlot> var_slot_generator =
-		FreeListIdGen<VariableSlot>(0);
-
-	// Generate slot for function arguments.
-	IncrementalIdGen<ArgStackIndex> stack_index_generator =
-		IncrementalIdGen<ArgStackIndex>(0);
+public:
+	struct {
+		TypeAttr* ty_void;
+		TypeAttr* ty_int;
+		TypeAttr* ty_float;
+		TypeAttr* ty_bool;
+		TypeAttr* ty_str;
+		TypeAttr* ty_sprite;
+	} types;
 
 public:
 	SymbolTable();
@@ -151,12 +197,13 @@ public:
 	// Look up a symbol and return the reference to its attr.
 	IdenAttr* lookup(IdentifierId id);
 
+public:
 	inline IdenAttr* lookup_global(IdentifierId id) {
 		return lookup(id, this->scopes.bottom());
 	}
 
 	// Intern an identifier to ID.
-	inline IdentifierId intern_iden(const std::string& iden) {
+	inline IdentifierId intern(const std::string& iden) {
 		auto [id, _] = this->iden_interner.intern(iden);
 		return id;
 	}
@@ -211,6 +258,26 @@ public:
 	}
 
 private:
+	// Identifier table stored in a cursor stack to manage scopes while
+	// preserving identifier attributes, ensuring references remain valid.	
+	CursorStack<Scope> scopes;
+
+	// Assigns a unique slot to each identifier, identical share same slot.
+	IdInterner<std::string, IdentifierId> iden_interner; 
+
+	// Generate ID for identifiers.
+	IncrementalIdGen<IdentifierId> iden_id_generator = 
+		IncrementalIdGen<IdentifierId>();
+
+	// Generate slot for variable identifiers.
+	FreeListIdGen<VariableSlot> var_slot_generator =
+		FreeListIdGen<VariableSlot>();
+
+	// Generate slot for function arguments.
+	IncrementalIdGen<ArgStackIndex> stack_index_generator =
+		IncrementalIdGen<ArgStackIndex>();
+
+private:
 	inline IdenAttr* new_identifier(
 		IdentifierId id, IdenAttr attr, Scope& scope) {
 		if (attr.kind_is<VarAttr>()) {
@@ -218,8 +285,6 @@ private:
 		} else if (attr.kind_is<ArgAttr>()) {
 			attr.get_data<ArgAttr>().index =
 				this->stack_index_generator.generate();
-		} else if (attr.kind_is<FuncAttr>()) {
-			attr.get_data<FuncAttr>().args_types = std::vector<TokenKind>{};
 		}
 
 		auto [it, _] = scope.table.try_emplace(id);

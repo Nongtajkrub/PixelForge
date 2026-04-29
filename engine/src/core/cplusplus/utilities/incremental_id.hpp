@@ -20,7 +20,7 @@ private:
 	T prev;
 
 public:
-	IncrementalIdGen(T start) :
+	IncrementalIdGen(T start = 0) :
 		start(start), prev(start)
 	{ }
 

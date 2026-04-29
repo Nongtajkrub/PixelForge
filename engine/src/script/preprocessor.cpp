@@ -1,7 +1,7 @@
 #include "preprocessor.hpp"
 
-#include "pattern.hpp"
 #include "symbol_table.hpp"
+#include "pattern.hpp"
 
 namespace scr {
 
@@ -23,12 +23,6 @@ bool Preprocessor::process_direct() {
 		return process_use_direct();
 	case TokenKind::DIRECT_SELF:
 		process_self_direct();
-		return true;
-	case TokenKind::DIRECT_UPDATE:
-		process_update_direct();
-		return true;
-	case TokenKind::DIRECT_COLLIDE:
-		process_collide_direct();
 		return true;
 	default:
 		this->tokens.advance();
@@ -54,8 +48,8 @@ bool Preprocessor::process_sprite_direct() {
 	this->script_sprite = *(this->tokens.peek().lexeme);
 	// Add sprite identifier to global scope.
 	this->symbols.new_identifier_global(
-		this->symbols.intern_iden(*(this->tokens.skip().lexeme)),
-		IdenAttr(TokenKind::SPRITE_T, VarAttr()));
+		this->symbols.intern(*(this->tokens.skip().lexeme)),
+		IdenAttr(this->symbols.types.ty_sprite, VarAttr()));
 
 	// Skip semicolon.
 	this->tokens.skip();
@@ -78,8 +72,8 @@ bool Preprocessor::process_use_direct() {
 
 	// Add sprite identifier to global scope.
 	this->symbols.new_identifier_global(
-		this->symbols.intern_iden(*(this->tokens.skip().lexeme)),
-		IdenAttr(TokenKind::SPRITE_T, VarAttr()));
+		this->symbols.intern(*(this->tokens.skip().lexeme)),
+		IdenAttr(this->symbols.types.ty_sprite, VarAttr()));
 
 	// Skip semicolon.
 	this->tokens.skip();
@@ -92,38 +86,6 @@ void Preprocessor::process_self_direct() {
 		Token(
 			TokenKind::IDENTIFIER,
 			this->script_sprite, this->tokens.peek().location)
-	});
-}
-
-void Preprocessor::process_update_direct() {
-	const auto loc = this->tokens.peek().location;
-	this->tokens.replace_and_insert({
-		Token(TokenKind::ARROW, loc),
-		Token(TokenKind::VOID_T, loc),
-
-		Token(TokenKind::LEFT_PAREN, loc),
-
-		Token(TokenKind::IDENTIFIER, "dt", loc),
-		Token(TokenKind::COLON, loc),
-		Token(TokenKind::FLOAT_T, loc),
-
-		Token(TokenKind::RIGHT_PAREN, loc),
-	});
-}
-
-void Preprocessor::process_collide_direct() {
-	const auto loc = this->tokens.peek().location;
-	this->tokens.replace_and_insert({
-		Token(TokenKind::ARROW, loc),
-		Token(TokenKind::VOID_T, loc),
-
-		Token(TokenKind::LEFT_PAREN, loc),
-
-		Token(TokenKind::IDENTIFIER, "other", loc),
-		Token(TokenKind::COLON, loc),
-		Token(TokenKind::SPRITE_T, loc),
-
-		Token(TokenKind::RIGHT_PAREN, loc),
 	});
 }
 

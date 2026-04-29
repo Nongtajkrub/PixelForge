@@ -166,7 +166,7 @@ struct FuncDeclarationStmt {
 	
 	ASTNode identifier;
 	std::vector<ASTNode> args;
-	ASTNode type;
+	std::optional<ASTNode> type;
 
 	ASTNode body;
 };
