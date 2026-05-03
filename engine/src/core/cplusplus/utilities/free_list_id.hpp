@@ -22,7 +22,7 @@ public:
 
 	inline T generate() {
 		if (free_list.empty()) {
-			return counter++;
+			return this->counter++;
 		} else {
 			const auto id = free_list.back();
 			free_list.pop_back();

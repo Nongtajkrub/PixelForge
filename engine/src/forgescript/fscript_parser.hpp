@@ -1,0 +1,224 @@
+#pragma once
+
+#include "../core/cplusplus/utilities/unique_string.hpp"
+#include "../core/cplusplus/container/bump_arena.hpp"
+#include "fscript_symbol_table.hpp"
+#include "fscript_const_pool.hpp"
+#include "fscript_diagnostic.hpp"
+#include "fscript_location.hpp"
+#include "fscript_pattern.hpp"
+#include "fscript_token.hpp"
+#include "fscript_ast.hpp"
+#include "fscript_specs.h"
+
+#include <cassert>
+#include <cstddef>
+#include <functional>
+#include <optional>
+#include <type_traits>
+#include <vector>
+#include <ostream>
+
+namespace scr {
+
+using namespace core;
+
+class Parser {
+public:
+	Parser(
+		const std::span<Token> tokens,
+		SymbolTable& symbols,
+		ConstPool& cpool, BumpArena& arena, std::ostream& err_stream) :
+		tokens(tokens, err_stream),
+		symbols(symbols),
+		cpool(cpool),
+		arena(arena),
+		err_stream(err_stream)
+	{ }
+
+	bool parse();
+
+	inline const std::vector<ASTNode>& get_ast() {
+		return this->ast;
+	}
+
+	inline const ASTNode get_ast(size_t line) {
+		return this->ast[line];
+	}
+
+private:
+	using CommandIdsMap =
+		std::unordered_map<std::string, command_id_t>;
+	inline static const CommandIdsMap command_ids = {
+		{CMD_UP_LEX, CID_UP},
+		{CMD_DOWN_LEX, CID_DOWN},
+		{CMD_RIGHT_LEX, CID_RIGHT},
+		{CMD_LEFT_LEX, CID_LEFT},
+		{CMD_GOTO_LEX, CID_GOTO},
+		{CMD_SPAWN_LEX, CID_SPAWN},
+		{CMD_DESPAWN_LEX, CID_DESPAWN},
+		{CMD_SHOW_LEX, CID_SHOW},
+		{CMD_WAIT_LEX, CID_WAIT},
+	};
+
+	TokenStream tokens;
+
+	// Arena allocator for nodes.
+	BumpArena& arena;
+	SymbolTable& symbols;
+	ConstPool& cpool;
+
+	// The stream to output error to.
+	std::ostream& err_stream;
+
+	UniqueStringGenerator identifier_generator =
+		UniqueStringGenerator("__");
+
+	// Abstract Syntax Tree separated into each statements.
+	std::vector<ASTNode> ast;
+
+private:
+	std::optional<ASTNode> parse_block(
+		std::function<bool(TokenKind kind)> end_predicate);
+
+	std::optional<ASTNode> parse_stmt();
+
+	std::optional<ASTNode> parse_var_declaration_stmt();
+	std::optional<ASTNode> parse_func_declaration_stmt();
+	std::optional<ASTNode> parse_if_stmt();
+	std::optional<ASTNode> parse_for_stmt();
+	std::optional<ASTNode> parse_return_stmt();
+	std::optional<ASTNode> parse_jump_stmt();
+	std::optional<ASTNode> parse_cmd_stmt();
+
+	std::optional<ASTNode> parse_expr(TokenKind terminator);
+	std::optional<ASTNode> pratt_nud();
+	std::optional<ASTNode> pratt_led(Token op, ASTNode left, u8 min_bp);
+	std::optional<ASTNode> pratt_parser(u8 min_bp = 0);
+
+	std::optional<ASTNode> parse_atomic(ASTNodeKind kind);
+
+	std::optional<ASTNode> parse_inter_declaration_stmt();
+
+	// Helper methods for parsing functions.
+	bool parse_func_args(std::vector<ASTNode>& buf, IdenAttr* func_attr);
+	bool parse_func_call_args(
+		std::vector<ASTNode>& buf,
+		const std::vector<TypeAttr*>& arg_types, TokenKind terminator);
+	bool ensure_func_returns(const BlockStmt* body);
+
+	std::vector<TypeAttr*> get_command_args(command_id_t id);
+
+	// Resolve data type of expression, take source location to emit errors.
+	// Optional ltype, typically passed internally during binary expr parsing.
+	TypeAttr* resolve_expr_type(ASTNode expr, Location err_loc);
+
+	IdenAttr* lookup_type_iden(IdentifierId id, Location err_loc);
+	bool ensure_expr_type(const ASTNode& expr, TypeAttr* type, Location err_loc);
+
+	inline void emit(DiagnosticKind kind, const Token& token) {
+		Diagnostic(kind, token).emit(this->err_stream);
+	}
+
+	inline void emit(DiagnosticKind kind, Location loc) {
+		Diagnostic(kind, loc).emit(this->err_stream);
+	}
+
+	// Parse `IDENTIFIER : "type"`, only work for variable declaration and
+	// function arguments. Return the type if success.
+	template<typename T>
+	requires (std::is_same_v<T, VarDeclarationStmt> 
+		|| std::is_same_v<T, FuncArgument>)
+	TypeAttr* parse_type_annotation(T* node) {
+		// Ensure correct type annotation syntax.
+		if (!Pattern<
+				TokenStream,
+				TokenKind::IDENTIFIER,
+				TokenKind::COLON,
+				TokenKind::IDENTIFIER>
+					::match_peek(this->tokens, this->err_stream)) {
+			return nullptr;
+		}
+
+		const auto iden_id =
+			this->symbols.intern(*(this->tokens.advance().lexeme));
+
+		// Check for varaible redeclaration.
+		if (this->symbols.contains_in_scope(iden_id)) {
+			emit(DiagnosticKind::VARIABLE_REDECLARATION, this->tokens.prev());
+			return nullptr;
+		}
+
+		this->tokens.advance(); // Skip colon (':').
+
+		const auto type_token = this->tokens.advance();
+		const auto type_id = this->symbols.intern(*type_token.lexeme);
+		const auto type = lookup_type_iden(type_id, type_token.location);
+		if (!type) return nullptr;
+
+		// Ensure parsed type is a value type.
+		if (!type->get_data<TypeAttr>().is_value) {
+			emit(DiagnosticKind::EXPECTED_VALUE_TYPE, this->tokens.peek());
+			return nullptr;
+		}
+
+		node->type = new_identifier_node(type_id, type); 
+
+		node->identifier =
+			new_identifier_node(
+				iden_id,
+				this->symbols.new_identifier(
+					iden_id,
+					IdenAttr(&type->get_data<TypeAttr>(), VarAttr())));
+
+		return &type->get_data<TypeAttr>();
+	}
+
+	inline bool ensure_iden_exist(IdentifierId id) {
+		if (!this->symbols.contains(id)) {
+			emit(DiagnosticKind::UNKNOWN_IDENTIFIER, this->tokens.peek()); 
+			return false;
+		}
+		return true;
+	}
+
+	template <typename  T>
+	inline T* new_node(ASTNodeKind kind) {
+		auto node = this->arena.alloc<T>();
+		node->kind = kind;
+		return node;
+	}
+
+	inline ASTNode new_primary_node(ASTNodeKind kind, const Token& token) {
+		auto node = this->arena.alloc<PrimaryExpr>();
+		node->kind = kind;
+		node->token = token;
+		return ASTNode(&node->kind);
+	}
+
+	inline ASTNode new_identifier_node(
+		const std::string& symbol, IdenAttr* attr) {
+		auto node = this->arena.alloc<IdentifierExpr>();
+		node->kind = ASTNodeKind::IDENTIFIER;
+		node->id = this->symbols.intern(symbol);
+		node->attr = attr;
+		return ASTNode(&node->kind);
+	}
+
+	inline ASTNode new_identifier_node(IdentifierId id, IdenAttr* attr) {
+		auto node = this->arena.alloc<IdentifierExpr>();
+		node->kind = ASTNodeKind::IDENTIFIER;
+		node->id = id;
+		node->attr = attr;
+		return ASTNode(&node->kind);
+	}
+
+	inline ASTNode new_literal_node(ConstIndex index) {
+		auto node = this->arena.alloc<LiteralExpr>();
+		node->kind = ASTNodeKind::LITERAL;
+		node->index = index;
+		return ASTNode(&node->kind);
+	}
+};
+
+} // namespace scr

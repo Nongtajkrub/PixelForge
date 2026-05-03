@@ -28,6 +28,10 @@ public:
 		return this->prev++;
 	}
 
+	inline T current() {
+		return this->prev;
+	}
+
 	inline void revert() {
 		if constexpr (std::same_as<T, u8> 
 			|| std::same_as<T, u16> 
@@ -36,6 +40,16 @@ public:
 		}
 
 		this->prev--;
+	}
+
+	inline void revert(T n) {
+		if constexpr (std::same_as<T, u8> 
+			|| std::same_as<T, u16> 
+			|| std::same_as<T, u32> || std::same_as<T, u64>) {
+			assert(this->prev > n);
+		}
+
+		this->prev -= n;
 	}
 
 	inline void reset() {

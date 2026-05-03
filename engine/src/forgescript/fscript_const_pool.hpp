@@ -1,0 +1,83 @@
+#pragma once
+
+#include "../core/cplusplus/utilities/id_interner.hpp"
+#include "../core/cplusplus/utilities/variant.hpp"
+#include "../core/cplusplus/container/pool.hpp"
+#include "../core/cplusplus/types.hpp"
+#include "../core/c/io/log.h"
+#include "fscript_token.hpp"
+#include "fscript_specs.h"
+
+#include <cassert>
+#include <cstddef>
+#include <functional>
+
+namespace scr {
+
+using namespace core;
+using ConstIndex = word_t;
+using StringIndex = word_t;
+
+struct Const {
+	Variant<i32, f32> data;
+
+	explicit Const(const Token& literal);
+
+	bool operator==(const Const& other) const {
+		if (this->data.is<i32>()) {
+			return this->data.get<i32>() == other.data.get<i32>();
+		} else if (this->data.is<f32>()) {
+			return this->data.get<f32>() == other.data.get<f32>();
+		} 
+
+		BUG("Unimplemented eq operator Const.");
+		exit(1);
+	}
+};
+
+} // namespace scr 
+
+template <>
+struct std::hash<scr::Const> {
+	size_t operator()(const scr::Const& value) const {
+		size_t h = 0;
+
+		if (value.data.is<i32>()) {
+			h = std::hash<i32>{ }(value.data.get<i32>());
+		} else if (value.data.is<f32>()) {
+			h = std::hash<f32>{ }(value.data.get<f32>());
+		} else {	
+			BUG("Unimplemented hash Const.");
+			exit(1);
+		}
+
+		return (h << 1);;
+	}
+};
+
+namespace scr {
+
+class ConstPool {
+private:
+	Pool<Const> pool;
+	// Assigns a unique index to each const; identical share same index.
+	IdInterner<Const, ConstIndex> const_index; 
+
+public:
+	ConstPool() :
+		const_index([this]() -> ConstIndex {
+			return this->pool.size();
+		})
+	{ }
+
+	// Push a const into pool if it does not already exist and return const index.
+	ConstIndex intern(const Const& value);
+
+	void serialize(std::vector<u8>& buf) const;
+
+	inline const Const& get(ConstIndex index) const {
+		return this->pool[index];
+	}
+};
+
+} // namespace scr
