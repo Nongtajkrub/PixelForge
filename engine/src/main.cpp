@@ -1,3 +1,4 @@
+#include "core/c/io/log.h"
 #include "forgescript/vm/fscript_interpreter.h"
 #include "forgescript/fscript_compiler.hpp"
 

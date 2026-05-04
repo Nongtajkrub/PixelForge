@@ -125,13 +125,13 @@ private:
 	inline void generate_load(const IdentifierExpr* node) {
 		assert(node->attr->kind_is<VarAttr>());
 		push(OP_LOAD);
-		push(node->attr->get_data<VarAttr>().slot);
+		push(node->attr->get_data<VarAttr>().offset);
 	}
 
 	inline void generate_store(const IdentifierExpr* node) {
 		assert(node->attr->kind_is<VarAttr>());
 		push(OP_STORE);
-		push(node->attr->get_data<VarAttr>().slot);
+		push(node->attr->get_data<VarAttr>().offset);
 	}
 
 	inline void generate_load_prop(const DotExpr* node) {

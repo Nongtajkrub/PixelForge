@@ -1,4 +1,5 @@
 #include "fscript_ast.hpp"
+#include "fscript_packer.hpp"
 
 #include <cassert>
 
@@ -20,6 +21,7 @@ const char* ASTNode::kind_as_str() const {
 	case ASTNodeKind::CALL: return "CALL";
 	case ASTNodeKind::DOT: return "DOT";
 	case ASTNodeKind::RANGE: return "RANGE";
+	case ASTNodeKind::CONSTRUCTOR: return "CONSTRUCTOR";
 	case ASTNodeKind::COMMAND: return "COMMAND";
 	case ASTNodeKind::LITERAL: return "LITERAL";
 	case ASTNodeKind::IDENTIFIER: return "IDENTIFIER";
@@ -219,6 +221,19 @@ void ASTNode::output(std::ostream &stream, const u32 level) const {
 		if (node->step) {
 			stream << indent << "step\n";
 			(*node->step).output(stream, level + 1);
+		}
+
+		break;
+	}
+	case ASTNodeKind::CONSTRUCTOR: {
+		auto node = reinterpret_cast<const ConstructorExpr*>(this->adr);
+
+		stream << indent << "type\n";
+		node->type.output(stream, level + 1);
+
+		stream << indent << "args (" << node->args.size() << "):\n";
+		for (const auto& arg : node->args) {
+			arg.output(stream, level + 1);
 		}
 
 		break;

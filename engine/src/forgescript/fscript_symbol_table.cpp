@@ -6,16 +6,26 @@
 
 namespace scr {
 
+std::vector<TypeAttr*> TypeAttr::get_prop_types() const {
+	std::vector<TypeAttr*> types;
+	types.reserve(this->properties.size());
+
+	for (const auto& prop : this->properties) {
+		types.push_back(prop.type);
+	}
+
+	return types;
+}
+
 SymbolTable::SymbolTable() :
 	iden_interner([this]() -> IdentifierId {
 		return this->iden_id_generator.generate(); 
 	})
 {
-	// Global scope
 	enter_scope(ScopeKind::GLOBAL);
 
 	// Setup types.
-	this->types.ty_int = 
+	this->types.ty_void = 
 		&new_identifier_global(
 			intern(VOID_T_LEX),
 			IdenAttr(construct_void_attr()))->get_data<TypeAttr>();
@@ -58,14 +68,10 @@ void SymbolTable::leave_scope() {
 
 		if (attr.in_scope) {
 			attr.in_scope = false;
-
-			// RAII Clean up stack.
-			if (attr.kind_is<VarAttr>()) {
-				this->stack_slot_generator.revert();
-			}
 		}
 	}
 	
+	this->scopes.top().stack_offset_gen.reset();
 	this->scopes.rewind();
 }
 
@@ -118,7 +124,7 @@ IdenAttr* SymbolTable::lookup(IdentifierId id) {
 IdenAttr* SymbolTable::new_identifier(
 	IdentifierId id, IdenAttr attr, Scope& scope) {
 	if (attr.kind_is<VarAttr>()) {
-		attr.get_data<VarAttr>().slot = this->stack_slot_generator.generate();
+		attr.get_data<VarAttr>().offset = scope.stack_offset_gen.generate();
 	} else if (attr.kind_is<TypeAttr>()) {
 		attr.get_data<TypeAttr>().id = id;
 	}

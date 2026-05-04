@@ -19,18 +19,19 @@
 namespace scr {
 
 using namespace core;
+// A unique ID for each identifier, identical share same ID.
 using IdentifierId = u32;
-using PropOffset = u16;
-using VariableSlot = word_t;
+
+// The offset between where the property is store and the start of property list.
+using PropOffset = word_t;
+
+// The offset between where the variable is store and the start of the stack.
+using StackOffset = word_t;
 
 // Forward declaration.
 struct TypeAttr;
 
-struct VarAttr{
-	VariableSlot slot;
-	TypeAttr* type;
-};
-
+// Wont appear in symbol table, only use in TypeAttr.
 struct PropAttr {
 	// Properties wont be insert into the table so they store their own ID.
 	IdentifierId id;
@@ -47,6 +48,8 @@ struct TypeAttr {
 	bool is_value;
 
 	std::vector<PropAttr> properties;
+
+	std::vector<TypeAttr*> get_prop_types() const;
 
 	inline PropAttr* get_prop(IdentifierId id) {
 		const auto it =
@@ -71,6 +74,11 @@ struct TypeAttr {
 	inline bool has_prop(IdentifierId id) {
 		return get_prop(id) != nullptr;
 	}
+};
+
+struct VarAttr{
+	StackOffset offset;
+	TypeAttr* type;
 };
 
 struct FuncAttr {
@@ -166,6 +174,10 @@ struct Scope {
 
 	// Owner of the scope if exist (Often a function).
 	IdenAttr* owner;
+
+	// For generating the stack offset of each variable, reset when leave scope.
+	IncrementalIdGen<StackOffset> stack_offset_gen = 
+		IncrementalIdGen<StackOffset>(0);
 	
 	// Owner of the scope if exist (Usually function).
 	// IdenAttr store in a stack to support identifier shadowing.
@@ -240,15 +252,11 @@ private:
 	IncrementalIdGen<IdentifierId> iden_id_generator = 
 		IncrementalIdGen<IdentifierId>();
 
-	// Assigns a unique slot to each identifier, identical share same slot.
+	// Assigns a unique ID to each identifier, identical share same ID.
 	IdInterner<std::string, IdentifierId> iden_interner =
 		IdInterner<std::string, IdentifierId>([this]() -> IdentifierId {
 			return this->iden_id_generator.generate(); 
 		});
-
-	// Generate slot for function arguments.
-	IncrementalIdGen<VariableSlot> stack_slot_generator =
-		IncrementalIdGen<VariableSlot>(0);
 
 private:
 	IdenAttr* new_identifier(

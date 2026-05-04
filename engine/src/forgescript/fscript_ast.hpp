@@ -28,6 +28,7 @@ enum class ASTNodeKind : u8 {
 	CALL,
 	DOT,
 	RANGE,
+	CONSTRUCTOR,
 
 	DIRECTIVE,
 	COMMAND,
@@ -123,6 +124,13 @@ struct RangeExpr {
 	ASTNode begin;
 	ASTNode end;
 	std::optional<ASTNode> step;
+};
+
+struct ConstructorExpr {
+	ASTNodeKind kind;
+
+	ASTNode type;
+	std::vector<ASTNode> args;
 };
 
 struct ReturnStmt {

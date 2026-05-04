@@ -456,6 +456,7 @@ static std::tuple<u8, u8> resolve_binding_power(TokenKind kind) {
 	case TokenKind::SLASH:
 		return {9, 10};
 	case TokenKind::LEFT_PAREN:
+	case TokenKind::LEFT_BRACE:
 		return {11, 12};
 	case TokenKind::DOT:
 		return {14, 13};
@@ -541,21 +542,41 @@ std::optional<ASTNode> Parser::pratt_led(Token op, ASTNode left, u8 min_bp) {
 		auto node = new_node<CallExpr>(ASTNodeKind::CALL);
 		node->identifier = left;
 
-		if (auto func_attr =
-				this->symbols.lookup(
-					reinterpret_cast<const IdentifierExpr*>(left.adr)->id)) {
-			if (!func_attr->kind_is<FuncAttr>()) {
-				emit(DiagnosticKind::EXPECTED_FUNCTION, op);
-				return std::nullopt;
-			}
+		const auto attr = reinterpret_cast<const IdentifierExpr*>(left.adr)->attr;
 
-			if (!parse_func_call_args(
-					node->args,
-					func_attr->get_data<FuncAttr>().args_types,
-					TokenKind::RIGHT_PAREN)) {
-				return std::nullopt;
-			}
-		} else {
+		if (!attr->kind_is<FuncAttr>()) {
+			emit(DiagnosticKind::EXPECTED_FUNCTION, op);
+			return std::nullopt;
+		}
+
+		if (!parse_func_call_args(
+				node->args,
+				attr->get_data<FuncAttr>().args_types, TokenKind::RIGHT_PAREN)) {
+			return std::nullopt;
+		}
+
+		return ASTNode(&node->kind);
+	}
+	// Parse constructor expression.
+	case TokenKind::LEFT_BRACE: {
+		if (*left.adr != ASTNodeKind::IDENTIFIER) {
+			emit(DiagnosticKind::EXPECTED_IDENTIFIER, op.location);
+			return std::nullopt;
+		}
+
+		auto node = new_node<ConstructorExpr>(ASTNodeKind::CONSTRUCTOR);
+
+		const auto attr = reinterpret_cast<const IdentifierExpr*>(left.adr)->attr;
+		if (!attr->kind_is<TypeAttr>()) {
+			emit(DiagnosticKind::EXPECTED_TYPE, op.location);
+			return std::nullopt;
+		}
+		const auto type = attr->get_data<TypeAttr>();
+
+		node->type = left;
+
+		if (!parse_func_call_args(
+				node->args, type.get_prop_types(), TokenKind::RIGHT_BRACE)) {
 			return std::nullopt;
 		}
 
@@ -822,14 +843,12 @@ TypeAttr* Parser::resolve_expr_type(
 		return 
 			resolve_expr_type(
 				reinterpret_cast<const CallExpr*>(expr.adr)->identifier, err_loc);
+	case ASTNodeKind::CONSTRUCTOR:
+		return 
+			resolve_expr_type(
+				reinterpret_cast<const ConstructorExpr*>(expr.adr)->type, err_loc);
 	case ASTNodeKind::IDENTIFIER: {
-		const auto id = reinterpret_cast<const IdentifierExpr*>(expr.adr)->id;
-
-		if (const auto attr = this->symbols.lookup(id)) return attr->get_type();
-
-		// Identifier dont exist.
-		emit(DiagnosticKind::UNKNOWN_IDENTIFIER, err_loc);
-		return nullptr;
+		return reinterpret_cast<const IdentifierExpr*>(expr.adr)->attr->get_type();
 	}
 	case ASTNodeKind::BINARY: {
 		const auto node = reinterpret_cast<const BinaryExpr*>(expr.adr);

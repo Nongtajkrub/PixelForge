@@ -34,10 +34,12 @@ public:
 	}
 
 	inline T& top() {
+		assert(this->stack.size() != 0);
 		return this->stack[cursor - 1];
 	}
 
 	inline T& bottom() {
+		assert(this->stack.size() != 0);
 		return this->stack[0];
 	}
 
