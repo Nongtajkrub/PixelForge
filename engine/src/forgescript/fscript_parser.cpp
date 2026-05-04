@@ -13,6 +13,7 @@
 #include <optional>
 #include <cassert>
 #include <cstddef>
+#include <print>
 #include <vector>
 #include <tuple>
 
@@ -894,6 +895,7 @@ bool Parser::ensure_expr_type(
 	const ASTNode& expr, TypeAttr* type, Location err_loc) {
 	if (const auto expr_type = resolve_expr_type(expr, err_loc)) {
 		if (expr_type->id != type->id) {
+			std::println("Type not the same: {}, {}", expr_type->id, type->id);
 			emit(DiagnosticKind::TYPE_ERROR, err_loc);
 			return false;
 		}

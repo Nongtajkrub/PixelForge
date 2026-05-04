@@ -1,5 +1,3 @@
-#include "core/c/io/log.h"
-#include "forgescript/vm/fscript_interpreter.h"
 #include "forgescript/fscript_compiler.hpp"
 
 #include <iostream>
@@ -11,9 +9,4 @@ int main() {
 
 	const auto code = compiler.compile();
 	if (!code) return -1;
-
-	/*
-	package_t pkg = pkg_deserialize((char*)code->data());
-	interpret(&pkg);
-	*/
 }

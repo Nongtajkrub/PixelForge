@@ -1,12 +1,12 @@
-#pragma once
-
 #ifdef __cplusplus
 extern "C" {
 #endif // #ifdef __cplusplus
 
-#include "fscript_package.h"
+#include "../core/c/container/vec.h"
 
-void interpret(fscript_pkg_t* pkg);
+typedef struct {
+	vec_t sprites;
+} package_t;
 
 #ifdef __cplusplus
 } // extern "C"

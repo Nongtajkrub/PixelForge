@@ -28,6 +28,8 @@ const char* op_to_str(opcode_t op) {
 	case OP_JMP: return "JMP";
 	case OP_JMP_TRUE: return "JMP_TRUE";
 	case OP_JMP_FALSE: return "JMP_FALSE";
+	case OP_CONSTRUCT: return "CONSTRUCT";
+	case OP_CONSTRUCT_REGISTER: return "CONSTRUCT_REGISTER";
 	}
 }
 
@@ -60,6 +62,8 @@ bool op_have_operand(opcode_t op) {
 	case OP_COMPARE_GEATER_EQUAL:
 	case OP_COMPARE_LESS_EQUAL:
 	case OP_RETURN:
+	case OP_CONSTRUCT:
+	case OP_CONSTRUCT_REGISTER:
 		return false;
 	}
 }

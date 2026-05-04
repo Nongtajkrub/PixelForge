@@ -2,7 +2,7 @@
 extern "C" {
 #endif // #ifdef __cplusplus
 
-#include "fscript_unpacker.h"
+#include "fscript_package.h"
 
 #include "../../core/c/container/block.h"
 #include "../fscript_specs.h"
@@ -12,8 +12,8 @@ extern "C" {
 #include <stddef.h>
 #include <stdio.h>
 
-static inline package_t pkg_new() {
-	return (package_t) {
+static inline fscript_pkg_t pkg_new() {
+	return (fscript_pkg_t) {
 		.cpool = {
 			.size = 0,
 			.data = vec_new(sizeof(block_t), block_freefn, block_copyfn),
@@ -32,8 +32,8 @@ static inline package_t pkg_new() {
 }
 
 // TODO: Fix deserializing problem.
-package_t pkg_deserialize(char* bytes) {
-	package_t pack = pkg_new();
+fscript_pkg_t fscript_pkg_load(char* bytes) {
+	fscript_pkg_t pack = pkg_new();
 	char* ptr = bytes;
 
 	// Deserialize const entries section.
@@ -88,7 +88,7 @@ package_t pkg_deserialize(char* bytes) {
 	return pack;
 }
 
-block_t* pkg_cpool_get(const package_t* pack, word_t index) {
+block_t* fscript_pkg_cpool_get(const fscript_pkg_t* pack, word_t index) {
 	return (block_t*)vec_get(&pack->cpool.data, index);
 }
 

@@ -29,12 +29,12 @@ typedef struct {
 			vec_t data;
 		} func;
 	} code;
-} package_t;
+} fscript_pkg_t;
 
-package_t pkg_deserialize(char* bytes);
-void pkg_destroy(package_t* pack);
+fscript_pkg_t fscript_pkg_load(char* bytes);
+void fscript_pkg_destroy(fscript_pkg_t* pack);
 
-block_t* pkg_cpool_get(const package_t* pack, word_t index);
+block_t* fscript_pkg_cpool_get(const fscript_pkg_t* pack, word_t index);
 
 #ifdef __cplusplus
 } // extern "C"

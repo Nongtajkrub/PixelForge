@@ -299,6 +299,16 @@ void CodeGenerator::handle_expr(const ASTNode& expr) {
 
 		break;
 	}
+	case ASTNodeKind::CONSTRUCTOR: {
+		const auto node = reinterpret_cast<const ConstructorExpr*>(expr.adr);
+
+		push(OP_CONSTRUCT);
+
+		for (const auto& arg : node->args) {
+			handle_expr(arg);
+			push(OP_CONSTRUCT_REGISTER);
+		}
+	}
 	case ASTNodeKind::RANGE:
 		TODO();
 		break;

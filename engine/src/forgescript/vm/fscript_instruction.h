@@ -43,6 +43,8 @@ typedef enum : instruction_t {
 	OP_JMP,
 	OP_JMP_TRUE,
 	OP_JMP_FALSE,
+	OP_CONSTRUCT,
+	OP_CONSTRUCT_REGISTER,
 } opcode_t;
 
 const char* op_to_str(opcode_t op);

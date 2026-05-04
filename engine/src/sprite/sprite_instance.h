@@ -1,12 +1,15 @@
-#pragma once
-
 #ifdef __cplusplus
 extern "C" {
 #endif // #ifdef __cplusplus
 
-#include "fscript_package.h"
+#include "../core/c/types.h"
 
-void interpret(fscript_pkg_t* pkg);
+typedef struct {
+	u16 id;
+
+	u16 x;
+	u16 y;
+} sprite_instance_t;
 
 #ifdef __cplusplus
 } // extern "C"
