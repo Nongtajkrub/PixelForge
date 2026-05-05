@@ -2,6 +2,7 @@
 
 #include "fscript_specs.h"
 
+#include <print>
 #include <ranges>
 
 namespace scr {
@@ -123,6 +124,7 @@ IdenAttr* SymbolTable::lookup(IdentifierId id) {
 
 IdenAttr* SymbolTable::new_identifier(
 	IdentifierId id, IdenAttr attr, Scope& scope) {
+
 	if (attr.kind_is<VarAttr>()) {
 		attr.get_data<VarAttr>().offset = scope.stack_offset_gen.generate();
 	} else if (attr.kind_is<TypeAttr>()) {

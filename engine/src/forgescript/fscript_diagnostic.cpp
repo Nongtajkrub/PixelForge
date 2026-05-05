@@ -45,6 +45,10 @@ std::string_view Diagnostic::resolve_msg() const {
 	case DiagnosticKind::VARIABLE_REDECLARATION: return "Varaible redeclaration";
 	case DiagnosticKind::INTERFACE_DECL_NOT_ALLOW: 
 		return "Interface declaration not allow.";
+	case DiagnosticKind::COMMAND_USED_NOT_ALLOW: 
+		return "Command used not allow.";
+	case DiagnosticKind::LOOP_UPDATE_NOT_ALLOW:
+		return "Loop update not allow.";
     }
 
 	return "Error message not implemented";

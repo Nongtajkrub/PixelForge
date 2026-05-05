@@ -1,5 +1,4 @@
 #include "fscript_ast.hpp"
-#include "fscript_packer.hpp"
 
 #include <cassert>
 
@@ -252,6 +251,17 @@ void ASTNode::output(std::ostream &stream, const u32 level) const {
 
 		break;
 	}
+	case ASTNodeKind::LOOP: {
+		auto node = reinterpret_cast<const LoopStmt*>(this->adr);
+
+		stream << indent << "is update:\n";
+		stream << indent << '\t' << ((node->is_update) ? "true\n" : "false\n");
+
+		stream << indent << "code block:\n";
+		node->block.output(stream, level + 1);
+
+		break;
+	}
 	case ASTNodeKind::BINARY: {
 		auto node = reinterpret_cast<const BinaryExpr*>(this->adr);
 
@@ -285,9 +295,6 @@ void ASTNode::output(std::ostream &stream, const u32 level) const {
 		stream << indent << "command:\n";
 		stream << indent  << '\t' << node->id;
 
-		stream << indent << "target:\n";
-		node->target.output(stream, level + 1);
-
 		stream << indent << "args (" << node->args.size() << "):\n";
 		for (const auto operand : node->args) {
 			operand.output(stream, level + 1);
@@ -295,9 +302,6 @@ void ASTNode::output(std::ostream &stream, const u32 level) const {
 
 		break;
 	}
-	default:
-		stream << "UNKNOW\n";
-		return;
 	}
 }
 

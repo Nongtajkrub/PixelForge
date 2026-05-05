@@ -50,6 +50,8 @@ enum class DiagnosticKind : u8 {
 	RETURN_NOT_ALLOW,
 	VARIABLE_REDECLARATION,
 	INTERFACE_DECL_NOT_ALLOW,
+	COMMAND_USED_NOT_ALLOW,
+	LOOP_UPDATE_NOT_ALLOW,
 };
 
 DiagnosticKind resolve_diag_expect_kind(TokenKind kind);

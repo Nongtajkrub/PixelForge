@@ -47,9 +47,13 @@ std::optional<std::vector<u8>> Compiler::compile() {
 		return std::nullopt;
 	}
 
+	for (const auto& node : parser.get_ast()) {
+		node.output(std::cout);
+	}
+
 	auto code_gen = CodeGenerator(parser.get_ast());
 
-	code_gen.output_code(std::cout);
+	//code_gen.output_code(std::cout);
 
 	return pack(cpool, code_gen);
 }

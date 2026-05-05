@@ -133,6 +133,13 @@ struct ConstructorExpr {
 	std::vector<ASTNode> args;
 };
 
+struct BlockStmt {
+	ASTNodeKind kind;
+
+	// separated into statements.
+	std::vector<ASTNode> block;
+};
+
 struct ReturnStmt {
 	ASTNodeKind kind;
 
@@ -148,11 +155,11 @@ struct ForLoopStmt {
 	ASTNode block; 
 };
 
-struct BlockStmt {
+struct LoopStmt {
 	ASTNodeKind kind;
 
-	// separated into statements.
-	std::vector<ASTNode> block;
+	bool is_update;
+	ASTNode block;
 };
 
 struct VarDeclarationStmt {
@@ -200,7 +207,6 @@ struct CommandStmt {
 	ASTNodeKind kind;
 
 	command_id_t id;
-	ASTNode target;
 	std::vector<ASTNode> args;
 };
 

@@ -184,8 +184,6 @@ void CodeGenerator::handle_command(const CommandStmt* node) {
 		handle_expr(arg);
 	}
 
-	handle_expr(node->target);
-
 	push(OP_COMMAND);
 	push(static_cast<word_t>(node->id));
 }

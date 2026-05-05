@@ -2,6 +2,7 @@
 
 #include "fscript_symbol_table.hpp"
 #include "fscript_pattern.hpp"
+#include <print>
 
 namespace scr {
 

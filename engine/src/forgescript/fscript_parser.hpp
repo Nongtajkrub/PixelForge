@@ -59,6 +59,7 @@ private:
 		{CMD_DESPAWN_LEX, CID_DESPAWN},
 		{CMD_SHOW_LEX, CID_SHOW},
 		{CMD_WAIT_LEX, CID_WAIT},
+		{CMD_COLLIDE_LEX, CID_COLLIDE},
 	};
 
 	TokenStream tokens;
@@ -85,11 +86,13 @@ private:
 
 	std::optional<ASTNode> parse_var_declaration_stmt();
 	std::optional<ASTNode> parse_func_declaration_stmt();
+	std::optional<ASTNode> parse_inter_declaration_stmt();
 	std::optional<ASTNode> parse_if_stmt();
 	std::optional<ASTNode> parse_for_stmt();
+	std::optional<ASTNode> parse_loop_stmt();
 	std::optional<ASTNode> parse_return_stmt();
 	std::optional<ASTNode> parse_jump_stmt();
-	std::optional<ASTNode> parse_cmd_stmt();
+	std::optional<ASTNode> parse_cmd_stmt(bool as_expr = false);
 
 	std::optional<ASTNode> parse_expr(TokenKind terminator);
 	std::optional<ASTNode> pratt_nud();
@@ -97,8 +100,6 @@ private:
 	std::optional<ASTNode> pratt_parser(u8 min_bp = 0);
 
 	std::optional<ASTNode> parse_atomic(ASTNodeKind kind);
-
-	std::optional<ASTNode> parse_inter_declaration_stmt();
 
 	// Helper methods for parsing functions.
 	bool parse_func_args(std::vector<ASTNode>& buf, IdenAttr* func_attr);
@@ -108,6 +109,7 @@ private:
 	bool ensure_func_returns(const BlockStmt* body);
 
 	std::vector<TypeAttr*> get_command_args(command_id_t id);
+	TypeAttr* get_command_returns(command_id_t id);
 
 	// Resolve data type of expression, take source location to emit errors.
 	// Optional ltype, typically passed internally during binary expr parsing.

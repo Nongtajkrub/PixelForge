@@ -67,6 +67,8 @@ enum class TokenKind : u8 {
 	PASS,
 	LET,
 	FUNC,
+	LOOP,
+	UPDATE,
 	INTERFACE,
 	END,
 

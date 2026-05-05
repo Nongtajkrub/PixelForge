@@ -165,6 +165,7 @@ enum class ScopeKind {
 	GLOBAL,
 	IF,
 	FUNC,
+	UPDATE,
 	INTERFACE,
 	LOOP,
 };

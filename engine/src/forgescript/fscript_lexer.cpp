@@ -23,6 +23,8 @@ static const std::unordered_map<std::string, TokenKind> keywords = {
 	{"pass", TokenKind::PASS},
 	{"let", TokenKind::LET},
 	{"func", TokenKind::FUNC},
+	{"loop", TokenKind::LOOP},
+	{"update", TokenKind::UPDATE},
 	{"interface", TokenKind::INTERFACE},
 	{"end", TokenKind::END},
 	{"@sprite", TokenKind::DIRECT_SPRITE},
@@ -37,6 +39,7 @@ static const std::unordered_map<std::string, TokenKind> keywords = {
 	{CMD_GOTO_LEX, TokenKind::COMMAND},
 	{CMD_SHOW_LEX, TokenKind::COMMAND},
 	{CMD_WAIT_LEX, TokenKind::COMMAND},
+	{CMD_COLLIDE_LEX, TokenKind::COMMAND},
 };
 
 bool Lexer::lex() {

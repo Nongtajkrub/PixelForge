@@ -101,6 +101,8 @@ const char* token_kind_as_str(TokenKind kind) {
 	case TokenKind::FALSE: return "FALSE";
 	case TokenKind::WHILE: return "WHILE";
 	case TokenKind::FOR: return "FOR";
+	case TokenKind::LOOP: return "LOOP";
+	case TokenKind::UPDATE: return "UPDATE";
 	case TokenKind::RETURN: return "RETURN";
 	case TokenKind::CONTINUE: return "CONTINUE";
 	case TokenKind::BREAK: return "BREAK";
