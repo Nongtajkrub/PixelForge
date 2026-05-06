@@ -74,6 +74,13 @@ struct TypeAttr {
 	inline bool has_prop(IdentifierId id) {
 		return get_prop(id) != nullptr;
 	}
+
+	inline void extend(TypeAttr* type) {
+		this->properties.insert(
+			this->properties.end(),
+			type->properties.begin(), type->properties.end());
+	}
+
 };
 
 struct VarAttr{

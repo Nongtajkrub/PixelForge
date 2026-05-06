@@ -70,6 +70,7 @@ enum class TokenKind : u8 {
 	LOOP,
 	UPDATE,
 	INTERFACE,
+	EXTEND,
 	END,
 
 	DIRECT_SPRITE,

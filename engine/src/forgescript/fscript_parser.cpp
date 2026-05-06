@@ -199,11 +199,30 @@ std::optional<ASTNode> Parser::parse_inter_declaration_stmt() {
 
 	if (!this->tokens.expect_peek(TokenKind::IDENTIFIER)) return std::nullopt;
 
+	// Create new type attr.
+	const auto type_id = this->symbols.intern(*this->tokens.advance().lexeme);
+	if (this->symbols.contains_in_scope(type_id)) {
+		emit(DiagnosticKind::INTERFACE_REDECLARATION, this->tokens.prev());
+		return std::nullopt;
+	}
+
 	const auto type =
 		&this->symbols.new_identifier_global(
-			this->symbols.intern(*this->tokens.advance().lexeme),
-			IdenAttr(TypeAttr()))->get_data<TypeAttr>();
+			type_id, IdenAttr(TypeAttr()))->get_data<TypeAttr>();
 	type->is_value = true;
+
+	// Handle interface extention.
+	if (this->tokens.match_kind(TokenKind::EXTEND)) {
+		if (!this->tokens.expect_peek(TokenKind::IDENTIFIER)) return std::nullopt;
+		const auto token = this->tokens.advance();
+
+		const auto extend_type =
+			lookup_type_iden(
+				this->symbols.intern(*token.lexeme), token.location);
+		if (!extend_type) return std::nullopt;
+
+		type->extend(&extend_type->get_data<TypeAttr>());
+	}
 
 	if (!this->tokens.expect(TokenKind::SEMICOLON)) return std::nullopt;
 	this->symbols.enter_scope(ScopeKind::INTERFACE);

@@ -110,6 +110,7 @@ const char* token_kind_as_str(TokenKind kind) {
 	case TokenKind::LET: return "LET";
 	case TokenKind::FUNC: return "FUNC";
 	case TokenKind::INTERFACE: return "INTERFACE";
+	case TokenKind::EXTEND: return "EXTEND";
 	case TokenKind::END: return "END";
 	
 	case TokenKind::DIRECT_SPRITE: return "DIRECT_SPRITE";

@@ -26,6 +26,7 @@ static const std::unordered_map<std::string, TokenKind> keywords = {
 	{"loop", TokenKind::LOOP},
 	{"update", TokenKind::UPDATE},
 	{"interface", TokenKind::INTERFACE},
+	{"extend", TokenKind::EXTEND},
 	{"end", TokenKind::END},
 	{"@sprite", TokenKind::DIRECT_SPRITE},
 	{"@use", TokenKind::DIRECT_USE},

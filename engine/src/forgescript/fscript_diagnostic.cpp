@@ -43,6 +43,8 @@ std::string_view Diagnostic::resolve_msg() const {
 		return "Function unexpected return";
 	case DiagnosticKind::RETURN_NOT_ALLOW: return "Return not allow";
 	case DiagnosticKind::VARIABLE_REDECLARATION: return "Varaible redeclaration";
+	case DiagnosticKind::INTERFACE_REDECLARATION:
+		return "Interface redeclaration";
 	case DiagnosticKind::INTERFACE_DECL_NOT_ALLOW: 
 		return "Interface declaration not allow.";
 	case DiagnosticKind::COMMAND_USED_NOT_ALLOW: 
