@@ -123,12 +123,12 @@ IdenAttr* SymbolTable::lookup(IdentifierId id) {
 
 IdenAttr* SymbolTable::new_identifier(
 	IdentifierId id, IdenAttr attr, Scope& scope) {
-
 	if (attr.kind_is<VarAttr>()) {
 		attr.get_data<VarAttr>().offset = scope.stack_offset_gen.generate();
 	} else if (attr.kind_is<TypeAttr>()) {
 		attr.get_data<TypeAttr>().id = id;
 	}
+	attr.id = id;
 
 	auto [it, _] = scope.table.try_emplace(id);
 	it->second.emplace(std::move(attr));

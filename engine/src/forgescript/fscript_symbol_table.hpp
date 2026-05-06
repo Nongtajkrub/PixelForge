@@ -80,7 +80,6 @@ struct TypeAttr {
 			this->properties.end(),
 			type->properties.begin(), type->properties.end());
 	}
-
 };
 
 struct VarAttr{
@@ -163,6 +162,7 @@ public:
 	}
 
 	bool in_scope = true;
+	IdentifierId id;
 
 private:
 	Variant<VarAttr,  FuncAttr, TypeAttr> data;
@@ -195,7 +195,6 @@ struct Scope {
 	Scope(ScopeKind kind, IdenAttr* owner = nullptr) : 
 		kind(kind), owner(owner), table() 
 	{ }
-
 };
  
 class SymbolTable {

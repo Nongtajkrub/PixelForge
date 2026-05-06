@@ -35,7 +35,6 @@ enum class ASTNodeKind : u8 {
 
 	LITERAL,
 	IDENTIFIER,
-	TYPE,
 	KEYWORD,
 	BREAK,
 	CONTINUE,
