@@ -13,6 +13,7 @@
 #include <optional>
 #include <cassert>
 #include <cstddef>
+#include <print>
 #include <vector>
 #include <tuple>
 
@@ -110,6 +111,7 @@ std::optional<ASTNode> Parser::parse_var_declaration_stmt() {
 		const auto type_attr = lookup_type_symbol(this->tokens.advance());
 		if (!type_attr) return std::nullopt;
 
+		node->type = new_type_node(&type_attr->get_data<TypeAttr>());
 		iden_attr->get_data<VarAttr>().type = &type_attr->get_data<TypeAttr>();
 
 		// Handle initialization expression if present.
@@ -130,6 +132,7 @@ std::optional<ASTNode> Parser::parse_var_declaration_stmt() {
 
 		if (iden_attr->get_data<VarAttr>().type == nullptr) {
 			// Automatic type resolving.
+			node->type = new_type_node(expr_type);
 			iden_attr->get_data<VarAttr>().type = expr_type;
 		} else {
 			// Type checking if user already specify type.
@@ -184,7 +187,7 @@ std::optional<ASTNode> Parser::parse_func_declaration_stmt() {
 	const auto type_attr = lookup_type_symbol(this->tokens.advance());
 	if (!type_attr) return std::nullopt;
 
-	node->type = new_identifier_node(type_attr);
+	node->type = new_type_node(&type_attr->get_data<TypeAttr>());
 	attr->get_data<FuncAttr>().type = &type_attr->get_data<TypeAttr>();
 
 	if (!this->tokens.expect(TokenKind::SEMICOLON)) return std::nullopt;
@@ -653,7 +656,7 @@ std::optional<ASTNode> Parser::pratt_led(Token op, ASTNode left, u8 min_bp) {
 		}
 		const auto type = attr->get_data<TypeAttr>();
 
-		node->type = left;
+		node->type = new_type_node(&attr->get_data<TypeAttr>());
 
 		if (!parse_func_call_args(
 				node->args, type.get_prop_types(), TokenKind::RIGHT_BRACE)) {
@@ -813,7 +816,14 @@ bool Parser::parse_func_call_args(
 	auto arg_it = arg_types.begin();
 
 	while (!this->tokens.is_eof()) {
-		if (this->tokens.match_kind(terminator)) return true;
+		if (this->tokens.match_kind(terminator)) {
+			if (buf.size() < arg_types.size()) {
+				emit(DiagnosticKind::NOT_ENOUGH_ARGUMENTS, this->tokens.prev());
+				return false;
+			}
+
+			return true;
+		}
 
 		// More argument pass in than the definition.
 		if (arg_it == arg_types.end()) {
@@ -913,6 +923,22 @@ TypeAttr* Parser::get_command_returns(command_id_t id) {
 TypeAttr* Parser::resolve_expr_type(
 	ASTNode expr, Location err_loc) {
 	switch (*expr.adr) {
+	case ASTNodeKind::CALL: 
+		return 
+			resolve_expr_type(
+				reinterpret_cast<const CallExpr*>(expr.adr)->identifier, err_loc);
+	// Some commands are expression.
+	case ASTNodeKind::COMMAND: 
+		return 
+			get_command_returns(
+				reinterpret_cast<const CommandStmt*>(expr.adr)->id);
+	case ASTNodeKind::IDENTIFIER:
+		return reinterpret_cast<const IdentifierExpr*>(expr.adr)->attr->get_type();
+	case ASTNodeKind::CONSTRUCTOR: {
+		const auto node =
+			reinterpret_cast<const ConstructorExpr*>(expr.adr);
+		return reinterpret_cast<const TypeNode*>(node->type.adr)->attr;
+	}
 	case ASTNodeKind::LITERAL: {
 		const auto entry =
 			this->cpool.get(
@@ -941,22 +967,6 @@ TypeAttr* Parser::resolve_expr_type(
 		}
 
 		return prop->type;
-	}
-	case ASTNodeKind::CALL: 
-		return 
-			resolve_expr_type(
-				reinterpret_cast<const CallExpr*>(expr.adr)->identifier, err_loc);
-	case ASTNodeKind::CONSTRUCTOR:
-		return 
-			resolve_expr_type(
-				reinterpret_cast<const ConstructorExpr*>(expr.adr)->type, err_loc);
-	// Some commands are expression.
-	case ASTNodeKind::COMMAND: 
-		return 
-			get_command_returns(
-				reinterpret_cast<const CommandStmt*>(expr.adr)->id);
-	case ASTNodeKind::IDENTIFIER: {
-		return reinterpret_cast<const IdentifierExpr*>(expr.adr)->attr->get_type();
 	}
 	case ASTNodeKind::BINARY: {
 		const auto node = reinterpret_cast<const BinaryExpr*>(expr.adr);

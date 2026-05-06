@@ -188,6 +188,13 @@ private:
 		return node;
 	}
 
+	inline ASTNode new_type_node(TypeAttr* attr) {
+		auto node = this->arena.alloc<TypeNode>();
+		node->kind = ASTNodeKind::TYPE;
+		node->attr = attr;
+		return ASTNode(&node->kind);
+	}
+
 	inline ASTNode new_primary_node(ASTNodeKind kind, const Token& token) {
 		auto node = this->arena.alloc<PrimaryExpr>();
 		node->kind = kind;

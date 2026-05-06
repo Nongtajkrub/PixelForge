@@ -35,6 +35,7 @@ std::string_view Diagnostic::resolve_msg() const {
 	case DiagnosticKind::UNTERMINATED_STRING: return "Unterminated string";
 	case DiagnosticKind::TYPE_ERROR: return "Type error";
 	case DiagnosticKind::TO_MANY_ARGUMENTS: return "To many arguments";
+	case DiagnosticKind::NOT_ENOUGH_ARGUMENTS: return "Not enough arguments";
 	case DiagnosticKind::JUMP_NOT_ALLOW: return "Jump statments not allow";
 	case DiagnosticKind::FUNC_DECL_NOT_ALLOW: 
 		return "Function declaration not allow";

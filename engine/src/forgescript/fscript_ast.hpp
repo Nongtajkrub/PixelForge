@@ -35,6 +35,7 @@ enum class ASTNodeKind : u8 {
 
 	LITERAL,
 	IDENTIFIER,
+	TYPE,
 	KEYWORD,
 	BREAK,
 	CONTINUE,
@@ -65,6 +66,12 @@ struct ASTNode {
 
 struct AtomicNode {
 	ASTNodeKind kind;
+};
+
+struct TypeNode {
+	ASTNodeKind kind;
+
+	TypeAttr* attr;
 };
 
 struct DirectiveStmt {
@@ -165,8 +172,8 @@ struct VarDeclarationStmt {
 	ASTNodeKind kind;
 
 	ASTNode identifier;
-	std::optional<ASTNode> init;
 	ASTNode type;
+	std::optional<ASTNode> init;
 };
 
 struct FuncArgument {
@@ -181,7 +188,7 @@ struct FuncDeclarationStmt {
 	
 	ASTNode identifier;
 	std::vector<ASTNode> args;
-	std::optional<ASTNode> type;
+	ASTNode type;
 
 	ASTNode body;
 };
