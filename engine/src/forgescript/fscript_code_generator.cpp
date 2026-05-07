@@ -51,8 +51,15 @@ void CodeGenerator::handle_node(const ASTNode& node) {
 	case ASTNodeKind::FOR_LOOP:
 		handle_for_stmt(reinterpret_cast<const ForLoopStmt*>(node.adr));
 		break;
+	case ASTNodeKind::LOOP:
+		handle_loop_stmt(reinterpret_cast<const LoopStmt*>(node.adr));
+		break;
 	case ASTNodeKind::CALL:
 		handle_expr(node);
+		break;
+	case ASTNodeKind::BREAK:
+	case ASTNodeKind::CONTINUE:
+		handle_atomic_node(reinterpret_cast<const AtomicNode*>(node.adr));
 		break;
 	case ASTNodeKind::RETURN:
 		handle_return_stmt(reinterpret_cast<const ReturnStmt*>(node.adr));
@@ -179,6 +186,21 @@ void CodeGenerator::handle_for_stmt(const ForLoopStmt* node) {
 	push(Label(LabelKind::LOOP_BEGIN, true));
 }
 
+void CodeGenerator::handle_loop_stmt(const LoopStmt* node) {
+	if (node->is_update) {
+		auto& entry = this->updates.emplace_back();
+		entry.index = this->updates.size() - 1;
+
+		auto guard = switch_push_buffer(&entry.body);
+
+		generate(reinterpret_cast<const BlockStmt*>(node->block.adr)->block);
+	} else {
+		push(Label(LabelKind::LOOP_BEGIN, false));
+		generate(reinterpret_cast<const BlockStmt*>(node->block.adr)->block);
+		push(Label(LabelKind::LOOP_END, false));
+	}
+}
+
 void CodeGenerator::handle_command(const CommandStmt* node) {
 	for (const auto& arg : node->args) {
 		handle_expr(arg);
@@ -186,6 +208,22 @@ void CodeGenerator::handle_command(const CommandStmt* node) {
 
 	push(OP_COMMAND);
 	push(static_cast<word_t>(node->id));
+}
+
+void CodeGenerator::handle_atomic_node(const AtomicNode* node) {
+	switch (node->kind) {
+	case ASTNodeKind::BREAK:
+		push(OP_JMP);
+		push(Label(LabelKind::LOOP_END, true));
+		break;
+	case ASTNodeKind::CONTINUE:
+		push(OP_JMP);
+		push(Label(LabelKind::LOOP_BEGIN, true));
+		break;
+	default:
+		BUG("Unhandled AtomicNode.");
+		exit(1);
+	}
 }
 
 void CodeGenerator::handle_binary_operator(TokenKind op) {
@@ -240,10 +278,14 @@ void CodeGenerator::handle_expr(const ASTNode& expr) {
 	switch (*expr.adr) {
 	case ASTNodeKind::LITERAL:
 		generate_const(reinterpret_cast<const LiteralExpr*>(expr.adr));
-		break;
+		return;
 	case ASTNodeKind::IDENTIFIER: {
 		generate_load(reinterpret_cast<const IdentifierExpr*>(expr.adr));
-		break;
+		return;
+	}
+	case ASTNodeKind::COMMAND: {
+		handle_command(reinterpret_cast<const CommandStmt*>(expr.adr));
+		return;
 	}
 	case ASTNodeKind::DOT: {
 		const auto node = reinterpret_cast<const DotExpr*>(expr.adr);
@@ -252,7 +294,7 @@ void CodeGenerator::handle_expr(const ASTNode& expr) {
 		push(OP_LOAD_PROP);
 		push(node->offset);
 
-		break;
+		return;
 	}
 	case ASTNodeKind::BINARY: {
 		const auto node = reinterpret_cast<const BinaryExpr*>(expr.adr);
@@ -268,7 +310,7 @@ void CodeGenerator::handle_expr(const ASTNode& expr) {
 		handle_expr(node->right);
 		handle_binary_operator(node->op.kind);
 
-		break;
+		return;
 	}
 	case ASTNodeKind::CALL: {
 		const auto node = reinterpret_cast<const CallExpr*>(expr.adr);
@@ -295,7 +337,7 @@ void CodeGenerator::handle_expr(const ASTNode& expr) {
 		push(index);
 		push(Label(LabelKind::RETURN_ADDR, false));
 
-		break;
+		return;
 	}
 	case ASTNodeKind::CONSTRUCTOR: {
 		const auto node = reinterpret_cast<const ConstructorExpr*>(expr.adr);
@@ -309,11 +351,13 @@ void CodeGenerator::handle_expr(const ASTNode& expr) {
 	}
 	case ASTNodeKind::RANGE:
 		TODO();
-		break;
+		return;
 	default:
-		BUG("Node is not an expression.");
-		exit(1);
+		break;
 	}
+
+	BUG("Node is not an expression.");
+	exit(1);
 }
 
 void CodeGenerator::patch_next_hole(word_t inst) {
@@ -404,6 +448,7 @@ void CodeGenerator::serialize(
 			case LabelKind::IF_END:
 			case LabelKind::RETURN:
 			case LabelKind::RETURN_ADDR:
+			case LabelKind::LOOP_END:
 				push_bytes<word_t>(
 					buf, buf.size() + next_label_offset(src, i + 1, label.kind));
 				break;
@@ -425,8 +470,9 @@ static const char* label_to_str(LabelKind label) {
 	case LabelKind::HOLE: return "HOLE"; 
 	case LabelKind::THEN_BRANCH: return "THEN_BRANCH";
 	case LabelKind::ELSE_BRANCH: return "ELSE_BRANCH";
-	case LabelKind::IF_END: return "IF_END";
 	case LabelKind::LOOP_BEGIN: return "LOOP_BEGIN";
+	case LabelKind::LOOP_END: return "LOOP_END";
+	case LabelKind::IF_END: return "IF_END";
 	case LabelKind::RETURN_ADDR: return "RETURN_ADDR";
 	case LabelKind::RETURN: return "RETURN";
 	}
@@ -466,7 +512,12 @@ void CodeGenerator::output_code(std::ostream& stream) {
 	output_code(stream, this->code);
 
 	for (const auto& entry : this->func) {
-		stream << "\tFUNC_ID: " << entry.index << '\n';
+		stream << "\tFUNC_INDEX: " << entry.index << '\n';
+		output_code(stream, entry.body);
+	}
+
+	for (const auto& entry : this->updates) {
+		stream << "\tFUNC_INDEX: " << entry.index << '\n';
 		output_code(stream, entry.body);
 	}
 }

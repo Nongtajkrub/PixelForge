@@ -36,7 +36,6 @@ enum class ASTNodeKind : u8 {
 	LITERAL,
 	IDENTIFIER,
 	TYPE,
-	KEYWORD,
 	BREAK,
 	CONTINUE,
 	RETURN,
@@ -80,12 +79,6 @@ struct DirectiveStmt {
 	ASTNode directive;
 	ASTNode identifier;
 };
-
-struct PrimaryExpr {
-	ASTNodeKind kind;
-
-	Token token;
-}; 
 
 struct LiteralExpr {
 	ASTNodeKind kind;

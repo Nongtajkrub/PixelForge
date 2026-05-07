@@ -25,7 +25,6 @@ const char* ASTNode::kind_as_str() const {
 	case ASTNodeKind::LITERAL: return "LITERAL";
 	case ASTNodeKind::IDENTIFIER: return "IDENTIFIER";
 	case ASTNodeKind::TYPE: return "TYPE";
-	case ASTNodeKind::KEYWORD: return "KEYWORD";
 	case ASTNodeKind::BREAK: return "BREAK";
 	case ASTNodeKind::CONTINUE: return "CONTINUE";
 	case ASTNodeKind::RETURN: return "RETURN";
@@ -85,19 +84,6 @@ void ASTNode::output(std::ostream &stream, const u32 level) const {
 	case ASTNodeKind::TYPE: {
 		auto node = reinterpret_cast<const TypeNode*>(this->adr);
 		stream << indent << "type: " << node->attr->id << '\n';
-		break;
-	}
-	case ASTNodeKind::KEYWORD: {
-		auto node = reinterpret_cast<const PrimaryExpr*>(this->adr);
-
-		// Some keyword kind like COMMAND have a lexeme.
-		stream 
-			<< indent 
-			<< "keyword: " 
-			<< ((node->token.lexeme) ?
-					*node->token.lexeme : token_kind_as_str(node->token.kind)) 
-			<< '\n';
-
 		break;
 	}
 	case ASTNodeKind::DIRECTIVE: {

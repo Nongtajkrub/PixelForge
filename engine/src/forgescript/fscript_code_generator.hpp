@@ -20,6 +20,7 @@ enum class LabelKind : u8 {
 	THEN_BRANCH,
 	ELSE_BRANCH,
 	LOOP_BEGIN,
+	LOOP_END,
 	IF_END,
 	RETURN_ADDR,
 	RETURN,
@@ -65,6 +66,9 @@ private:
 	std::vector<FuncEntry> func;
 	IdInterner<IdentifierId, word_t> func_id_interner;
 
+	// Update functions are automatically call every frame.
+	std::vector<FuncEntry> updates;
+
 	// Store index of hole labels in the code avoiding o(n) lookup.
 	std::queue<size_t> hole_indexes;
 
@@ -91,7 +95,9 @@ private:
 	void handle_assign_stmt(const AssignStmt* node);
 	void handle_if_stmt(const IfStmt* node);
 	void handle_for_stmt(const ForLoopStmt* node);
+	void handle_loop_stmt(const LoopStmt* node);
 	void handle_command(const CommandStmt* node);
+	void handle_atomic_node(const AtomicNode* node);
 	void handle_expr(const ASTNode& expr);
 	void handle_binary_operator(TokenKind op);
 

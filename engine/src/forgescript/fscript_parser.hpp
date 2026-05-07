@@ -195,13 +195,6 @@ private:
 		return ASTNode(&node->kind);
 	}
 
-	inline ASTNode new_primary_node(ASTNodeKind kind, const Token& token) {
-		auto node = this->arena.alloc<PrimaryExpr>();
-		node->kind = kind;
-		node->token = token;
-		return ASTNode(&node->kind);
-	}
-
 	inline ASTNode new_identifier_node(IdenAttr* attr) {
 		auto node = this->arena.alloc<IdentifierExpr>();
 		node->kind = ASTNodeKind::IDENTIFIER;
