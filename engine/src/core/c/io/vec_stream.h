@@ -16,3 +16,5 @@ const char* vstream_advance(vec_stream_t* stream);
 const char* vstream_peek(const vec_stream_t* stream);
 
 bool vstream_end(const vec_stream_t* stream);
+
+size_t vstream_cursor(const vec_stream_t* stream);

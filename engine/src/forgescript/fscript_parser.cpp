@@ -2,6 +2,7 @@
 
 #include "../core/cplusplus/macros.hpp"
 #include "../core/c/io/log.h"
+
 #include "fscript_symbol_table.hpp"
 #include "fscript_diagnostic.hpp"
 #include "fscript_location.hpp"

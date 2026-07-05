@@ -17,17 +17,25 @@ typedef struct {
 		vec_t data;
 	} cpool;
 
-	// Instructions data.
+	// Code data.
 	struct {
+		// The main code.
 		struct {
 			size_t size;
 			vec_t data;
 		} main;
 
+		// Function definitions and implementation.
 		struct {
 			size_t size;
 			vec_t data;
 		} func;
+
+		// Update functions that are run every automatically frame.
+		struct {
+			size_t size;
+			vec_t data;
+		} updates;
 	} code;
 } fscript_pkg_t;
 

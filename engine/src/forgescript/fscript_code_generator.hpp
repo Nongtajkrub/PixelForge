@@ -112,7 +112,7 @@ private:
 	size_t prev_label_offset(
 		const std::vector<CodeEntry>& src, size_t from, LabelKind label) const;
 
-	void serialize(std::vector<u8>& buf, const std::vector<CodeEntry>& src) const;
+	size_t serialize(std::vector<u8>& buf, const std::vector<CodeEntry>& src) const;
 
 	static void output_code(
 		std::ostream& stream, const std::vector<CodeEntry>& code);

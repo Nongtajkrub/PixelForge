@@ -23,3 +23,7 @@ const char* vstream_peek(const vec_stream_t* stream) {
 bool vstream_end(const vec_stream_t* stream) {
 	return stream->cusor == stream->vec->size;
 }
+
+size_t vstream_cursor(const vec_stream_t *stream) {
+	return stream->cusor;
+}

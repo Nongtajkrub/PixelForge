@@ -21,11 +21,15 @@ static inline fscript_pkg_t pkg_new() {
 		.code = {
 			.main = {
 				.size = 0,
-				.data = vec_new(WORD_SIZE, NULL, NULL),
+				.data = vec_new(WORD_SIZE, NULL, NULL)
 			},
 			.func = {
 				.size = 0,
-				.data = vec_new(sizeof(vec_t), vec_freefn, vec_copyfn),
+				.data = vec_new(sizeof(vec_t), vec_freefn, vec_copyfn)
+			},
+			.updates = {
+				.size = 0,
+				.data = vec_new(sizeof(vec_t), vec_freefn, vec_copyfn)
 			}
 		}
 	};
@@ -62,7 +66,7 @@ fscript_pkg_t fscript_pkg_load(char* bytes) {
 		ptr += WORD_SIZE;
 	}
 
-	// Deserialize main instructions section.
+	// Deserialize functions definition and implementation section.
 	memcpy(&pack.code.func.size, ptr, WORD_SIZE);
 	ptr += WORD_SIZE;
 
@@ -84,7 +88,27 @@ fscript_pkg_t fscript_pkg_load(char* bytes) {
 			ptr += WORD_SIZE;
 		}
 	}
-	
+
+	// Deserialize update functions section.
+	memcpy(&pack.code.updates.size, ptr, WORD_SIZE);
+	ptr += WORD_SIZE;
+
+	const char* updates_end = ptr + pack.code.updates.size;
+	while (ptr < updates_end) {
+		vec_t* entry = (vec_t*)vec_push_null(&pack.code.updates.data);
+		vec_init(entry, WORD_SIZE, NULL, NULL);
+
+		size_t entry_size;
+		memcpy(&entry_size, ptr, WORD_SIZE);
+		ptr += WORD_SIZE;
+
+		const char* entry_end = ptr + entry_size;
+		while (ptr < entry_end) {
+			memcpy(vec_push_null(entry), ptr, WORD_SIZE);
+			ptr += WORD_SIZE;
+		}
+	}
+
 	return pack;
 }
 

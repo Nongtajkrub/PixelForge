@@ -17,19 +17,46 @@
 namespace scr {
 
 void CodeGenerator::serialize(std::vector<u8>& buf) const {
-	push_bytes<word_t>(buf, this->code.size() * WORD_SIZE);
-	serialize(buf, this->code);
+	using HoleToken = BytesBufferWriter::HoleToken;
 
-	std::vector<u8> func_buf;
-	for (const auto& entry : this->func) {
-		push_bytes<word_t>(func_buf, entry.body.size() * WORD_SIZE);
-		serialize(func_buf, entry.body);
+	auto io = BytesBufferWriter(buf);
+
+	{
+		const HoleToken size_hole = io.hole<word_t>();
+		const size_t code_size = serialize(io.get_buf(), this->code); 
+
+		io.fill<word_t>(code_size, size_hole);
 	}
 
-	// Concat two buffer together with size information.
-	buf.reserve(WORD_SIZE + func_buf.size());
-	push_bytes<word_t>(buf, func_buf.size());
-	buf.insert(buf.end(), func_buf.begin(), func_buf.end());
+	{
+		const HoleToken sum_size_hole = io.hole<word_t>();
+		size_t size_sum = 0;
+		
+		for (const auto& entry : this->func) {
+			const HoleToken func_size_hole = io.hole<word_t>();
+			const size_t func_size = serialize(io.get_buf(), entry.body);
+			size_sum += func_size;
+
+			io.fill<word_t>(func_size, func_size_hole);
+		}
+
+		io.fill<word_t>(size_sum, sum_size_hole);
+	}
+
+	{
+		const HoleToken sum_size_hole = io.hole<word_t>();
+		size_t size_sum = 0;
+		
+		for (const auto& entry : this->updates) {
+			const HoleToken update_size_hole = io.hole<word_t>();
+			const size_t update_size = serialize(io.get_buf(), entry.body);
+			size_sum += update_size;
+
+			io.fill<word_t>(update_size, update_size_hole);
+		}
+
+		io.fill<word_t>(size_sum, sum_size_hole);
+	}
 }
 
 void CodeGenerator::handle_node(const ASTNode& node) {
@@ -425,8 +452,9 @@ size_t CodeGenerator::prev_label_offset(
 	exit(1);
 }
 
-void CodeGenerator::serialize(
+size_t CodeGenerator::serialize(
 	std::vector<u8>& buf, const std::vector<CodeEntry>& src) const {
+	size_t size = 0;
 	buf.reserve(src.size() * WORD_SIZE);
 
 	// Serialize main instructions.
@@ -435,6 +463,7 @@ void CodeGenerator::serialize(
 
 		if (entry.data.is<instruction_t>()) {
 			push_bytes(buf, entry.data.get<instruction_t>());
+			size += WORD_SIZE;
 		} else if (entry.data.is<Label>()) {
 			// Resolve labels.
 			const auto label = entry.data.get<Label>();
@@ -451,11 +480,13 @@ void CodeGenerator::serialize(
 			case LabelKind::LOOP_END:
 				push_bytes<word_t>(
 					buf, buf.size() + next_label_offset(src, i + 1, label.kind));
+				size += WORD_SIZE;
 				break;
 			// Scan backward.
 			case LabelKind::LOOP_BEGIN:
 				push_bytes<word_t>(
 					buf, buf.size() - prev_label_offset(src, i - 1, label.kind));
+				size += WORD_SIZE;
 				break;
 			case LabelKind::HOLE:
 				BUG("LabelKind::HOLE should not be reach.");
@@ -463,6 +494,8 @@ void CodeGenerator::serialize(
 			}
 		}
 	}
+
+	return size;
 }
 
 static const char* label_to_str(LabelKind label) {
@@ -517,7 +550,7 @@ void CodeGenerator::output_code(std::ostream& stream) {
 	}
 
 	for (const auto& entry : this->updates) {
-		stream << "\tFUNC_INDEX: " << entry.index << '\n';
+		stream << "\tUPDATE_INDEX: " << entry.index << '\n';
 		output_code(stream, entry.body);
 	}
 }

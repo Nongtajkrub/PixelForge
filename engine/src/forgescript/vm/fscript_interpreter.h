@@ -6,7 +6,7 @@ extern "C" {
 
 #include "fscript_package.h"
 
-void interpret(fscript_pkg_t* pkg);
+void fscript_interpret(fscript_pkg_t* pkg);
 
 #ifdef __cplusplus
 } // extern "C"
