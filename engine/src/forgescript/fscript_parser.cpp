@@ -1,7 +1,7 @@
 #include "fscript_parser.hpp"
 
-#include "../core/cplusplus/macros.hpp"
-#include "../core/c/io/log.h"
+#include <core-cplusplus/macros.hpp>
+#include <core-c/io/log.h>
 
 #include "fscript_symbol_table.hpp"
 #include "fscript_diagnostic.hpp"

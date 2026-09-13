@@ -1,10 +1,11 @@
 #pragma once
 
-#include "../core/cplusplus/utilities/incremental_id.hpp"
-#include "../core/cplusplus/container/cursor_stack.hpp"
-#include "../core/cplusplus/utilities/id_interner.hpp"
-#include "../core/cplusplus/utilities/variant.hpp"
-#include "../core/c/io/log.h"
+#include <core-cplusplus/utilities/incremental_id.hpp>
+#include <core-cplusplus/utilities/id_interner.hpp>
+#include <core-cplusplus/utilities/variant.hpp>
+#include <core-cplusplus/container/cursor_stack.hpp>
+#include <core-c/io/log.h>
+
 #include "fscript_specs.h"
 
 #include <unordered_map>
@@ -18,7 +19,6 @@
 
 namespace scr {
 
-using namespace core;
 // A unique ID for each identifier, identical share same ID.
 using IdentifierId = u32;
 
@@ -165,7 +165,7 @@ public:
 	IdentifierId id;
 
 private:
-	Variant<VarAttr,  FuncAttr, TypeAttr> data;
+	core::Variant<VarAttr,  FuncAttr, TypeAttr> data;
 };
 
 enum class ScopeKind {
@@ -184,8 +184,8 @@ struct Scope {
 	IdenAttr* owner;
 
 	// For generating the stack offset of each variable, reset when leave scope.
-	IncrementalIdGen<StackOffset> stack_offset_gen = 
-		IncrementalIdGen<StackOffset>(0);
+	core::IncrementalIdGen<StackOffset> stack_offset_gen = 
+		core::IncrementalIdGen<StackOffset>(0);
 	
 	// Owner of the scope if exist (Usually function).
 	// IdenAttr store in a stack to support identifier shadowing.
@@ -253,15 +253,15 @@ public:
 private:
 	// Identifier table stored in a cursor stack to manage scopes while
 	// preserving identifier attributes, ensuring references remain valid.	
-	CursorStack<Scope> scopes;
+	core::CursorStack<Scope> scopes;
 
 	// Generate ID for identifiers.
-	IncrementalIdGen<IdentifierId> iden_id_generator = 
-		IncrementalIdGen<IdentifierId>();
+	core::IncrementalIdGen<IdentifierId> iden_id_generator = 
+		core::IncrementalIdGen<IdentifierId>();
 
 	// Assigns a unique ID to each identifier, identical share same ID.
-	IdInterner<std::string, IdentifierId> iden_interner =
-		IdInterner<std::string, IdentifierId>([this]() -> IdentifierId {
+	core::IdInterner<std::string, IdentifierId> iden_interner =
+		core::IdInterner<std::string, IdentifierId>([this]() -> IdentifierId {
 			return this->iden_id_generator.generate(); 
 		});
 

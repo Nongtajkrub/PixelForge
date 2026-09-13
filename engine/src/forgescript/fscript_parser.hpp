@@ -1,7 +1,8 @@
 #pragma once
 
-#include "../core/cplusplus/utilities/unique_string.hpp"
-#include "../core/cplusplus/container/bump_arena.hpp"
+#include <core-cplusplus/utilities/unique_string.hpp>
+#include <core-cplusplus/utilities/bump_arena.hpp>
+
 #include "fscript_symbol_table.hpp"
 #include "fscript_const_pool.hpp"
 #include "fscript_diagnostic.hpp"

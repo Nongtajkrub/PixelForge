@@ -1,6 +1,7 @@
 #include "fscript_const_pool.hpp"
 
-#include "../core/cplusplus/io/byte_io.hpp"
+#include <core-cplusplus/io/byte_io.hpp>
+
 #include "fscript_token.hpp"
 #include "fscript_specs.h"
 

@@ -1,6 +1,7 @@
 #pragma once
 
-#include "../core/cplusplus/types.hpp"
+#include <core-cplusplus/types.hpp>
+
 #include "fscript_symbol_table.hpp"
 #include "fscript_const_pool.hpp"
 #include "fscript_token.hpp"

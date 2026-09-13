@@ -1,10 +1,11 @@
 #pragma once
 
-#include "../core/cplusplus/utilities/id_interner.hpp"
-#include "../core/cplusplus/utilities/variant.hpp"
-#include "../core/cplusplus/container/pool.hpp"
-#include "../core/cplusplus/types.hpp"
-#include "../core/c/io/log.h"
+#include <core-cplusplus/utilities/id_interner.hpp>
+#include <core-cplusplus/utilities/variant.hpp>
+#include <core-cplusplus/container/pool.hpp>
+#include <core-cplusplus/types.hpp>
+#include <core-c/io/log.h>
+
 #include "fscript_token.hpp"
 #include "fscript_specs.h"
 

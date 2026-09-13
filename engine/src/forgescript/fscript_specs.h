@@ -9,7 +9,7 @@
 extern "C" {
 #endif // #ifdef __cplusplus
 
-#include "../core/c/types.h"
+#include <core-c/types.h>
 
 typedef u16 word_t;
 

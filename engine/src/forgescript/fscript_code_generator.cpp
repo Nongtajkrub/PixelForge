@@ -1,7 +1,8 @@
 #include "fscript_code_generator.hpp"
 
-#include "../core/cplusplus/io/byte_io.hpp"
-#include "../core/cplusplus/macros.hpp"
+#include <core-cplusplus/io/byte_io.hpp>
+#include <core-cplusplus/macros.hpp>
+
 #include "fscript_symbol_table.hpp"
 #include "fscript_token.hpp"
 #include "fscript_ast.hpp"

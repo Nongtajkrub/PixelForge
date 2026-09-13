@@ -1,6 +1,7 @@
 #pragma once
 
-#include "../core/cplusplus/types.hpp"
+#include <core-cplusplus/types.hpp>
+
 #include "fscript_code_generator.hpp"
 #include "fscript_const_pool.hpp"
 

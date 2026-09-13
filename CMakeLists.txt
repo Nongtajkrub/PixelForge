@@ -1,0 +1,15 @@
+cmake_minimum_required(VERSION 3.15...3.28)
+
+project(PixelForge VERSION 0.0.1 LANGUAGES CXX C)
+
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
+set(CMAKE_CXX_STANDARD 23)
+set(CMAKE_CXX_STANDARD_REQIURED ON)
+set(CMAKE_CXX_EXTENTIONS OFF)
+
+add_subdirectory(core)
+add_subdirectory(engine)
+add_subdirectory(runtime)
+
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")

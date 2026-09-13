@@ -1,9 +1,11 @@
-#include "fscript_compiler.hpp"
+#include <engine/forgescript/fscript_compiler.hpp>
 
-#include "../core/cplusplus/container/bump_arena.hpp"
-#include "../core/cplusplus/io/file_io.hpp"
+#include <core-cplusplus/utilities/bump_arena.hpp>
+#include <core-cplusplus/io/file_io.hpp>
+
 #include "fscript_code_generator.hpp"
 #include "fscript_preprocessor.hpp"
+#include "fscript_symbol_table.hpp"
 #include "fscript_const_pool.hpp"
 #include "fscript_diagnostic.hpp"
 #include "fscript_parser.hpp"
@@ -15,14 +17,14 @@
 
 namespace scr {
 
-using namespace core;
-
 static constexpr size_t DEFAULT_NODES_ARENA_SIZE = 2048;
 
 std::optional<std::vector<u8>> Compiler::compile() {
+	auto symbols = SymbolTable();
+
 	const auto source = fload_str(this->src_path);
 	if (!source) {
-		emit(DiagnosticKind::FAIL_OPEN_SOURCE);
+		Diagnostic(DiagnosticKind::FAIL_OPEN_SOURCE).emit(this->err_stream);
 		return std::nullopt;
 	}
 
@@ -32,7 +34,7 @@ std::optional<std::vector<u8>> Compiler::compile() {
 	}
 
 	if (!(Preprocessor(
-			lexer.get_token(), this->symbols, this->err_stream).process())) {
+			lexer.get_token(), symbols, this->err_stream).process())) {
 		return std::nullopt;
 	}
 
@@ -41,7 +43,7 @@ std::optional<std::vector<u8>> Compiler::compile() {
 
 	auto parser =
 		Parser(
-			lexer.get_token(), this->symbols, cpool, arena, this->err_stream);
+			lexer.get_token(), symbols, cpool, arena, this->err_stream);
 	if (!parser.parse()) {
 		return std::nullopt;
 	}

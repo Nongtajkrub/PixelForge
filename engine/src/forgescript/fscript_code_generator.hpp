@@ -1,7 +1,8 @@
 #pragma once
 
-#include "../core/cplusplus/utilities/ref_state_guard.hpp"
-#include "../core/cplusplus/utilities/variant.hpp"
+#include <core-cplusplus/utilities/ref_state_guard.hpp>
+#include <core-cplusplus/utilities/variant.hpp>
+
 #include "fscript_symbol_table.hpp"
 #include "fscript_ast.hpp"
 #include "fscript_specs.h"
