@@ -43,11 +43,13 @@ compile_commands.json
 *.gcda
 *.gcno
 
-# Vim / Neovim
+# Vim / Neovim / LSP
 *.swp
 *.swo
 Session.vim
 .netrwhist
+.clangd/
+.cache/
 
 # VS Code 
 # (Uncomment the '!' lines if you want to share build/launch tasks with a team)
