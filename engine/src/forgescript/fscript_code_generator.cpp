@@ -18,9 +18,9 @@
 namespace scr {
 
 void CodeGenerator::serialize(std::vector<u8>& buf) const {
-	using HoleToken = BytesBufferWriter::HoleToken;
+	using HoleToken = core::BytesBufferWriter::HoleToken;
 
-	auto io = BytesBufferWriter(buf);
+	auto io = core::BytesBufferWriter(buf);
 
 	{
 		const HoleToken size_hole = io.hole<word_t>();
@@ -463,7 +463,7 @@ size_t CodeGenerator::serialize(
 		const auto& entry = src[i];
 
 		if (entry.data.is<instruction_t>()) {
-			push_bytes(buf, entry.data.get<instruction_t>());
+			core::push_bytes(buf, entry.data.get<instruction_t>());
 			size += WORD_SIZE;
 		} else if (entry.data.is<Label>()) {
 			// Resolve labels.
@@ -479,13 +479,13 @@ size_t CodeGenerator::serialize(
 			case LabelKind::RETURN:
 			case LabelKind::RETURN_ADDR:
 			case LabelKind::LOOP_END:
-				push_bytes<word_t>(
+				core::push_bytes<word_t>(
 					buf, buf.size() + next_label_offset(src, i + 1, label.kind));
 				size += WORD_SIZE;
 				break;
 			// Scan backward.
 			case LabelKind::LOOP_BEGIN:
-				push_bytes<word_t>(
+				core::push_bytes<word_t>(
 					buf, buf.size() - prev_label_offset(src, i - 1, label.kind));
 				size += WORD_SIZE;
 				break;

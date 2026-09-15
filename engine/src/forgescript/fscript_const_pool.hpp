@@ -15,12 +15,11 @@
 
 namespace scr {
 
-using namespace core;
 using ConstIndex = word_t;
 using StringIndex = word_t;
 
 struct Const {
-	Variant<i32, f32> data;
+	core::Variant<i32, f32> data;
 
 	explicit Const(const Token& literal);
 
@@ -60,9 +59,9 @@ namespace scr {
 
 class ConstPool {
 private:
-	Pool<Const> pool;
+	core::Pool<Const> pool;
 	// Assigns a unique index to each const; identical share same index.
-	IdInterner<Const, ConstIndex> const_index; 
+	core::IdInterner<Const, ConstIndex> const_index; 
 
 public:
 	ConstPool() :

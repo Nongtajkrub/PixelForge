@@ -41,11 +41,11 @@ void ConstPool::serialize(std::vector<u8>& buf) const {
 
 	for (const auto& entry : this->pool) {
 		if (entry.data.is<i32>()) {
-			push_bytes<word_t>(entry_buf, sizeof(i32));
-			push_bytes<i32>(entry_buf, entry.data.get<i32>());
+			core::push_bytes<word_t>(entry_buf, sizeof(i32));
+			core::push_bytes<i32>(entry_buf, entry.data.get<i32>());
 		} else if (entry.data.is<f32>()) {
-			push_bytes<word_t>(entry_buf, sizeof(f32));
-			push_bytes<f32>(entry_buf, entry.data.get<f32>());
+			core::push_bytes<word_t>(entry_buf, sizeof(f32));
+			core::push_bytes<f32>(entry_buf, entry.data.get<f32>());
 		} else {
 			BUG("Unimplemented get_type Const.");
 			exit(1);
@@ -54,7 +54,7 @@ void ConstPool::serialize(std::vector<u8>& buf) const {
 
 	// Concat size information, address buffer and value buffer together
 	buf.reserve(WORD_SIZE + entry_buf.size());
-	push_bytes<word_t>(buf, entry_buf.size());
+	core::push_bytes<word_t>(buf, entry_buf.size());
 	buf.insert(buf.end(), entry_buf.begin(), entry_buf.end());
 }
 

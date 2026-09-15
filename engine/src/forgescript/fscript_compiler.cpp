@@ -22,7 +22,7 @@ static constexpr size_t DEFAULT_NODES_ARENA_SIZE = 2048;
 std::optional<std::vector<u8>> Compiler::compile() {
 	auto symbols = SymbolTable();
 
-	const auto source = fload_str(this->src_path);
+	const auto source = core::fload_str(this->src_path);
 	if (!source) {
 		Diagnostic(DiagnosticKind::FAIL_OPEN_SOURCE).emit(this->err_stream);
 		return std::nullopt;
@@ -38,7 +38,7 @@ std::optional<std::vector<u8>> Compiler::compile() {
 		return std::nullopt;
 	}
 
-	auto arena = BumpArena(DEFAULT_NODES_ARENA_SIZE); 
+	auto arena = core::BumpArena(DEFAULT_NODES_ARENA_SIZE); 
 	auto cpool = ConstPool();
 
 	auto parser =

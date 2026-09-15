@@ -13,6 +13,7 @@ private:
 
 public:
 	Pool() = default;
+	~Pool() = default;
 
 	inline size_t push(T value) {
 		this->pool.push_back(value);

@@ -39,7 +39,7 @@ struct Label {
 };
 
 struct CodeEntry {
-	Variant<instruction_t, Label> data;
+	core::Variant<instruction_t, Label> data;
 
 	explicit CodeEntry(instruction_t inst) :
 		data(inst)
@@ -65,7 +65,7 @@ private:
 
 	// Function code buffer containing function definitions and implementations.
 	std::vector<FuncEntry> func;
-	IdInterner<IdentifierId, word_t> func_id_interner;
+	core::IdInterner<IdentifierId, word_t> func_id_interner;
 
 	// Update functions are automatically call every frame.
 	std::vector<FuncEntry> updates;

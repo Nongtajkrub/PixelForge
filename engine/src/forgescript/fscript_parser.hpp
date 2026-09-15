@@ -12,24 +12,22 @@
 #include "fscript_ast.hpp"
 #include "fscript_specs.h"
 
-#include <cassert>
-#include <cstddef>
+#include <type_traits>
 #include <functional>
 #include <optional>
-#include <type_traits>
-#include <vector>
 #include <ostream>
+#include <cassert>
+#include <cstddef>
+#include <vector>
 
 namespace scr {
-
-using namespace core;
 
 class Parser {
 public:
 	Parser(
 		const std::span<Token> tokens,
 		SymbolTable& symbols,
-		ConstPool& cpool, BumpArena& arena, std::ostream& err_stream) :
+		ConstPool& cpool, core::BumpArena& arena, std::ostream& err_stream) :
 		tokens(tokens, err_stream),
 		symbols(symbols),
 		cpool(cpool),
@@ -66,15 +64,15 @@ private:
 	TokenStream tokens;
 
 	// Arena allocator for nodes.
-	BumpArena& arena;
+	core::BumpArena& arena;
 	SymbolTable& symbols;
 	ConstPool& cpool;
 
 	// The stream to output error to.
 	std::ostream& err_stream;
 
-	UniqueStringGenerator identifier_generator =
-		UniqueStringGenerator("__");
+	core::UniqueStringGenerator identifier_generator =
+		core::UniqueStringGenerator("__");
 
 	// Abstract Syntax Tree separated into each statements.
 	std::vector<ASTNode> ast;
