@@ -15,5 +15,20 @@ using i64 = int64_t;
 
 using f32 = float;
 
+namespace core {
+
 template <typename T>
 using Ref = std::reference_wrapper<T>;
+
+template<typename T>
+struct reverse_index_sequence;
+
+template<size_t... Is>
+struct reverse_index_sequence<std::index_sequence<Is...>> {
+	using type = std::index_sequence<((sizeof...(Is) - 1) - Is)...>;
+};
+
+template<typename T>
+using reverse_index_sequence_t = reverse_index_sequence<T>::type;
+
+}
