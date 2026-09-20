@@ -17,7 +17,7 @@
 
 namespace scr {
 
-void CodeGenerator::serialize(std::vector<u8>& buf) const {
+void CodeGenerator::serialize(CodeBuffer& buf) const {
 	using HoleToken = core::BytesBufferWriter::HoleToken;
 
 	auto io = core::BytesBufferWriter(buf);
@@ -454,7 +454,7 @@ size_t CodeGenerator::prev_label_offset(
 }
 
 size_t CodeGenerator::serialize(
-	std::vector<u8>& buf, const std::vector<CodeEntry>& src) const {
+	CodeBuffer& buf, const std::vector<CodeEntry>& src) const {
 	size_t size = 0;
 	buf.reserve(src.size() * WORD_SIZE);
 

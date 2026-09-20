@@ -1,9 +1,13 @@
 #include "fscript_lexer.hpp"
 
 #include "fscript_diagnostic.hpp"
+#include "fscript_location.hpp"
 #include "fscript_token.hpp"
 #include "fscript_specs.h"
 
+#include <optional>
+#include <ostream>
+#include <string_view>
 #include <unordered_map>
 
 namespace scr {
@@ -43,107 +47,130 @@ static const std::unordered_map<std::string, TokenKind> keywords = {
 	{CMD_COLLIDE_LEX, TokenKind::COMMAND},
 };
 
-bool Lexer::lex() {
-	while (!this->source.is_eof()) {
-		char c = this->source.advance();
-		this->location.col++;
+static inline void add_token(
+	TokenBuffer& buf, TokenKind kind, const Location& loc) {
+	buf.push_back(Token(kind, loc));
+}
+
+static inline void add_token(
+	TokenBuffer& buf,
+	TokenKind kind, std::string_view lexeme, const Location& loc) {
+	buf.push_back(Token(kind, lexeme, loc));
+}
+
+std::optional<TokenBuffer> lex(const std::string& src, std::ostream& err_stream) {
+	auto srcstream = SourceStream<std::string, char>(src);
+	auto loc = Location(1, 1);
+	auto buf = TokenBuffer{};
+
+	while (!srcstream.is_eof()) {
+		char c = srcstream.advance();
+		loc.col++;
 
 		switch (c) {
 		case '(':
-			add_token(TokenKind::LEFT_PAREN);
+			add_token(buf, TokenKind::LEFT_PAREN, loc);
 			break;
 		case ')':
-			add_token(TokenKind::RIGHT_PAREN);
+			add_token(buf, TokenKind::RIGHT_PAREN, loc);
 			break;
 		case '{':
-			add_token(TokenKind::LEFT_BRACE);
+			add_token(buf, TokenKind::LEFT_BRACE, loc);
 			break;
 		case '}':
-			add_token(TokenKind::RIGHT_BRACE);
+			add_token(buf, TokenKind::RIGHT_BRACE, loc);
 			break;
 		case '[':
-			add_token(TokenKind::LEFT_BRACKET);
+			add_token(buf, TokenKind::LEFT_BRACKET, loc);
 			break;
 		case ']':
-			add_token(TokenKind::RIGHT_BRACKET);
+			add_token(buf, TokenKind::RIGHT_BRACKET, loc);
 			break;
 		case ',':
-			add_token(TokenKind::COMMA);
+			add_token(buf, TokenKind::COMMA, loc);
 			break;
 		case '+':
-			add_token(TokenKind::PLUS);
+			add_token(buf, TokenKind::PLUS, loc);
 			break;
 		case '/':
-			add_token(TokenKind::SLASH);
+			add_token(buf, TokenKind::SLASH, loc);
 			break;
 		case '*':
-			add_token(TokenKind::STAR);
+			add_token(buf, TokenKind::STAR, loc);
 			break;
 		case ';':
-			add_token(TokenKind::SEMICOLON);
+			add_token(buf, TokenKind::SEMICOLON, loc);
 			break;
 		case '_':
-			add_token(TokenKind::UNDERSCORE);
+			add_token(buf, TokenKind::UNDERSCORE, loc);
 			break;
 		case '.':
-			add_token(TokenKind::DOT);
+			add_token(buf, TokenKind::DOT, loc);
 			break;
 		case '$':
-			add_token(TokenKind::DOLLAR_SIGN);
+			add_token(buf, TokenKind::DOLLAR_SIGN, loc);
 			break;
 		case ':':
 			add_token(
-				(this->source.match(':')) ?
-					TokenKind::RANGE_OP : TokenKind::COLON);
+				buf,
+				(srcstream.match(':')) ? TokenKind::RANGE_OP : TokenKind::COLON, 
+				loc);
 			break;
 		case '=':
 			add_token(
-				(this->source.match('=')) ?
-					TokenKind::DOUBLE_EQUAL : TokenKind::EQUAL);
+				buf,
+				(srcstream.match('=')) ? 
+					TokenKind::DOUBLE_EQUAL : TokenKind::EQUAL,
+				loc);
 			break;
 		case '!':
 			add_token(
-				this->source.match('=') ?
-					TokenKind::BANG_EQUAL : TokenKind::BANG);
+				buf,
+				srcstream.match('=') ? TokenKind::BANG_EQUAL : TokenKind::BANG,
+				loc);
 			break;
 		case '>':
 			add_token(
-				this->source.match('=') ?
-					TokenKind::GREATER_EQUAL : TokenKind::GREATER);
+				buf,
+				srcstream.match('=') ?
+					TokenKind::GREATER_EQUAL : TokenKind::GREATER,
+				loc);
 			break;
 		case '<':
 			add_token(
-				this->source.match('=') ?
-					TokenKind::LESS_EQUAL : TokenKind::LESS);
+				buf,
+				srcstream.match('=') ? TokenKind::LESS_EQUAL : TokenKind::LESS,
+				loc);
 			break;
 		case '"': {
 			// Advance once to skip the first quote.
-			this->source.advance();
+			srcstream.advance();
 
-			const auto sub_info = this->source.advance_until('"');
+			const auto sub_info = srcstream.advance_until('"');
 
-			if (this->source.is_eof()) {
-				emit(DiagnosticKind::UNTERMINATED_STRING);
-				return false;
+			if (srcstream.is_eof()) {
+				Diagnostic(DiagnosticKind::UNTERMINATED_STRING).emit(err_stream);
+				return std::nullopt;
 			}
 
 			add_token(
+				buf,
 				TokenKind::STRING_LIT,
-				this->source.data().substr(sub_info.begin, sub_info.size));
-			this->location.col += sub_info.size;
+				srcstream.data().substr(sub_info.begin, sub_info.size), loc);
+			loc.col += sub_info.size;
 
 			// Advance again to skip the last quote.
-			this->source.advance();
+			srcstream.advance();
 			break;
 		}
 		case '-':
-			if (std::isdigit(this->source.peek())) {
+			if (std::isdigit(srcstream.peek())) {
 				break;
 			}
 
 			add_token(
-				(this->source.match('>')) ?
-					TokenKind::ARROW : TokenKind::MINUS);
+				buf,
+				(srcstream.match('>')) ? TokenKind::ARROW : TokenKind::MINUS, loc);
 			break;
 		case '0':
 		case '1':
@@ -155,60 +182,63 @@ bool Lexer::lex() {
 		case '7':
 		case '8':
 		case '9': {
-			const bool neg = this->source.prev() == '-';
+			const bool neg = srcstream.prev() == '-';
 			const auto sub_info =
-				this->source.advance_until(
+				srcstream.advance_until(
 					[](auto c) -> bool {
-						return !std::isdigit(c) && c != '.'; });
+						return !std::isdigit(c) && c != '.'; 
+					});
 			const auto lexeme = 
 				(neg) ? "-" : "" 
-					+ this->source.data().substr(sub_info.begin, sub_info.size);
+					+ srcstream.data().substr(sub_info.begin, sub_info.size);
 
 			add_token(
+				buf,
 				(lexeme.contains('.')) ?
-					TokenKind::FLOAT_LIT : TokenKind::INTEGER_LIT, lexeme);
+					TokenKind::FLOAT_LIT : TokenKind::INTEGER_LIT,
+				lexeme, loc);
 
-			this->location.col += sub_info.size;
+			loc.col += sub_info.size;
 			break;
 		}
 		case '#':
-			if (this->source.peek() == '<') {
-				this->source.advance_until('>');
-				this->source.advance();
+			if (srcstream.peek() == '<') {
+				srcstream.advance_until('>');
+				srcstream.advance();
 			} else {
-				this->source.advance_until(
+				srcstream.advance_until(
 					[](auto c) -> bool { return c == '\n' || c == '\r'; });
 			}
 			break;
 		case '\n':
 		case '\r':
-			this->location.row++;
-			this->location.col = 0;
+			loc.row++;
+			loc.col = 0;
 			break;
 		case ' ':
 		case '\t':
 			break;
 		default: {
 			const auto sub_info = 
-				this->source.advance_until(
+				srcstream.advance_until(
 					[](auto c) -> bool { 
 						return !std::isalpha(c) 
 							&& c != '_' && !std::isdigit(c); });
 			const auto lexeme = 
-				this->source.data().substr(sub_info.begin, sub_info.size);
-			this->location.col += sub_info.size;
+				srcstream.data().substr(sub_info.begin, sub_info.size);
+			loc.col += sub_info.size;
 
 			// If the keyword is a command then keep it's lexeme as well.
 			if (auto it = keywords.find(lexeme); it != keywords.end()) {
 				const auto kind = it->second;
 
 				if (kind == TokenKind::COMMAND) {
-					add_token(kind, lexeme);
+					add_token(buf, kind, lexeme, loc);
 				} else {
-					add_token(kind);
+					add_token(buf, kind, loc);
 				}
 			} else {
-				add_token(TokenKind::IDENTIFIER, lexeme);
+				add_token(buf, TokenKind::IDENTIFIER, lexeme, loc);
 			}
 
 			break;
@@ -216,7 +246,7 @@ bool Lexer::lex() {
 		}
 	}
 
-	return true;
+	return buf;
 }
 
 } // namespace scr

@@ -1,7 +1,9 @@
 #pragma once
 
 #include <cstdint>
+#include <optional>
 #include <functional>
+#include <type_traits>
 
 using u8  = uint8_t;
 using u16 = uint16_t;
@@ -30,5 +32,14 @@ struct reverse_index_sequence<std::index_sequence<Is...>> {
 
 template<typename T>
 using reverse_index_sequence_t = reverse_index_sequence<T>::type;
+
+template<typename T>
+struct is_optional : std::false_type {};
+
+template<typename T>
+struct is_optional<std::optional<T>> : std::true_type {};
+
+template<typename T>
+constexpr auto is_optional_v = is_optional<T>::value;
 
 }

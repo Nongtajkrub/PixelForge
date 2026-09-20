@@ -778,7 +778,7 @@ std::optional<ASTNode> Parser::parse_atomic(ASTNodeKind kind) {
 	return ASTNode(&node->kind);
 }
 
-bool Parser::parse_func_args(std::vector<ASTNode>& buf, IdenAttr* func_attr) {
+bool Parser::parse_func_args(ASTBuffer& buf, IdenAttr* func_attr) {
 	assert(func_attr->kind_is<FuncAttr>());
 	auto& attr = func_attr->get_data<FuncAttr>();
 
@@ -811,7 +811,7 @@ bool Parser::parse_func_args(std::vector<ASTNode>& buf, IdenAttr* func_attr) {
 }
 
 bool Parser::parse_func_call_args(
-	std::vector<ASTNode>& buf,
+	ASTBuffer& buf,
 	const std::vector<TypeAttr*>& arg_types, TokenKind terminator) {
 	auto arg_it = arg_types.begin();
 

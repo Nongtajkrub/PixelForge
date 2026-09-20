@@ -22,22 +22,26 @@
 
 namespace scr {
 
+using ASTBuffer = std::vector<ASTNode>;
+
 class Parser {
 public:
 	Parser(
 		const std::span<Token> tokens,
 		SymbolTable& symbols,
-		ConstPool& cpool, core::BumpArena& arena, std::ostream& err_stream) :
+		ConstPool& cpool,
+		core::BumpArena& arena, ASTBuffer& ast, std::ostream& err_stream) :
 		tokens(tokens, err_stream),
 		symbols(symbols),
 		cpool(cpool),
 		arena(arena),
+		ast(ast),
 		err_stream(err_stream)
 	{ }
 
 	bool parse();
 
-	inline const std::vector<ASTNode>& get_ast() {
+	inline const ASTBuffer& get_ast() {
 		return this->ast;
 	}
 
@@ -75,9 +79,8 @@ private:
 		core::UniqueStringGenerator("__");
 
 	// Abstract Syntax Tree separated into each statements.
-	std::vector<ASTNode> ast;
+	ASTBuffer& ast;
 
-private:
 	std::optional<ASTNode> parse_block(
 		std::function<bool(TokenKind kind)> end_predicate);
 
@@ -101,9 +104,9 @@ private:
 	std::optional<ASTNode> parse_atomic(ASTNodeKind kind);
 
 	// Helper methods for parsing functions.
-	bool parse_func_args(std::vector<ASTNode>& buf, IdenAttr* func_attr);
+	bool parse_func_args(ASTBuffer& buf, IdenAttr* func_attr);
 	bool parse_func_call_args(
-		std::vector<ASTNode>& buf,
+		ASTBuffer& buf,
 		const std::vector<TypeAttr*>& arg_types, TokenKind terminator);
 	bool ensure_func_returns(const BlockStmt* body);
 

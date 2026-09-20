@@ -9,6 +9,8 @@
 
 namespace scr {
 
-std::vector<u8> pack(const ConstPool& cpool, const CodeGenerator& code_gen);
+using CodePackage = std::vector<u8>;
+
+CodePackage pack(const ConstPool& cpool, const CodeGenerator& code_gen);
 
 } // namespace scr

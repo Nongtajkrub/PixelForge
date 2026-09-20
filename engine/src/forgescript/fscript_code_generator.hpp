@@ -3,6 +3,7 @@
 #include <core-cplusplus/utilities/ref_state_guard.hpp>
 #include <core-cplusplus/utilities/variant.hpp>
 
+#include "fscript_parser.hpp"
 #include "fscript_symbol_table.hpp"
 #include "fscript_ast.hpp"
 #include "fscript_specs.h"
@@ -15,6 +16,8 @@
 #include <queue>
 
 namespace scr {
+
+using CodeBuffer = std::vector<u8>;
 
 enum class LabelKind : u8 {
 	HOLE,
@@ -73,19 +76,22 @@ private:
 	// Store index of hole labels in the code avoiding o(n) lookup.
 	std::queue<size_t> hole_indexes;
 
-	const std::vector<ASTNode>& ast;
+	const ASTBuffer& ast;
 
 public:
-	CodeGenerator(const std::vector<ASTNode>& ast) :
+	CodeGenerator(const ASTBuffer& ast) :
 		ast(ast),
 		func_id_interner([this]() -> word_t { return this->func.size(); })
-	{ 
-		generate();
+	{ }
+
+	inline void generate() {
+		generate(this->ast);
+		push(OP_END);
 	}
 
 	void output_code(std::ostream& stream);
 
-	void serialize(std::vector<u8>& buf) const;
+	void serialize(CodeBuffer& buf) const;
 
 private:
 	void handle_node(const ASTNode& node);
@@ -118,12 +124,7 @@ private:
 	static void output_code(
 		std::ostream& stream, const std::vector<CodeEntry>& code);
 
-	inline void generate() {
-		generate(this->ast);
-		push(OP_END);
-	}
-
-	inline void generate(const std::vector<ASTNode>& nodes) {
+	inline void generate(const ASTBuffer& nodes) {
 		for (const auto& node : nodes) {
 			handle_node(node);
 		}

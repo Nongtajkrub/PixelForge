@@ -1,6 +1,7 @@
 #include <engine/forgescript/fscript_compiler.hpp>
 
 #include <core-cplusplus/utilities/bump_arena.hpp>
+#include <core-cplusplus/utilities/pipeline.hpp>
 #include <core-cplusplus/io/file_io.hpp>
 
 #include "fscript_code_generator.hpp"
@@ -12,45 +13,118 @@
 #include "fscript_packer.hpp"
 #include "fscript_lexer.hpp"
 
-#include <cstddef>
+#include <filesystem>
 #include <optional>
+#include <cstddef>
+#include <ostream>
+#include <print>
+#include <vector>
 
 namespace scr {
 
-static constexpr size_t DEFAULT_NODES_ARENA_SIZE = 2048;
+struct PipelineCtx {
+	std::ostream& err_stream;
+
+	core::BumpArena arena;
+	SymbolTable symbols;
+	ConstPool cpool;
+};
+
+struct load_soruce {
+	core::PipelineOut<std::string> operator()(
+		const std::filesystem::path& src, PipelineCtx& ctx) const {
+		const auto data = core::fload_str(src);
+
+		if (!data) {
+			Diagnostic(DiagnosticKind::FAIL_OPEN_SOURCE).emit(ctx.err_stream);
+			return core::plterminate;
+		}
+
+		return data;
+	}
+};
+
+struct lex_source {
+	core::PipelineOut<TokenBuffer> operator()(
+		std::string src, PipelineCtx& ctx) const {
+		const auto tokens = lex(src, ctx.err_stream);
+
+		if (!tokens) {
+			return core::plterminate;
+		}
+
+		return tokens;
+	}
+};
+
+struct preprocess_tokens {
+	core::PipelineOut<TokenBuffer> operator()(
+		TokenBuffer tokens, PipelineCtx& ctx) const {
+		auto preprocessor = Preprocessor(tokens, ctx.symbols, ctx.err_stream);
+
+		if (!preprocessor.process()) {
+			return core::plterminate;
+		}
+
+		return tokens;
+	}
+};
+
+struct parse_tokens {
+	core::PipelineOut<ASTBuffer> operator()(
+		TokenBuffer tokens, PipelineCtx& ctx) const {
+		ASTBuffer ast{};
+		auto parser = Parser(
+			tokens, ctx.symbols, ctx.cpool, ctx.arena, ast, ctx.err_stream); 
+
+		if (!parser.parse()) {
+			return core::plterminate;
+		}
+
+		return ast;
+	}
+}; 
+
+struct generate_code {
+	core::PipelineOut<CodeGenerator> operator()(
+		ASTBuffer ast, PipelineCtx& ctx) const {
+		auto generator = CodeGenerator(ast);
+
+		generator.generate();
+
+		// TODO: Make generator return a buffer instead.
+		return generator;
+	}
+};
+
+struct package_code {
+	inline core::PipelineOut<CodePackage> operator()(
+		CodeGenerator generator, PipelineCtx& ctx) const {
+		const auto package = pack(ctx.cpool, generator);
+
+		for (const auto byte : package) {
+			std::println("{}", byte);
+		}
+
+		return package;
+	}
+};
 
 std::optional<std::vector<u8>> Compiler::compile() {
-	auto symbols = SymbolTable();
+	auto ctx = (PipelineCtx) {
+		.err_stream = this->err_stream,
+		.arena = core::BumpArena(2048),
+		.symbols = SymbolTable(),
+		.cpool = ConstPool(),
+	};
 
-	const auto source = core::fload_str(this->src_path);
-	if (!source) {
-		Diagnostic(DiagnosticKind::FAIL_OPEN_SOURCE).emit(this->err_stream);
-		return std::nullopt;
-	}
+	core::Pipeline<
+		load_soruce,
+		lex_source,
+		preprocess_tokens,	
+		parse_tokens, generate_code, package_code>::execute(this->src, ctx);
 
-	auto lexer = Lexer(*source, this->err_stream);
-	if (!lexer.lex()) {
-		return std::nullopt;
-	}
-
-	if (!(Preprocessor(
-			lexer.get_token(), symbols, this->err_stream).process())) {
-		return std::nullopt;
-	}
-
-	auto arena = core::BumpArena(DEFAULT_NODES_ARENA_SIZE); 
-	auto cpool = ConstPool();
-
-	auto parser =
-		Parser(
-			lexer.get_token(), symbols, cpool, arena, this->err_stream);
-	if (!parser.parse()) {
-		return std::nullopt;
-	}
-
-	auto code_gen = CodeGenerator(parser.get_ast());
-
-	return pack(cpool, code_gen);
+	return std::nullopt;
 }
 
 }; // namespace scr
