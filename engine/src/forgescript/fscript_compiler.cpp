@@ -86,21 +86,20 @@ struct parse_tokens {
 }; 
 
 struct generate_code {
-	core::PipelineOut<CodeGenerator> operator()(
+	core::PipelineOut<std::vector<u8>> operator()(
 		ASTBuffer ast, PipelineCtx& ctx) const {
 		auto generator = CodeGenerator(ast);
 
 		generator.generate();
 
-		// TODO: Make generator return a buffer instead.
-		return generator;
+		return generator.serialize();
 	}
 };
 
 struct package_code {
 	inline core::PipelineOut<CodePackage> operator()(
-		CodeGenerator generator, PipelineCtx& ctx) const {
-		const auto package = pack(ctx.cpool, generator);
+		std::vector<u8> code, PipelineCtx& ctx) const {
+		const auto package = pack(ctx.cpool.serialize(), code);
 
 		for (const auto byte : package) {
 			std::println("{}", byte);

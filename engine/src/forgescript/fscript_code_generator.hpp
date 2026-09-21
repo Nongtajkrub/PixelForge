@@ -2,6 +2,7 @@
 
 #include <core-cplusplus/utilities/ref_state_guard.hpp>
 #include <core-cplusplus/utilities/variant.hpp>
+#include <core-cplusplus/io/byte_io.hpp>
 
 #include "fscript_parser.hpp"
 #include "fscript_symbol_table.hpp"
@@ -16,8 +17,6 @@
 #include <queue>
 
 namespace scr {
-
-using CodeBuffer = std::vector<u8>;
 
 enum class LabelKind : u8 {
 	HOLE,
@@ -91,7 +90,7 @@ public:
 
 	void output_code(std::ostream& stream);
 
-	void serialize(CodeBuffer& buf) const;
+	std::vector<u8> serialize() const;
 
 private:
 	void handle_node(const ASTNode& node);
@@ -119,7 +118,8 @@ private:
 	size_t prev_label_offset(
 		const std::vector<CodeEntry>& src, size_t from, LabelKind label) const;
 
-	size_t serialize(std::vector<u8>& buf, const std::vector<CodeEntry>& src) const;
+	size_t serialize(
+		core::BytesBufferWriter& buf, const std::vector<CodeEntry>& src) const;
 
 	static void output_code(
 		std::ostream& stream, const std::vector<CodeEntry>& code);

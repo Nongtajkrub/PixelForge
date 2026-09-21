@@ -17,14 +17,15 @@
 
 namespace scr {
 
-void CodeGenerator::serialize(CodeBuffer& buf) const {
+std::vector<u8> CodeGenerator::serialize() const {
 	using HoleToken = core::BytesBufferWriter::HoleToken;
 
+	std::vector<u8> buf; 
 	auto io = core::BytesBufferWriter(buf);
 
 	{
 		const HoleToken size_hole = io.hole<word_t>();
-		const size_t code_size = serialize(io.get_buf(), this->code); 
+		const size_t code_size = serialize(io, this->code); 
 
 		io.fill<word_t>(code_size, size_hole);
 	}
@@ -35,7 +36,7 @@ void CodeGenerator::serialize(CodeBuffer& buf) const {
 		
 		for (const auto& entry : this->func) {
 			const HoleToken func_size_hole = io.hole<word_t>();
-			const size_t func_size = serialize(io.get_buf(), entry.body);
+			const size_t func_size = serialize(io, entry.body);
 			size_sum += func_size;
 
 			io.fill<word_t>(func_size, func_size_hole);
@@ -50,7 +51,7 @@ void CodeGenerator::serialize(CodeBuffer& buf) const {
 		
 		for (const auto& entry : this->updates) {
 			const HoleToken update_size_hole = io.hole<word_t>();
-			const size_t update_size = serialize(io.get_buf(), entry.body);
+			const size_t update_size = serialize(io, entry.body);
 			size_sum += update_size;
 
 			io.fill<word_t>(update_size, update_size_hole);
@@ -58,6 +59,8 @@ void CodeGenerator::serialize(CodeBuffer& buf) const {
 
 		io.fill<word_t>(size_sum, sum_size_hole);
 	}
+
+	return buf;
 }
 
 void CodeGenerator::handle_node(const ASTNode& node) {
@@ -454,16 +457,16 @@ size_t CodeGenerator::prev_label_offset(
 }
 
 size_t CodeGenerator::serialize(
-	CodeBuffer& buf, const std::vector<CodeEntry>& src) const {
+	core::BytesBufferWriter& io, const std::vector<CodeEntry>& src) const {
 	size_t size = 0;
-	buf.reserve(src.size() * WORD_SIZE);
+	io.get_buf().reserve(src.size() * WORD_SIZE);
 
 	// Serialize main instructions.
 	for (size_t i = 0; i < src.size(); i++) {
 		const auto& entry = src[i];
 
 		if (entry.data.is<instruction_t>()) {
-			core::push_bytes(buf, entry.data.get<instruction_t>());
+			io.write<word_t>(entry.data.get<instruction_t>());
 			size += WORD_SIZE;
 		} else if (entry.data.is<Label>()) {
 			// Resolve labels.
@@ -479,14 +482,14 @@ size_t CodeGenerator::serialize(
 			case LabelKind::RETURN:
 			case LabelKind::RETURN_ADDR:
 			case LabelKind::LOOP_END:
-				core::push_bytes<word_t>(
-					buf, buf.size() + next_label_offset(src, i + 1, label.kind));
+				io.write<word_t>(
+					io.size() + next_label_offset(src, i + 1, label.kind));
 				size += WORD_SIZE;
 				break;
 			// Scan backward.
 			case LabelKind::LOOP_BEGIN:
-				core::push_bytes<word_t>(
-					buf, buf.size() - prev_label_offset(src, i - 1, label.kind));
+				io.write<word_t>(
+					io.size() - prev_label_offset(src, i - 1, label.kind));
 				size += WORD_SIZE;
 				break;
 			case LabelKind::HOLE:

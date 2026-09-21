@@ -53,14 +53,18 @@ public:
 	// Push data into the buffer.
 	template<typename T>
 	requires std::is_trivially_copyable_v<T>
-	void write(T data) {
+	inline void write(T data) {
 		push_bytes<T>(this->bytes, data);
+	}
+	
+	inline void extend(const std::vector<u8>& data) {
+		this->bytes.insert(this->bytes.end(), data.begin(), data.end());
 	}
 
 	// Push an empty hole into the buffer and return the token to it.
 	template<typename T>
 	requires std::is_trivially_copyable_v<T>
-	HoleToken hole() {
+	[[nodiscard]] inline HoleToken hole() {
 		const auto token = HoleToken(this->bytes.size(), sizeof(T));
 		push_bytes<T>(this->bytes, 0);
 		return token;
@@ -68,12 +72,16 @@ public:
 
 	template<typename T>
 	requires std::is_trivially_copyable_v<T>
-	void fill(T data, HoleToken token) {
+	inline void fill(T data, HoleToken token) {
 		assert(token.size == sizeof(T));
 		replace_bytes(this->bytes, token.index, data);
 	}
 
-	std::vector<u8>& get_buf() {
+	inline size_t size() {
+		return this->bytes.size();
+	}
+
+	inline std::vector<u8>& get_buf() {
 		return this->bytes;
 	}
 };

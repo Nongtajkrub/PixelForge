@@ -73,7 +73,7 @@ public:
 	// Push a const into pool if it does not already exist and return const index.
 	ConstIndex intern(const Const& value);
 
-	void serialize(std::vector<u8>& buf) const;
+	std::vector<u8> serialize() const;
 
 	inline const Const& get(ConstIndex index) const {
 		return this->pool[index];
