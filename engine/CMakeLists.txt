@@ -2,9 +2,6 @@ add_library(Engine STATIC)
 
 target_sources(Engine
 	PRIVATE
-		src/forgescript/vm/fscript_instruction.c
-	
-		src/forgescript/fscript_ast.cpp	
 		src/forgescript/fscript_ast.cpp
 		src/forgescript/fscript_code_generator.cpp
 		src/forgescript/fscript_compiler.cpp
@@ -16,6 +13,8 @@ target_sources(Engine
 		src/forgescript/fscript_preprocessor.cpp
 		src/forgescript/fscript_symbol_table.cpp
 		src/forgescript/fscript_token.cpp
+
+		src/vm/vm_instruction.c
 )
 
 target_include_directories(Engine
@@ -26,5 +25,6 @@ target_include_directories(Engine
 
 target_link_libraries(Engine
 	PUBLIC
+		Thirdparty
 		Core
 )

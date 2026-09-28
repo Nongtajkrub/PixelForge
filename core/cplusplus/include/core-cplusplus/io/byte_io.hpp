@@ -56,6 +56,10 @@ public:
 	inline void write(T data) {
 		push_bytes<T>(this->bytes, data);
 	}
+
+	inline void write(const char* bytes, size_t size) {
+		push_bytes(this->bytes, bytes, size);
+	}
 	
 	inline void extend(const std::vector<u8>& data) {
 		this->bytes.insert(this->bytes.end(), data.begin(), data.end());

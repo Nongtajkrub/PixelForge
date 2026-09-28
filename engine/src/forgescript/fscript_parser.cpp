@@ -8,8 +8,8 @@
 #include "fscript_location.hpp"
 #include "fscript_pattern.hpp"
 #include "fscript_token.hpp"
-#include "fscript_specs.h"
 #include "fscript_ast.hpp"
+#include "../vm/vm_specs.h"
 
 #include <optional>
 #include <cassert>

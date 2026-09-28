@@ -3,7 +3,6 @@
 #include "fscript_diagnostic.hpp"
 #include "fscript_location.hpp"
 #include "fscript_token.hpp"
-#include "fscript_specs.h"
 
 #include <optional>
 #include <ostream>

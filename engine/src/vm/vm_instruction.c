@@ -1,4 +1,4 @@
-#include "fscript_instruction.h"
+#include "vm_instruction.h"
 
 const char* op_to_str(opcode_t op) {
 	switch (op) {

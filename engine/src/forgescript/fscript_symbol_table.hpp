@@ -6,7 +6,7 @@
 #include <core-cplusplus/container/cursor_stack.hpp>
 #include <core-c/io/log.h>
 
-#include "fscript_specs.h"
+#include "../vm/vm_specs.h"
 
 #include <unordered_map>
 #include <type_traits>
@@ -187,7 +187,6 @@ struct Scope {
 	core::IncrementalIdGen<StackOffset> stack_offset_gen = 
 		core::IncrementalIdGen<StackOffset>(0);
 	
-	// Owner of the scope if exist (Usually function).
 	// IdenAttr store in a stack to support identifier shadowing.
 	std::unordered_map<IdentifierId, std::stack<IdenAttr>> table;
 

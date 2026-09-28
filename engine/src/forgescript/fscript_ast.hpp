@@ -5,7 +5,7 @@
 #include "fscript_symbol_table.hpp"
 #include "fscript_const_pool.hpp"
 #include "fscript_token.hpp"
-#include "fscript_specs.h"
+#include "../vm/vm_specs.h"
 
 #include <optional>
 #include <ostream>

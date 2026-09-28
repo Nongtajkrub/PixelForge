@@ -10,7 +10,6 @@
 #include "fscript_pattern.hpp"
 #include "fscript_token.hpp"
 #include "fscript_ast.hpp"
-#include "fscript_specs.h"
 
 #include <type_traits>
 #include <functional>

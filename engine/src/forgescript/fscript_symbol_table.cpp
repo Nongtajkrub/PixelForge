@@ -1,6 +1,6 @@
 #include "fscript_symbol_table.hpp"
 
-#include "fscript_specs.h"
+#include "fscript_token.hpp"
 
 #include <ranges>
 

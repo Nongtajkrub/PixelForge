@@ -10,7 +10,7 @@
 extern "C" {
 #endif // #ifdef __cplusplus
 
-#include "../fscript_specs.h"
+#include "vm_specs.h"
 
 #include <stdbool.h>
 

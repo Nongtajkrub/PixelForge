@@ -1,7 +1,7 @@
 #include "fscript_token.hpp"
 
 #include "fscript_diagnostic.hpp"
-#include "fscript_specs.h"
+#include "fscript_token.hpp"
 
 #include <cassert>
 #include <initializer_list>

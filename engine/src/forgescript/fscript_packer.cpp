@@ -6,8 +6,9 @@
 
 namespace scr {
 
-CodePackage pack(const std::vector<u8>& cpool, const std::vector<u8>& code) {
-	std::vector<u8> buf;
+CodePackage pack_script(
+	const std::vector<u8>& cpool, const std::vector<u8>& code) {
+	CodePackage buf;
 	auto io = core::BytesBufferWriter(buf);
 
 	io.extend(cpool);

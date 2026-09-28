@@ -7,7 +7,7 @@
 #include <core-c/io/log.h>
 
 #include "fscript_token.hpp"
-#include "fscript_specs.h"
+#include "../vm/vm_specs.h"
 
 #include <cassert>
 #include <cstddef>

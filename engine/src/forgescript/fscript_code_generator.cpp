@@ -6,8 +6,8 @@
 #include "fscript_symbol_table.hpp"
 #include "fscript_token.hpp"
 #include "fscript_ast.hpp"
-#include "fscript_specs.h"
-#include "vm/fscript_instruction.h"
+#include "../vm/vm_specs.h"
+#include "../vm/vm_instruction.h"
 
 #include <cassert>
 #include <cstddef>
