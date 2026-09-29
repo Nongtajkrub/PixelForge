@@ -65,6 +65,10 @@ public:
 		this->bytes.insert(this->bytes.end(), data.begin(), data.end());
 	}
 
+	inline void extend(std::span<const u8> data) {
+		this->bytes.insert(this->bytes.end(), data.begin(), data.end());
+	}
+
 	// Push an empty hole into the buffer and return the token to it.
 	template<typename T>
 	requires std::is_trivially_copyable_v<T>

@@ -23,7 +23,7 @@ private:
 		if constexpr (sizeof...(rest) == 0) {
 			return first(std::forward<TInput>(input), std::forward<TCtx>(ctx));
 		} else {
-			const auto prev = nested_call(
+			auto prev = nested_call(
 				std::forward<TInput>(input),
 				std::forward<TCtx>(ctx), std::forward<FRest>(rest)...);
 

@@ -2,13 +2,12 @@
 
 #include <core-cplusplus/types.hpp>
 
-#include <vector>
+#include <span>
 
 namespace scr {
 
 using CodePackage = std::vector<u8>;
 
-CodePackage pack_script(
-	const std::vector<u8>& cpool, const std::vector<u8>& code);
+CodePackage pack_script(std::span<const u8> cpool, std::span<const u8> code);
 
 } // namespace scr

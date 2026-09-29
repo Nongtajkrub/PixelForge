@@ -1,7 +1,5 @@
 #include <engine/forgescript/fscript_compiler.hpp>
 
-#include <boost/dynamic_bitset.hpp>
-
 #include <core-cplusplus/utilities/bump_arena.hpp>
 #include <core-cplusplus/utilities/pipeline.hpp>
 #include <core-cplusplus/io/file_io.hpp>
@@ -100,7 +98,7 @@ struct generate_code {
 
 struct package_code {
 	inline core::PipelineOut<CodePackage> operator()(
-		std::vector<u8> code, PipelineCtx& ctx) const {
+		std::span<u8> code, PipelineCtx& ctx) const {
 		const auto package = pack_script(ctx.cpool.serialize(), code);
 
 		for (const auto byte : package) {
