@@ -15,9 +15,8 @@
 
 #include <filesystem>
 #include <optional>
+#include <iostream>
 #include <cstddef>
-#include <ostream>
-#include <print>
 #include <vector>
 
 namespace scr {
@@ -91,6 +90,7 @@ struct generate_code {
 		auto generator = CodeGenerator(ast);
 
 		generator.generate();
+		generator.output_code(std::cout);
 
 		return generator.serialize();
 	}
@@ -100,10 +100,6 @@ struct package_code {
 	inline core::PipelineOut<CodePackage> operator()(
 		std::span<u8> code, PipelineCtx& ctx) const {
 		const auto package = pack_script(ctx.cpool.serialize(), code);
-
-		for (const auto byte : package) {
-			std::println("{}", byte);
-		}
 
 		return package;
 	}

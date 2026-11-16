@@ -4,10 +4,10 @@
 
 #define TODO() assert(true && "TODO!")
 
-#define OPT_ASSIGN_OR_RETURN(TARGET, EXPR)                                    \
+#define OPT_ASSIGN_OR_RETURN(target_, expr_)                                  \
 do {                                                                          \
-    auto TMP = (EXPR);                                                        \
-    if (!TMP)                                                                 \
+    auto temp_ = (expr_);                                                     \
+    if (!temp_)                                                               \
         return std::nullopt;                                                  \
-    TARGET = std::move(*TMP);                                                 \
+    target_ = std::move(*temp_);                                              \
 } while (0)

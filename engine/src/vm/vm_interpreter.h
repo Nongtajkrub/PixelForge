@@ -18,7 +18,9 @@ typedef struct {
 	vm_stack_t stack;
 } vm_interpreter_t;
 
-vm_interpreter_t vminter_new(pkg_script_cpool_t* cpool, pkg_sprite_t* sprite);
+vm_interpreter_t vm_inter_new(pkg_script_cpool_t* cpool, pkg_sprite_t* sprite);
+
+void vm_inter_tick(vm_interpreter_t* inter);
 
 #ifdef __cplusplus
 } // extern "C"

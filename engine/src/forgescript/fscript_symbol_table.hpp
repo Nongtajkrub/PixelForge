@@ -1,9 +1,9 @@
 #pragma once
 
 #include <core-cplusplus/utilities/incremental_id.hpp>
+#include <core-cplusplus/container/cursor_stack.hpp>
 #include <core-cplusplus/utilities/id_interner.hpp>
 #include <core-cplusplus/utilities/variant.hpp>
-#include <core-cplusplus/container/cursor_stack.hpp>
 #include <core-c/io/log.h>
 
 #include "../vm/vm_specs.h"
@@ -183,10 +183,6 @@ struct Scope {
 	// Owner of the scope if exist (Often a function).
 	IdenAttr* owner;
 
-	// For generating the stack offset of each variable, reset when leave scope.
-	core::IncrementalIdGen<StackOffset> stack_offset_gen = 
-		core::IncrementalIdGen<StackOffset>(0);
-	
 	// IdenAttr store in a stack to support identifier shadowing.
 	std::unordered_map<IdentifierId, std::stack<IdenAttr>> table;
 
@@ -253,6 +249,10 @@ private:
 	// Identifier table stored in a cursor stack to manage scopes while
 	// preserving identifier attributes, ensuring references remain valid.	
 	core::CursorStack<Scope> scopes;
+
+	// For generating the stack offset of each variable, rollback when leave scope.
+	core::IncrementalIdGen<StackOffset> stack_offset_gen = 
+		core::IncrementalIdGen<StackOffset>(0);
 
 	// Generate ID for identifiers.
 	core::IncrementalIdGen<IdentifierId> iden_id_generator = 

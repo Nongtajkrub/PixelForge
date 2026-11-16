@@ -24,6 +24,12 @@ typedef enum : u8 {
 	CID_COLLIDE,
 } command_id_t;
 
+typedef enum : u8 {
+	MEM_SIZE_S,
+	MEM_SIZE_MD,
+	MEM_SIZE_L,
+	MEM_SIZE_XL,
+} mem_size_category_t;
 
 #ifdef __cplusplus
 } // extern "C"

@@ -2,7 +2,7 @@
 * Written by Google Gemini.
 */
 
-#include <core-c/primitive_view.h>
+#include <core-c/utilities/primitive_view.h>
 
 #include <core-c/types.h>
 

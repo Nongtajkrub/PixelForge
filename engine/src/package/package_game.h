@@ -1,10 +1,11 @@
 #pragma once
 
-#include "package_script.h"
-#include "package_sprite.h"
 #ifdef __cplusplus
 extern "C" {
 #endif // #ifdef __cplusplus
+
+#include "package_script.h"
+#include "package_sprite.h"
 
 typedef struct {
 	pkg_sprite_t sprite;

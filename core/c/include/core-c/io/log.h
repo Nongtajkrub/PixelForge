@@ -18,16 +18,16 @@ extern "C" {
 			prefix, file_name, function_name, line, msg);
     }
 
-    #define LOG_INFO(MSG) core_log_stdout("INFO", MSG, __FILE__, __func__, __LINE__)
-    #define LOG_WARN(MSG) core_log_stdout("WARN", MSG, __FILE__, __func__, __LINE__)
-    #define LOG_ERR(MSG) core_log_stdout("ERROR", MSG, __FILE__, __func__, __LINE__)
-    #define BUG(MSG) core_log_stdout("BUG", MSG, __FILE__, __func__, __LINE__)
+    #define LOG_INFO(msg_) core_log_stdout("INFO", msg_, __FILE__, __func__, __LINE__)
+    #define LOG_WARN(msg_) core_log_stdout("WARN", msg_, __FILE__, __func__, __LINE__)
+    #define LOG_ERR(msg_) core_log_stdout("ERROR", msg_, __FILE__, __func__, __LINE__)
+    #define BUG(msg_) core_log_stdout("BUG", msg_, __FILE__, __func__, __LINE__)
 
 #else
-    #define LOG_INFO(MSG) ((void)0)
-    #define LOG_WARN(MSG) ((void)0)
-    #define LOG_ERR(MSG) ((void)0)
-    #define BUG(MSG) ((void)0)
+    #define LOG_INFO(msg_) ((void)0)
+    #define LOG_WARN(msg_) ((void)0)
+    #define LOG_ERR(msg_) ((void)0)
+    #define BUG(msg_) ((void)0)
 #endif // #ifdef ENABLE_LOG 
 
 #ifdef __cplusplus

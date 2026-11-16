@@ -67,11 +67,11 @@ void SymbolTable::leave_scope() {
 		auto& attr = attr_stack.top();
 
 		if (attr.in_scope) {
+			this->stack_offset_gen.revert();
 			attr.in_scope = false;
 		}
 	}
 	
-	this->scopes.top().stack_offset_gen.reset();
 	this->scopes.rewind();
 }
 
@@ -124,7 +124,7 @@ IdenAttr* SymbolTable::lookup(IdentifierId id) {
 IdenAttr* SymbolTable::new_identifier(
 	IdentifierId id, IdenAttr attr, Scope& scope) {
 	if (attr.kind_is<VarAttr>()) {
-		attr.get_data<VarAttr>().offset = scope.stack_offset_gen.generate();
+		attr.get_data<VarAttr>().offset = this->stack_offset_gen.generate();
 	} else if (attr.kind_is<TypeAttr>()) {
 		attr.get_data<TypeAttr>().id = id;
 	}

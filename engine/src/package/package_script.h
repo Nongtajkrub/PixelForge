@@ -4,8 +4,8 @@
 extern "C" {
 #endif // #ifdef __cplusplus
 
+#include <core-c/utilities/primitive_view.h>
 #include <core-c/types.h>
-#include <core-c/primitive_view.h>
 
 #include_next "../vm/vm_instruction.h"
 
@@ -27,7 +27,8 @@ typedef struct {
 	u16_v routines;
 } pkg_script_subroutine_list_t;
 
-instruction_t pkg_script_subroutine_inst(const char* routine, size_t n);
+instruction_t pkg_script_subroutine_inst(
+	const pkg_script_subroutine_t* routine, size_t n);
 
 typedef struct {
 	size_t size;

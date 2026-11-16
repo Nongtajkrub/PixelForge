@@ -4,8 +4,8 @@
 extern "C" {
 #endif // #ifdef __cplusplus
 
+#include <core-c/utilities/primitive_view.h>
 #include <core-c/types.h>
-#include <core-c/primitive_view.h>
 
 #include "package_script.h"
 

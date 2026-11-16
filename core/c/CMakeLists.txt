@@ -2,7 +2,9 @@ add_library(CoreC STATIC)
 
 target_sources(CoreC
     PRIVATE
-		src/primitive_view.c
+		src/utilities/primitive_view.c
+
+		src/allocator/bump_arena.c
 )
 
 target_include_directories(CoreC
