@@ -11,7 +11,7 @@ extern "C" {
 #include <stddef.h>
 
 #define BUMP_ARENA_ALLOC(arena_, type_) \
-	bump_arena_alloc(arena_, sizeof(type_), alignof(TYPE))
+	bump_arena_alloc(arena_, sizeof(type_), alignof(type_))
 
 typedef struct {
 	xalloc_info_single_t xalloc;
